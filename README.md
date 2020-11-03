@@ -68,3 +68,5 @@ To train the model with new dataset and potentially with different solvers, the 
 1. main.py provides a sample implementation where all the parameters are fetched from a config.json file. The location of config.json can also be passed as a command line argument to the python script. The default location is json_files folder.
 
 2. analysis.py prints a detailed report which includes the accuracy, coverage and custom score details as described in our paper.
+
+3. Use dir(MAPFAST) or help(MAPFAST) to get detailed information about each function in MAPFAST and InceptionClassificationNet class and its usages.
