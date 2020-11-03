@@ -106,7 +106,7 @@ class MAPFASt_Classification:
 		'''
 		Computes the ground truth for the pairwise comparison neurons of a given filename.
 
-		Returns a numpy array of 0 or 1 denoting [bcp < cbs, bcp < cbsh, bcp < sat, cbs < cbsh, cbs < sat, cbsh < sat] where < implies faster.
+		Returns: A numpy array of 0 or 1 denoting [bcp < cbs, bcp < cbsh, bcp < sat, cbs < cbsh, cbs < sat, cbsh < sat] where < implies faster.
 		'''
 		di = self.yaml_details[file_name]
 		bcp = 400
