@@ -69,4 +69,4 @@ To train the model with new dataset and potentially with different solvers, the 
 
 2. analysis.py prints a detailed report which includes the accuracy, coverage and custom score details as described in our paper.
 
-3. Use dir(MAPFAST) or help(MAPFAST) to get detailed information about each function in MAPFAST and InceptionClassificationNet class and its usages.
+3. Use dir(MAPFAST) or help(MAPFAST) to get information and usage details for each function in MAPFAST and InceptionClassificationNet class.
