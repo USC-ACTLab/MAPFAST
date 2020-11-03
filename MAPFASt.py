@@ -25,6 +25,23 @@ random.seed(42)
 from utils import *
 
 class MAPFASt_Classification:
+	'''
+	MAPFASt classification class - The official implementation for our paper "MAPFAST: A Deep Algorithm Selector for Multi Agent Path Finding using Shortest Path Embeddings"
+
+	The arguments are:
+		Required Arguments:
+			1. device -> Device to train(cpu/gpu)
+			2. yaml_details -> Json object which contains file name as key and another json object(which has 'SOLVER' storing the name of the fastest solver and solving time(in seconds) for all the solvers) as value.
+			3. agent_details -> Json object which contains file name as key and its value is a json object containing the start and goal locations of the agents.
+			4. map_details -> Json object which contains file name as key and another json object(which has number of agents, dimensions of the input map) as value.
+			5. input_location -> String denoting the location of all the image files
+		Optional Arguments:
+			6. test_details -> Default value of None. It is a json object which contains names of files as keys. This is provided when different models have to be trained and tested with same data.
+			7. augmentation -> Default value of 1. Refer the get_transition function in utils.py for more details
+			8. is_image -> Default value of 1. When set to 0, the input can be given as numpy arrays.
+
+	Returns: None
+	'''
 	def __init__(self, device, yaml_details, agent_details, map_details, input_location, test_details=None, augmentation=1, is_image=1):
 		self.device = device
 		self.yaml_details = yaml_details
@@ -43,7 +60,14 @@ class MAPFASt_Classification:
 				self.files[f] = i
 
 	def get_train_valid_test_list(self):
+		'''
+		Function to get the split for training, testing and validation data. When test_details is provided, the function performs 90:10 split on the remaining data for train and valid list. Else, it performs 80:10:10 for train, valid and test data.
 
+		Returns: Tuple of three lists
+				1. File names for training data
+				2. File names for test data
+				3. File names for validation data
+		'''
 		file_list = set(self.files.keys())
 
 		if self.test_details:
@@ -65,6 +89,11 @@ class MAPFASt_Classification:
 		return train_list, test_list, valid_list
 
 	def compute_y2(self, file_name):
+		'''
+		Computes the ground truth for the finish prediction neurons of a given filename.
+
+		Returns: A numpy array of 0 or 1 denoting if each of the solver successfully solved the input.
+		'''
 		di = self.yaml_details[file_name]
 		y2 = []
 		y2.append(float(di['BCP'] != -1))
@@ -74,6 +103,11 @@ class MAPFASt_Classification:
 		return asarray(y2)
 
 	def compute_y3(self, file_name):
+		'''
+		Computes the ground truth for the pairwise comparison neurons of a given filename.
+
+		Returns a numpy array of 0 or 1 denoting [bcp < cbs, bcp < cbsh, bcp < sat, cbs < cbsh, cbs < sat, cbsh < sat] where < implies faster.
+		'''
 		di = self.yaml_details[file_name]
 		bcp = 400
 		cbs = 400
@@ -89,14 +123,24 @@ class MAPFASt_Classification:
 		if di['SAT'] != -1:
 			sat = di['SAT']
 
-		'''
-		< implies faster
-		bcp < cbs, bcp < cbsh, bcp < sat, cbs < cbsh, cbs < sat, cbsh < sat
-		'''
 		return asarray([float(bcp <= cbs), float(bcp <= cbsh), float(bcp <= sat), float(cbs <= cbsh), float(cbs <= sat), float(cbsh <= sat)])
 
-
 	def data_generator(self, files_names_list, batch_size):
+		'''
+		A data generator function used when training the neural network.
+
+		The arguments are:
+			Required Arguments:
+				1. files_names_list -> List containing the file names
+				2. batch_size -> Size for each batch when yielding the necessary data
+
+		Yields: a tuple of five items
+				1. List containing the names of files in the current batch
+				2. Image data after augmentation and reshaping
+				3. Ground truth for best solver classification neurons
+				4. Ground truth for finish prediction neurons
+				5. Ground truth for pairwise comparison neurons
+		'''
 		files_names = files_names_list
 		i = 0
 		while 1:
@@ -140,6 +184,25 @@ class MAPFASt_Classification:
 				i = 0
 
 	def train_model(self, train_list, valid_list, model_loc=None, model_name=None, batch_size=16, epochs=10, log_interval=1000, cl_units=1, fin_pred_units=1, pair_units=1):
+		'''
+		Function to train a model of class InceptionClassificationNet in utils.py
+
+		The arguments are:
+			Required Arguments:
+				1. train_list -> List with file names that belong to the training data
+				2. valid_list -> List with file names that belong to the validation data
+			Optional Arguments:
+				3. model_loc -> Default value of None. Location to store the model
+				4. model_name -> Default value of None, Name of the model. When given a model is stored for each epoch at model_loc with name model_name + "_epoch_" + epoch_number
+				5. batch_size -> Default value of 16. The size per batch for training the neural network.
+				6. epochs -> Default value of 10. The number of epochs to train the network.
+				7. log_interval -> Default value of 1000. The steps after which the performance should be evaluated with the validation data.
+				8. cl_units -> Default value of 1. 0/1 for indicating if best solver classification neurons should be present.
+				9. fin_pred_units -> Default value of 1. 0/1 for indicating if finish prediction neurons should be present.
+				10. pair_units -> Default value of 1. 0/1 for indicating if pairwise comparison neurons should be present.
+
+		Returns: The trained model
+		'''
 		train_steps = (len(train_list) + batch_size + 1) // batch_size
 		valid_steps = (len(valid_list) + batch_size + 1) // batch_size
 
@@ -265,6 +328,25 @@ class MAPFASt_Classification:
 		return net
 
 	def test_model(self, test_list, model_loc, model_name, batch_size=16, cl_units=1, fin_pred_units=1, pair_units=1):
+		'''
+		Function to test a model of class InceptionClassificationNet in utils.py
+
+		The arguments are:
+			Required Arguments:
+				1. test_list -> List with file names that belong to the testing data
+				2. model_loc -> Location of the model to be retrieved
+				3. model_name -> Name of the model to be retrieved
+			Optional Arguments:
+				4. batch_size -> Default value of 16. The size per batch for testing the neural network.
+				5. cl_units -> Default value of 1. 0/1 for indicating if best solver classification neurons should be present.
+				6. fin_pred_units -> Default value of 1. 0/1 for indicating if finish prediction neurons should be present.
+				7. pair_units -> Default value of 1. 0/1 for indicating if pairwise comparison neurons should be present.
+
+		Returns: Json object containing the file name as key. The value is another json object whose content depends on the model.
+			If the model has classification units, the json will have a key 'best' and a value [predicted value, ground truth](a list)
+			If the model has finish prediction neurons, the json will have key with name of solver and value [predicted value, ground truth](a list)
+			If the model has pairwise classification neurons, the json will have a key as number(corresponsing to the index values of computer_y3) and the value is predicted answer(an integer)
+		'''
 		
 		test_steps = (len(test_list) + batch_size + 1) // batch_size
 		test_steps = 10

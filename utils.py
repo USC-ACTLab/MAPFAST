@@ -45,20 +45,32 @@ class MaxPool2dSame(nn.Module):
 		return self.net(x)
 
 class InceptionClassificationNet(nn.Module):
-	def __init__(self, cl_units=True, fin_pred_units=True, pair_units=True):
+	'''
+	Inception model class as described in MAPFASt paper.
+
+	The arguments are:
+		Optional Arguments:
+			1. cl_units -> Default value of 1. 0/1 for indicating if best solver classification neurons should be present.
+			2. fin_pred_units -> Default value of 1. 0/1 for indicating if finish prediction neurons should be present.
+			3. pair_units -> Default value of 1. 0/1 for indicating if pairwise comparison neurons should be present.
+			4. input_d -> Default value of 3. Number of channels in the input
+
+	Returns: None
+	'''
+	def __init__(self, cl_units=True, fin_pred_units=True, pair_units=True, input_d=3):
 		super(InceptionClassificationNet, self).__init__()
 
 		self.cl_units = cl_units
 		self.fin_pred_units = fin_pred_units
 		self.pair_units = pair_units
 
-		self.conv1 = Conv2dSame(3, 32, 1)
-		self.conv_mid_1 = Conv2dSame(3, 96, 1)
+		self.conv1 = Conv2dSame(input_d, 32, 1)
+		self.conv_mid_1 = Conv2dSame(input_d, 96, 1)
 		self.conv3 = Conv2dSame(96, 32, 3)
-		self.conv_mid_2 = Conv2dSame(3, 16, 1)
+		self.conv_mid_2 = Conv2dSame(input_d, 16, 1)
 		self.conv5 = Conv2dSame(16, 32, 5)
 		self.pool1 = MaxPool2dSame(3)
-		self.conv_after = Conv2dSame(3, 32, 1)
+		self.conv_after = Conv2dSame(input_d, 32, 1)
 
 		self.conv1_ = Conv2dSame(128, 32, 1)
 		self.conv_mid_1_ = Conv2dSame(128, 96, 1)
@@ -85,7 +97,14 @@ class InceptionClassificationNet(nn.Module):
 			self.linear4 = nn.Linear(200, 6)
 
 	def forward(self, x1):
+		'''
+		Forward function for our Inception module.
 
+		Returns: Json object whose content depends on the model.
+			If the model has classification units, the json will have a key 'cl' and a value corresponding to the output of forward propagation step.
+			If the model has finish prediction neurons, the json will have a key 'fin' and a value corresponding to the output of forward propagation step.
+			If the model has pairwise classification neurons, the json will have a key 'pair' and a value corresponding to the output of forward propagation step.
+		'''
 		cov1 = self.conv1(x1)
 		cov2 = self.conv3(self.conv_mid_1(x1))
 		cov3 = self.conv5(self.conv_mid_2(x1))
@@ -173,6 +192,8 @@ class InceptionClassificationNet(nn.Module):
 
 def horizontal_flip(li, map_details):
 	'''
+	Returns the (x, y) coordinates after horizantal flip
+
 	Columns -> Same
 	Rows -> Map Height - 1 - Current Row Val #0 indexed
 	'''
@@ -185,6 +206,8 @@ def horizontal_flip(li, map_details):
 
 def vertical_flip(li, map_details):
 	'''
+	Returns the (x, y) coordinates after vertical flip
+
 	Columns -> Map Width - 1 - Current Column Val #0 indexed
 	Rows -> Same
 	'''
@@ -197,6 +220,8 @@ def vertical_flip(li, map_details):
 
 def ninety_degree_rotation(li, map_details):
 	'''
+	Returns the (x, y) coordinates after 90 degree rotation
+
 	Columns -> Map Height - 1 - Current Row Val #0 indexed
 	Rows -> Current Column Val
 	'''
@@ -208,12 +233,39 @@ def ninety_degree_rotation(li, map_details):
 	return ans
 
 def one_eighty_degree_rotation(li, map_details):
+	'''
+	Returns the (x, y) coordinates after 180 degree rotation
+	'''
 	return vertical_flip(horizontal_flip(li, map_details), map_details)
 
 def two_seventy_degree_rotation(li, map_details):
+	'''
+	Returns the (x, y) coordinates after 270 degree rotation
+	'''
 	return ninety_degree_rotation(one_eighty_degree_rotation(li, map_details), map_details)
 
 def get_transition(image_data, start, goal, map_details, transition):
+	'''
+	Get a transition for the image, start and goal location
+
+	The arguments are:
+		Required Arguments:
+			1. image_data -> Numpy array of the image
+			2. start -> List containing the (x, y) positions of the start locations of agents in the input map
+			3. goal -> List containing the (x, y) positions of the goal locations of agents in the input map
+			4. transition -> Number of the transition
+								0 -> No transition
+								1 -> Horizantal flip
+								2 -> Vertical flip
+								3 -> 90 degree rotation
+								4 -> 180 degree rotation
+								5 -> 270 degree rotation
+
+	Returns: Tuple of three items
+			1. Numpy array of image data after transition
+			2. List of start locations after transition
+			3. List of goal locations after transition
+	'''
 	if transition == 0:
 		#No transition
 		return image_data, start, goal
