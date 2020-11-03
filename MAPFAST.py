@@ -16,7 +16,6 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 from torch.nn.utils.rnn import pad_sequence
-from torch.utils.tensorboard import SummaryWriter
 import argparse
 import torch.optim as optim
 
@@ -24,9 +23,9 @@ random.seed(42)
 
 from utils import *
 
-class MAPFASt_Classification:
+class MAPFAST:
 	'''
-	MAPFASt classification class - The official implementation for our paper "MAPFAST: A Deep Algorithm Selector for Multi Agent Path Finding using Shortest Path Embeddings"
+	MAPFAST class - The official implementation for our paper "MAPFAST: A Deep Algorithm Selector for Multi Agent Path Finding using Shortest Path Embeddings"
 
 	The arguments are:
 		Required Arguments:
@@ -35,14 +34,15 @@ class MAPFASt_Classification:
 			3. agent_details -> Json object which contains file name as key and its value is a json object containing the start and goal locations of the agents.
 			4. map_details -> Json object which contains file name as key and another json object(which has number of agents, dimensions of the input map) as value.
 			5. input_location -> String denoting the location of all the image files
+			6. mapping -> Json object for mapping solver names with a number
 		Optional Arguments:
-			6. test_details -> Default value of None. It is a json object which contains names of files as keys. This is provided when different models have to be trained and tested with same data.
-			7. augmentation -> Default value of 1. Refer the get_transition function in utils.py for more details
-			8. is_image -> Default value of 1. When set to 0, the input can be given as numpy arrays.
+			7. test_details -> Default value of None. It is a json object which contains names of files as keys. This is provided when different models have to be trained and tested with same data.
+			8. augmentation -> Default value of 1. Refer the get_transition function in utils.py for more details
+			9. is_image -> Default value of 1. When set to 0, the input can be given as numpy arrays.
 
 	Returns: None
 	'''
-	def __init__(self, device, yaml_details, agent_details, map_details, input_location, test_details=None, augmentation=1, is_image=1):
+	def __init__(self, device, yaml_details, agent_details, map_details, input_location, mapping, test_details=None, augmentation=1, is_image=1):
 		self.device = device
 		self.yaml_details = yaml_details
 		self.agent_details = agent_details
@@ -52,6 +52,9 @@ class MAPFASt_Classification:
 		self.augmentation = augmentation
 		self.is_image = is_image
 		
+		self.mapping = mapping
+		self.inv_mapping = get_inv_mapping(mapping)
+
 		file_list = list(yaml_details.keys())
 		self.files = {}
 		for i in file_list:
@@ -96,10 +99,8 @@ class MAPFASt_Classification:
 		'''
 		di = self.yaml_details[file_name]
 		y2 = []
-		y2.append(float(di['BCP'] != -1))
-		y2.append(float(di['CBSH'] != -1))
-		y2.append(float(di['CBS'] != -1))
-		y2.append(float(di['SAT'] != -1))
+		for i in self.mapping:
+			y2.append(float(di[i] != -1))
 		return asarray(y2)
 
 	def compute_y3(self, file_name):
@@ -107,23 +108,25 @@ class MAPFASt_Classification:
 		Computes the ground truth for the pairwise comparison neurons of a given filename.
 
 		Returns: A numpy array of 0 or 1 denoting [bcp < cbs, bcp < cbsh, bcp < sat, cbs < cbsh, cbs < sat, cbsh < sat] where < implies faster.
+		Note: The length may vary depending on the mapping Json given as input.
 		'''
 		di = self.yaml_details[file_name]
-		bcp = 400
-		cbs = 400
-		cbsh = 400
-		sat = 400
 
-		if di['BCP'] != -1:
-			bcp = di['BCP']
-		if di['CBS'] != -1:
-			cbs = di['CBS']
-		if di['CBSH'] != -1:
-			cbsh = di['CBSH']
-		if di['SAT'] != -1:
-			sat = di['SAT']
+		solvers_time = []
+		for i in self.mapping:
+			t = 400
+			if di[i] != -1:
+				t = di[i]
+			solvers_time.append(t)
 
-		return asarray([float(bcp <= cbs), float(bcp <= cbsh), float(bcp <= sat), float(cbs <= cbsh), float(cbs <= sat), float(cbsh <= sat)])
+		y3 = []
+		for i in range(len(solvers_time)-1):
+			for j in range(i+1, len(solvers_time)):
+				y3.append(float(solvers_time[i] <= solvers_time[j]))
+
+		y3 = asarray(y3)
+
+		return y3
 
 	def data_generator(self, files_names_list, batch_size):
 		'''
@@ -169,7 +172,7 @@ class MAPFASt_Classification:
 
 				X.append(new_image)
 
-				Y1.append(mapping[self.yaml_details[kk]['SOLVER']])
+				Y1.append(self.mapping[self.yaml_details[kk]['SOLVER']])
 				Y2.append(self.compute_y2(kk))
 				Y3.append(self.compute_y3(kk))
 
@@ -402,7 +405,7 @@ class MAPFASt_Classification:
 						val = 0
 						if temp_sig[_] >= temp_sig_1[_]:
 							val = 1
-						Y_prediction_data[n_b[i]][inv_mapping[_]] = [val, int(Y2[i][_].item())]
+						Y_prediction_data[n_b[i]][self.inv_mapping[_]] = [val, int(Y2[i][_].item())]
 
 				if pair_units:
 					temp_sig_2 = sig(temp_out3[i]).numpy()

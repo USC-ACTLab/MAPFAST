@@ -8,9 +8,6 @@ import torch.nn.functional as F
 import torch.nn as nn
 from torch.nn.utils.rnn import pad_sequence
 
-mapping = {'BCP':0, 'CBS':1, 'CBSH':2, 'SAT':3, 'ICTS':4, 'EPEA':5}
-inv_mapping = {0:'BCP', 1:'CBS', 2:'CBSH', 3:'SAT', 4:'ICTS', 5:'EPEA'}
-
 def create_model_weights(loc='model_weights'):
 	if not os.path.isdir(loc):
 		os.makedirs(loc)
@@ -23,6 +20,18 @@ def read_json(file):
 		print(file, 'was not found!')
 		sys.exit(0)
 
+def get_inv_mapping(mapping):
+	'''
+	Given a Json object which stores name of solvers as key and a number a value, find the inverse mapping(number-solver)
+
+	Returns: Json object corresponding to inverse mapping
+	'''
+	j = {}
+	for i in mapping:
+		if mapping[i] in j:
+			print('Ensure that values in mapping json is unique')
+		j[mapping[i]] = i
+	return j
 
 class Conv2dSame(torch.nn.Module):
 	def __init__(self, in_channels, out_channels, kernel_size, bias=True, padding_layer=torch.nn.ReflectionPad2d):
@@ -46,23 +55,25 @@ class MaxPool2dSame(nn.Module):
 
 class InceptionClassificationNet(nn.Module):
 	'''
-	Inception model class as described in MAPFASt paper.
+	Inception model class as described in MAPFAST paper.
 
 	The arguments are:
 		Optional Arguments:
-			1. cl_units -> Default value of 1. 0/1 for indicating if best solver classification neurons should be present.
-			2. fin_pred_units -> Default value of 1. 0/1 for indicating if finish prediction neurons should be present.
-			3. pair_units -> Default value of 1. 0/1 for indicating if pairwise comparison neurons should be present.
-			4. input_d -> Default value of 3. Number of channels in the input
+			1. solvers -> Default value of 4. Number of solvers in our portfolio. This is used to change the number of neurons in the output layer.
+			2. cl_units -> Default value of 1. 0/1 for indicating if best solver classification neurons should be present.
+			3. fin_pred_units -> Default value of 1. 0/1 for indicating if finish prediction neurons should be present.
+			4. pair_units -> Default value of 1. 0/1 for indicating if pairwise comparison neurons should be present.
+			5. input_d -> Default value of 3. Number of channels in the input
 
 	Returns: None
 	'''
-	def __init__(self, cl_units=True, fin_pred_units=True, pair_units=True, input_d=3):
+	def __init__(self, solvers=4, cl_units=True, fin_pred_units=True, pair_units=True, input_d=3):
 		super(InceptionClassificationNet, self).__init__()
 
 		self.cl_units = cl_units
 		self.fin_pred_units = fin_pred_units
 		self.pair_units = pair_units
+		self.outs = solvers
 
 		self.conv1 = Conv2dSame(input_d, 32, 1)
 		self.conv_mid_1 = Conv2dSame(input_d, 96, 1)
@@ -88,13 +99,14 @@ class InceptionClassificationNet(nn.Module):
 		self.linear1 = nn.Linear(val, 200)
 
 		if cl_units:
-			self.linear2 = nn.Linear(200, 4)
+			self.linear2 = nn.Linear(200, self.outs)
 
 		if fin_pred_units:
-			self.linear3 = nn.Linear(200, 4)
+			self.linear3 = nn.Linear(200, self.outs)
 
 		if pair_units:
-			self.linear4 = nn.Linear(200, 6)
+			m = (self.outs * (self.outs + 1))//2
+			self.linear4 = nn.Linear(200, m)
 
 	def forward(self, x1):
 		'''

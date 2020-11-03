@@ -1,5 +1,5 @@
 from utils import *
-from MAPFASt import *
+from MAPFAST import *
 
 def train(device, config):
 	yaml_details = read_json(config['yaml_details'])
@@ -23,11 +23,11 @@ def train(device, config):
 	fin_pred_units = out_units['fin']
 	pair_units = out_units['pair']
 	model_loc = config['model_loc']
-
+	mapping = config['mapping']
 	is_image = config['is_image']
 	input_location = config['input_location']
 
-	mapfast = MAPFASt_Classification(device, yaml_details, agent_details, map_details, input_location, test_details, augmentation, is_image)
+	mapfast = MAPFAST(device, yaml_details, agent_details, map_details, input_location, mapping, test_details, augmentation, is_image)
 	train_list, valid_list, test_list = mapfast.get_train_valid_test_list()
 	print('\n\n---------------- Training started ----------------\n\n')
 	net = mapfast.train_model(train_list, valid_list, model_loc, model_name, batch_size, epochs, log_interval, cl_units, fin_pred_units, pair_units)
@@ -53,8 +53,9 @@ def test(device, config):
 	fin_pred_units = out_units['fin']
 	pair_units = out_units['pair']
 	model_loc = config['model_loc']
+	mapping = config['mapping']
 
-	mapfast = MAPFASt_Classification(device, yaml_details, agent_details, map_details, input_location, test_details, augmentation, is_image)
+	mapfast = MAPFAST(device, yaml_details, agent_details, map_details, input_location, mapping, test_details, augmentation, is_image)
 
 	train_list, valid_list, test_list = mapfast.get_train_valid_test_list()
 
