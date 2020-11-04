@@ -59,11 +59,11 @@ class InceptionClassificationNet(nn.Module):
 
 	The arguments are:
 		Optional Arguments:
-			1. solvers -> Default value of 4. Number of solvers in our portfolio. This is used to change the number of neurons in the output layer.
-			2. cl_units -> Default value of 1. 0/1 for indicating if best solver classification neurons should be present.
-			3. fin_pred_units -> Default value of 1. 0/1 for indicating if finish prediction neurons should be present.
-			4. pair_units -> Default value of 1. 0/1 for indicating if pairwise comparison neurons should be present.
-			5. input_d -> Default value of 3. Number of channels in the input
+			1. cl_units -> Default value of 1. 0/1 for indicating if best solver classification neurons should be present.
+			2. fin_pred_units -> Default value of 1. 0/1 for indicating if finish prediction neurons should be present.
+			3. pair_units -> Default value of 1. 0/1 for indicating if pairwise comparison neurons should be present.
+			4. input_d -> Default value of 3. Number of channels in the input
+			5. solvers -> Default value of 4. Number of solvers in our portfolio. This is used to change the number of neurons in the output layer.
 
 	Returns: None
 	'''
