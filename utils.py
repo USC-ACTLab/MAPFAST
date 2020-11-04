@@ -74,7 +74,7 @@ class InceptionClassificationNet(nn.Module):
 		self.fin_pred_units = fin_pred_units
 		self.pair_units = pair_units
 		self.solvers_count = solvers
-		
+
 		self.conv1 = Conv2dSame(input_d, 32, 1)
 		self.conv_mid_1 = Conv2dSame(input_d, 96, 1)
 		self.conv3 = Conv2dSame(96, 32, 3)
