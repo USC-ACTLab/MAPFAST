@@ -67,14 +67,14 @@ class InceptionClassificationNet(nn.Module):
 
 	Returns: None
 	'''
-	def __init__(self, solvers=4, cl_units=True, fin_pred_units=True, pair_units=True, input_d=3):
+	def __init__(self, cl_units=True, fin_pred_units=True, pair_units=True, input_d=3, solvers=4):
 		super(InceptionClassificationNet, self).__init__()
 
 		self.cl_units = cl_units
 		self.fin_pred_units = fin_pred_units
 		self.pair_units = pair_units
-		self.outs = solvers
-
+		self.solvers_count = solvers
+		
 		self.conv1 = Conv2dSame(input_d, 32, 1)
 		self.conv_mid_1 = Conv2dSame(input_d, 96, 1)
 		self.conv3 = Conv2dSame(96, 32, 3)
@@ -99,13 +99,13 @@ class InceptionClassificationNet(nn.Module):
 		self.linear1 = nn.Linear(val, 200)
 
 		if cl_units:
-			self.linear2 = nn.Linear(200, self.outs)
+			self.linear2 = nn.Linear(200, self.solvers_count)
 
 		if fin_pred_units:
-			self.linear3 = nn.Linear(200, self.outs)
+			self.linear3 = nn.Linear(200, self.solvers_count)
 
 		if pair_units:
-			m = (self.outs * (self.outs + 1))//2
+			m = (self.solvers_count * (self.solvers_count - 1))//2
 			self.linear4 = nn.Linear(200, m)
 
 	def forward(self, x1):
