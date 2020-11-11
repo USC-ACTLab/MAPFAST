@@ -20,6 +20,22 @@ Following items are needed for training the model:
 ```
 We used [MAPF benchmark](https://movingai.com/benchmarks/mapf.html) to generate the MAPF instances for training and testing. 
 
+Each entry of yaml_details will look as shown below. new_brc202d-even-4_1_40_agents.yaml is the file name and the value is a json. yaml_details\[filename\]\["SOLVER"\] gives the name of the best solver for the given file name. yaml_details\[filename\]\[solver_name\] gives the time which the solver took to solver the instance if it was successful else -1. In our dataset, the possible solvers are BCP, CBSH, CBS, SAT.
+```
+"new_brc202d-even-4_1_40_agents.yaml": {"SOLVER": "BCP", "BCP": 34.2429, "CBS": -1, "CBSH": 37.1887, "SAT": -1}
+```
+
+Each entry of map_details will look as shown below. new_empty-8-8-random-17_2_20_agents.yaml is the file name and the value is a json. map_details\[filename\]\["no_agents"\] will give the number of agents in the input instance, map_details\[filename\]\["mp_dim"\] will give a list where the first value corresponds to the height, second value corresponds to the width of the input map and map_details\[filename\]\["no_obs"\] will give the number of obstacle in the input instance.
+```
+"new_empty-8-8-random-17_2_20_agents.yaml": {"no_agents": 20, "mp_dim": [8, 8], "no_obs": 0}
+```
+
+Each entry of agent_details will look as shown below. maze-32-32-2-even-8_5_agents.yaml is the file name and the value is a json. agent_details\[filename\]\["starts"\] and agent_details\[filename\]\["goals"\] will give a list corresponding to the start and goal location of each of the agents respectively. For example, in the json below, [23, 30] is the start location of agent 3 and [20, 29] is the goal location of agent 3.
+```
+"maze-32-32-2-even-8_5_agents.yaml": {"starts": [[11, 15], [22, 24], [23, 30], [2, 5], [12, 10]], "goals": [[10, 13], [23, 24], [20, 29], [1, 4], [14, 8]]}
+```
+
+
 ## MAPFAST
 
 `MAPFAST.py` contains the necessary class for training and testing the model as described in our paper.
@@ -51,7 +67,10 @@ train_list, valid_list, test_list = mapfast.get_train_valid_test_list()
 prediction_data = mapfast.test_model(test_list, model_loc, model_name)
 ```
 
-This will test the default MAPFAST model at given location and given name and return a json object with the test details.
+This will test the default MAPFAST model at given location and given name and return a json object with the test details. A sample entry in this json is shown below. new_ht_mansion_n-even-22_2_40_agents.yaml_0 is the filename. `_0` in the end denotes that no augmentation was performed in the input. "best" gives a list where first entry is the predicted best solver and the second entry is ground truth. "BCP", "CBSH", "CBS", "SAT" each gives a list where first entry tells if the solver was successful in solving the instance as predicted by the model and the second entry is ground truth. "0" to "5" each corresponds to output of the comparison neurons.
+```
+"new_ht_mansion_n-even-22_2_40_agents.yaml_0": {"best": [0, 0], "BCP": [1, 1], "CBS": [1, 1], "CBSH": [0, 0], "SAT": [0, 0], "0": 1, "1": 1, "2": 1, "3": 0, "4": 1, "5": 1}
+```
 
 ### Note
 When creating the `MAPFAST` class, we have to give a json object called mapping which maps the solver name to a unique number.
