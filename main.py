@@ -7,7 +7,7 @@ def train(device, config):
 	map_details = read_json(config['map_details'])
 
 	if config['test_details']:
-		test_details = read_json((config['test_details']))
+		test_details = read_json(config['test_details'])
 	else:
 		test_details = None
 
@@ -28,7 +28,7 @@ def train(device, config):
 	input_location = config['input_location']
 
 	mapfast = MAPFAST(device, yaml_details, agent_details, map_details, input_location, mapping, test_details, augmentation, is_image)
-	train_list, valid_list, test_list = mapfast.get_train_valid_test_list()
+	train_list, test_list, valid_list = mapfast.get_train_valid_test_list()
 	print('\n\n---------------- Training started ----------------\n\n')
 	net = mapfast.train_model(train_list, valid_list, model_loc, model_name, batch_size, epochs, log_interval, cl_units, fin_pred_units, pair_units)
 	print('\n\n---------------- Training completed ----------------\n\n')
@@ -39,7 +39,7 @@ def test(device, config):
 	map_details = read_json(config['map_details'])
 
 	if config['test_details']:
-		test_details = read_json((config['test_details']))
+		test_details = read_json(config['test_details'])
 	else:
 		test_details = None
 
@@ -57,7 +57,7 @@ def test(device, config):
 
 	mapfast = MAPFAST(device, yaml_details, agent_details, map_details, input_location, mapping, test_details, augmentation, is_image)
 
-	train_list, valid_list, test_list = mapfast.get_train_valid_test_list()
+	train_list, test_list, valid_list = mapfast.get_train_valid_test_list()
 
 	prediction_data = mapfast.test_model(test_list, model_loc, model_name, batch_size, cl_units, fin_pred_units, pair_units)
 

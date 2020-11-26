@@ -74,11 +74,11 @@ class MAPFAST:
 		file_list = set(self.files.keys())
 
 		if self.test_details:
-			m = list(file_list - set(test_details.keys()))
+			m = list(file_list - set(self.test_details.keys()))
 			train_size = (1 + (len(m) // 100)) * 90
 			train_list = m[:train_size]
 			valid_list = m[train_size:]
-			test_list = list(test_details.keys())
+			test_list = list(self.test_details.keys())
 		else:
 			file_list = list(file_list)
 			random.shuffle(file_list)
@@ -157,7 +157,8 @@ class MAPFAST:
 			for _ in next_batch:
 				kk = self.files[_]
 				if self.is_image:
-					img = img_to_array(load_img(self.input_location + kk[:-4] + 'png').resize((320, 320)))
+					img = img_to_array(load_img(self.input_location + kk[:-4] + 'png', target_size=(320, 320)))
+					#img = img_to_array(load_img(self.input_location + kk[:-4] + 'png').resize((320, 320)))
 					start = self.agent_details[kk]['starts']
 					goal = self.agent_details[kk]['goals']
 					new_image, new_start, new_goal = get_transition(img, start, goal, self.map_details[kk], int(_.split('_')[-1]))
@@ -352,7 +353,6 @@ class MAPFAST:
 		'''
 		
 		test_steps = (len(test_list) + batch_size + 1) // batch_size
-		test_steps = 10
 
 		test_datagen = self.data_generator(test_list, batch_size)
 

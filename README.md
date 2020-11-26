@@ -47,7 +47,7 @@ Following shows a way to train a model with the default setting given the necess
 ```
 mapfast = MAPFAST(device, yaml_details, agent_details, map_details, input_location, mapping)
 
-train_list, valid_list, test_list = mapfast.get_train_valid_test_list()
+train_list, test_list, valid_list = mapfast.get_train_valid_test_list()
 
 model = mapfast.train_model(train_list, valid_list, model_loc, model_name)
 ```
@@ -62,7 +62,7 @@ Following shows a way to test a model with the default setting given the necessa
 ```
 mapfast = MAPFAST(device, yaml_details, agent_details, map_details, input_location, mapping)
 
-train_list, valid_list, test_list = mapfast.get_train_valid_test_list()
+train_list, test_list, valid_list = mapfast.get_train_valid_test_list()
 
 prediction_data = mapfast.test_model(test_list, model_loc, model_name)
 ```

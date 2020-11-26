@@ -3,7 +3,7 @@
 		"yaml_details": "json_files/solved_yaml_details.json",
 		"agent_details": "json_files/solved_agent_details.json",
 		"map_details": "json_files/solved_map_details.json",
-		"test_details": "",
+		"test_details": "json_files/y_pred_true_classification_finish_pairwise.json",
 		"augmentation": 1,
 		"batch_size": 16,
 		"epochs": 10,
@@ -12,29 +12,29 @@
 		"input_location": "img_shortest_path/",
 		"output_units": {"cl": 1, "fin": 1, "pair": 1},
 		"model_loc": "model_weights/",
-		"model_name": "sp_14_units",
+		"model_name": "sp_320_14_units",
 		"mapping": {"BCP":0, "CBS":1, "CBSH":2, "SAT":3}
 	},
 	"Testing":{
 		"yaml_details": "json_files/solved_yaml_details.json",
 		"agent_details": "json_files/solved_agent_details.json",
 		"map_details": "json_files/solved_map_details.json",
-		"test_details": "",
+		"test_details": "json_files/y_pred_true_classification_finish_pairwise.json",
 		"augmentation": 1,
 		"batch_size": 16,
 		"is_image": 1,
 		"input_location": "img_shortest_path/",
 		"output_units": {"cl": 1, "fin": 1, "pair": 1},
 		"model_loc": "model_weights/",
-		"model_name": "model_sp_14_units_epoch_0.pth",
-		"prediction_output": "json_files/y_pred_true_sp_14.json",
+		"model_name": "model_sp_320_14_units_epoch_1.pth",
+		"prediction_output": "json_files/y_pred_true_sp_320_14.json",
 		"mapping": {"BCP":0, "CBS":1, "CBSH":2, "SAT":3}
 	},
 	"Analysis":{
 		"yaml_details": "json_files/solved_yaml_details.json",
 		"agent_details": "json_files/solved_agent_details.json",
 		"map_details": "json_files/solved_map_details.json",
-		"prediction_output": "json_files/y_pred_true_classification_finish_pairwise.json",
+		"prediction_output": "json_files/y_pred_true_sp_320_14.json",
 		"mapping": {"BCP":0, "CBS":1, "CBSH":2, "SAT":3}
 	}
 }
