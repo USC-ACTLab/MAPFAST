@@ -19,7 +19,7 @@
 		"yaml_details": "json_files/solved_yaml_details.json",
 		"agent_details": "json_files/solved_agent_details.json",
 		"map_details": "json_files/solved_map_details.json",
-		"test_details": "json_files/y_pred_true_classification_finish_pairwise.json",
+		"test_details": "",
 		"augmentation": 1,
 		"batch_size": 16,
 		"is_image": 1,
