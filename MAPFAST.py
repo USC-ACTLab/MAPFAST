@@ -9,15 +9,15 @@ from PIL import Image
 import pickle
 import random
 
-from keras.preprocessing.image import ImageDataGenerator
-from keras.preprocessing.image import load_img
-from keras.preprocessing.image import img_to_array
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
 from torch.nn.utils.rnn import pad_sequence
 import argparse
 import torch.optim as optim
+
+from torchvision.io import read_image
+from torchvision import transforms
 
 random.seed(42)
 
@@ -75,12 +75,14 @@ class MAPFAST:
 
 		if self.test_details:
 			m = list(file_list - set(self.test_details.keys()))
+			random.shuffle(m)
 			train_size = (1 + (len(m) // 100)) * 90
 			train_list = m[:train_size]
 			valid_list = m[train_size:]
 			test_list = list(self.test_details.keys())
 		else:
 			file_list = list(file_list)
+			file_list.sort()
 			random.shuffle(file_list)
 			train_size = (1 + (len(file_list) // 100)) * 80
 			valid_size = (len(file_list) - train_size) // 2
@@ -157,8 +159,14 @@ class MAPFAST:
 			for _ in next_batch:
 				kk = self.files[_]
 				if self.is_image:
-					img = img_to_array(load_img(self.input_location + kk[:-4] + 'png', target_size=(320, 320)))
+					# img = img_to_array(load_img(self.input_location + kk[:-4] + 'png', target_size=(320, 320)))
 					#img = img_to_array(load_img(self.input_location + kk[:-4] + 'png').resize((320, 320)))
+					img = read_image(self.input_location + kk[:-4] + 'png')
+					img_transforms = torch.nn.Sequential(
+						transforms.Resize([320, 320])
+					)
+					img = img_transforms(img)
+
 					start = self.agent_details[kk]['starts']
 					goal = self.agent_details[kk]['goals']
 					new_image, new_start, new_goal = get_transition(img, start, goal, self.map_details[kk], int(_.split('_')[-1]))
@@ -279,6 +287,7 @@ class MAPFAST:
 				
 
 				if j % log_interval == 0 and valid_list:
+					net.eval()
 					valid_loss = 0
 					valid_j = 0
 					for next_batch, V, L1, L2, L3 in valid_datagen:
@@ -324,6 +333,7 @@ class MAPFAST:
 						del L3
 						
 					print("Num Batches {} / {} | Batch_Loss {} | Valid_Loss {} | Valid_Losses {}".format(j, train_steps, loss / batch_size, sum(valid_losses) / len(valid_list), valid_losses))
+					net.train()
 
 			print('Iteration', i, ': Loss =', run_loss)
 	
@@ -360,6 +370,7 @@ class MAPFAST:
 		net.to(self.device)
 
 		net.load_state_dict(torch.load(model_loc + model_name, map_location=torch.device(self.device)))
+		net.eval()
 
 		Y_prediction_data = {}
 		j = 0

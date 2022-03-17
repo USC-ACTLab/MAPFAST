@@ -93,7 +93,9 @@ class InceptionClassificationNet(nn.Module):
 
 		self.pool2 = nn.MaxPool2d(3, stride=3)
 
-		self.batch = nn.BatchNorm2d(128)
+		self.batch1 = nn.BatchNorm2d(128)
+		self.batch2 = nn.BatchNorm2d(128)
+		self.batch3 = nn.BatchNorm2d(128)
 
 		val = 15488
 		self.linear1 = nn.Linear(val, 200)
@@ -132,7 +134,7 @@ class InceptionClassificationNet(nn.Module):
 		del cov4
 
 		conv = self.pool2(conv)
-		conv = self.batch(conv)
+		conv = self.batch1(conv)
 		conv = F.relu(conv)
 
 		cov1 = self.conv1_(conv)
@@ -150,7 +152,7 @@ class InceptionClassificationNet(nn.Module):
 		del cov4
 
 		conv = self.pool2(conv)
-		conv = self.batch(conv)
+		conv = self.batch2(conv)
 		conv = F.relu(conv)
 
 		cov1 = self.conv1_(conv)
@@ -168,7 +170,7 @@ class InceptionClassificationNet(nn.Module):
 		del cov4
 
 		conv = self.pool2(conv)
-		conv = self.batch(conv)
+		conv = self.batch3(conv)
 		conv = F.relu(conv)
 		conv = conv.view(-1, self.num_features(conv))
 
