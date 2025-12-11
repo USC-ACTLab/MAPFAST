@@ -2,27 +2,31 @@
 
 This repository contains the official implementation for our paper "MAPFAST: A Deep Algorithm Selector for Multi Agent Path Finding using Shortest Path Embeddings"
 
-## Research Updates
+## Research Updates (2025)
 
 Some research updates and suggestions for my fellow researchers:
 
-- The models with addtional auxilary outputs **didn't work**. This has been tested and reported in multiple follow-up papers. It only makes the training slower and won't bring any improvements. 
+- Models with additional auxiliary outputs **do not work**. This is caused by a Pthon related-bug and has been tested and reported in several follow-up papers [1–2]. The auxiliary outputs only slow down training and do not provide any improvement. We thank other researchers for pointing it out!
 
-We thank for fixing the problem 
+- The base model with only the classicfication loss still works and have decent performance. Check the nice benchmarking work by Weizhe on a broader test [2].
 
-- The based model with only the classicfication loss still works and have decent performance. Check the nice following work by Weizhe on a broader test.
+References:
 
+[1] Jean-Marc Alkazzi, Anthony Rizk, Michel Salomon, and Abdallah Makhoul. "Mapfaster: A faster and simpler take on multi-agent path finding algorithm selection." IROS-22.
+
+[2] Weizhe Chen, Zhihan Wang, Jiaoyang Li, Sven Koenig, and Bistra Dilkina. "No Panacea in Planning: Algorithm Selection for Suboptimal Multi-Agent Path Finding."
 
 
 Should you still work on related topics? 
 
-- You definitely should if you are interested! The fundamental problem is still there, there is no dominating optimal MAPF algorithms. Acutally for most of the search problems, there is no dominating search algorithms. There is no free lunch for improvements.
+- You definitely should if you are interested! The fundamental problem is still there, there is no dominating optimal MAPF algorithms. Acutally for many search problems, there is no dominating optimal algorithms. There is no free lunch for improvements.
 
-- But don't just simply swap in different deep learning models, cause it is boring and the MAPF community won't benefit much. 
+- But don't just simply swap in different deep learning models, cause it is boring and the MAPF community won't benefit much.
 
 - Think about how to properly encode MAPF instances. Think about how to use totally different approaches, not just image classifiers. Think about what makes instances hard to solve and how you can effectively identify them. 
 
 - Apart from the papers mentioned above. Check the following paper to get more insights and ideas on empirical hardness of MAPF:
+    - Jingyao Ren, Eric Ewing, T. K. Satish Kumar, Sven Koenig, and Nora Ayanian. "Empirical Hardness in Multi-Agent Pathfinding: Research Challenges and Opportunities.", AAMAS-25, [link](https://idm-lab.org/bib/abstracts/papers/aamas25.pdf).
 
 
 Good luck!
