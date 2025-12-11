@@ -6,7 +6,7 @@ This repository contains the official implementation for our paper "MAPFAST: A D
 
 Some research updates and suggestions for my fellow researchers:
 
-- Models with additional auxiliary outputs **do not work**. This is caused by a Python related-bug and has been tested and reported in several follow-up papers [1–2]. The auxiliary outputs only slow down training and do not provide any improvement. We thank other researchers for pointing it out!
+- Models with additional auxiliary outputs **do not work**. This is caused by a Python-related bug and has been tested and reported in several follow-up papers [1–2]. The auxiliary outputs only slow down training and do not provide any improvement. We thank other researchers for pointing it out!
 
 - The base model with only the classicfication loss still works and have decent performance. Check the nice benchmarking work by Weizhe on a broader test [2].
 
