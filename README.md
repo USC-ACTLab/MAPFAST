@@ -2,6 +2,34 @@
 
 This repository contains the official implementation for our paper "MAPFAST: A Deep Algorithm Selector for Multi Agent Path Finding using Shortest Path Embeddings"
 
+## Research Updates
+
+Some research updates and suggestions for my fellow researchers:
+
+- The models with addtional auxilary outputs **didn't work**. This has been tested and reported in multiple follow-up papers. It only makes the training slower and won't bring any improvements. 
+
+We thank for fixing the problem 
+
+- The based model with only the classicfication loss still works and have decent performance. Check the nice following work by Weizhe on a broader test.
+
+
+
+Should you still work on related topics? 
+
+- You definitely should if you are interested! The fundamental problem is still there, there is no dominating optimal MAPF algorithms. Acutally for most of the search problems, there is no dominating search algorithms. There is no free lunch for improvements.
+
+- But don't just simply swap in different deep learning models, cause it is boring and the MAPF community won't benefit much. 
+
+- Think about how to properly encode MAPF instances. Think about how to use totally different approaches, not just image classifiers. Think about what makes instances hard to solve and how you can effectively identify them. 
+
+- Apart from the papers mentioned above. Check the following paper to get more insights and ideas on empirical hardness of MAPF:
+
+
+Good luck!
+
+
+
+
 ## After cloning the repo
 ```
 cd MAPFAST
