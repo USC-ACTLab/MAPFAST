@@ -1,5 +1,6 @@
 #!/bin/bash
-# Train, test, analyse and plot MAPFAST on one dataset (graphs in logs/<jobid>_plots/)
+# Train, test, analyse and plot MAPFAST on one dataset (log logs/<job name>_<jobid>.out, graphs in logs/<job name>_<jobid>_plots/)
+# The job name (-J) defaults to MAPFAST_training, e.g. sbatch -J MAPFASTv2 train.sh datasets/nine_solvers
 # usage: sbatch train.sh [dataset], e.g. sbatch train.sh datasets/nine_solvers
 #
 # The first job creates the virtual environment pytorch.venvsource/ (or repairs it, if its torch
@@ -13,8 +14,8 @@
 #SBATCH --time=3:00:00
 #SBATCH --mem=16G
 #SBATCH -J MAPFAST_training
-#SBATCH -o logs/%j.out
-#SBATCH -e logs/%j.err
+#SBATCH -o logs/%x_%j.out
+#SBATCH -e logs/%x_%j.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=milan_capoor@brown.edu
 
@@ -51,4 +52,4 @@ python -u main.py -T 0 -C "$DATASET"
 echo "Running Analysis..."
 python -u analysis.py -C "$DATASET"
 echo "Plotting..."
-python -u plots.py -C "$DATASET" --log "logs/$SLURM_JOB_ID.out"
+python -u plots.py -C "$DATASET" --log "logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out"

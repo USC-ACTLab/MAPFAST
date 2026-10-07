@@ -140,10 +140,12 @@ def render_scenario(task):
 		written += 1
 	return written
 
-def convert(yaml_details, agent_details, map_details, solvers=None):
+def convert(yaml_details, agent_details, map_details, solvers=None, solved_by=None):
 	'''
 	Converts the benchmark's records to MAPFAST's conventions, keeping only `solvers` (default: all)
 	and the instances that one of them solved, and relabelling SOLVER as the fastest of them.
+	With `solved_by`, only the instances that one of those solvers solved are kept, e.g. the solvers of
+	another portfolio, so that two datasets built from the same benchmark hold the same instances.
 
 	Returns: Tuple of the converted yaml_details, agent_details and map_details
 	'''
@@ -152,7 +154,7 @@ def convert(yaml_details, agent_details, map_details, solvers=None):
 	for instance, record in yaml_details.items():
 		times = {s: record[s] for s in solvers}
 		solved = {s: t for s, t in times.items() if t != -1}
-		if not solved:
+		if not solved or (solved_by and all(record[s] == -1 for s in solved_by)):
 			continue
 		yd[instance] = {'SOLVER': min(solved, key=solved.get), **times}
 		ad[instance] = {
@@ -163,7 +165,7 @@ def convert(yaml_details, agent_details, map_details, solvers=None):
 		md[instance] = {**map_details[instance], 'mp_dim': [height, width]}
 	return yd, ad, md
 
-def make_config(name, mapping, timeout):
+def make_config(name, mapping, timeout, augmentation=1):
 	'''
 	Returns: Json object with the Training, Testing and Analysis sections for this dataset, with paths relative to its folder
 	'''
@@ -171,7 +173,7 @@ def make_config(name, mapping, timeout):
 	common = {
 		**files,
 		'test_details': '',
-		'augmentation': 1,
+		'augmentation': augmentation,
 		'batch_size': 16,
 		'input_location': 'images/',
 		'output_units': {'cl': 1, 'fin': 0, 'pair': 0},
@@ -191,7 +193,11 @@ if __name__ == '__main__':
 	parser.add_argument('--benchmarks', required=True, help='MAPF Benchmarking benchmarks/ directory, with <map>/<map>.map for every map')
 	parser.add_argument('--name', default=None, help='Name of the dataset (default: the base name of prefix)')
 	parser.add_argument('--solvers', nargs='+', default=None, help='Solver portfolio (default: every solver in the files)')
+	parser.add_argument('--solved-by', nargs='+', default=None,
+						help='Keep only the instances that one of these solvers solved, e.g. the --solvers of another dataset built from the same benchmark, so that both hold the same instances')
 	parser.add_argument('--timeout', type=float, default=60, help='Time limit of the benchmark runs in seconds, charged to unsolved runs by analysis.py (default 60, as in benchmark.sh)')
+	parser.add_argument('--augmentation', type=int, default=1, choices=range(1, 7),
+						help='Copies of each training instance, flipped and rotated (see get_transition in utils.py); 6 uses every transition (default 1: none)')
 	parser.add_argument('--jobs', type=int, default=os.cpu_count(), help='Scenario files to render in parallel (default: all CPUs)')
 	args = parser.parse_args()
 
@@ -201,7 +207,7 @@ if __name__ == '__main__':
 	for d in DETAILS:
 		with open('{}_{}.json'.format(prefix, d)) as f:
 			details.append(json.load(f))
-	yaml_details, agent_details, map_details = convert(*details, args.solvers)
+	yaml_details, agent_details, map_details = convert(*details, args.solvers, args.solved_by)
 	solvers = [s for s in next(iter(yaml_details.values())) if s != 'SOLVER']
 	mapping = {s: i for i, s in enumerate(solvers)}
 
@@ -212,7 +218,7 @@ if __name__ == '__main__':
 		with open(os.path.join(dataset_dir, d + '.json'), 'w') as f:
 			json.dump(records, f)
 	with open(os.path.join(dataset_dir, 'config.json'), 'w') as f:
-		json.dump(make_config(name, mapping, args.timeout), f, indent='\t')
+		json.dump(make_config(name, mapping, args.timeout, args.augmentation), f, indent='\t')
 	print('{} of {} instances solved by {}'.format(len(yaml_details), len(details[0]), ', '.join(solvers)), flush=True)
 
 	benchmarks = os.path.expanduser(args.benchmarks)

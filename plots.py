@@ -7,14 +7,14 @@ Graphs of a MAPFAST training run and of its test predictions:
 	confusion.png			predicted against actual fastest solver
 	accuracy_by_agents.png	accuracy of the model and of the best solver against the number of agents
 
-	python plots.py -C datasets/nine_solvers --log logs/1234.out
+	python plots.py -C datasets/nine_solvers --log logs/MAPFASTv2_1234.out
 
 With --run, several trained models are compared on the same graphs instead (see plot_comparison), all
 evaluated under the same time limit (see apply_time_limit):
 
-	python plots.py --run MAPFAST datasets/three_solvers logs/1234.out --run MAPFASTv2 datasets/nine_solvers logs/1235.out -o logs/compare_1236
+	python plots.py --run MAPFAST datasets/three_solvers logs/MAPFAST_1234.out --run MAPFASTv2 datasets/nine_solvers logs/MAPFASTv2_1235.out -o logs/MAPFAST_vs_MAPFASTv2_1236
 
-The graphs are written next to the log, to logs/<jobid>_plots/ for --log logs/<jobid>.out
+The graphs are written next to the log, to logs/<name>_<jobid>_plots/ for --log logs/<name>_<jobid>.out
 (logs/<dataset>_plots/ without --log). Without --log, loss.png is skipped; without the
 prediction_output of the config (written by main.py -T 0), only loss.png is drawn.
 The accuracy, coverage and runtime are computed as in analysis.py.
@@ -396,16 +396,16 @@ def save(fig, out):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-C', '--config', default='datasets/three_solvers', help='Give the dataset folder, or the location of its config.json file')
-	parser.add_argument('--log', default=None, help='Slurm log of the training run (logs/<jobid>.out), for the loss graph')
+	parser.add_argument('--log', default=None, help='Slurm log of the training run (logs/<name>_<jobid>.out), for the loss graph')
 	parser.add_argument('--run', nargs=3, action='append', metavar=('NAME', 'DATASET', 'LOG'),
 						help='Compare several models on the same graphs instead: a name, its dataset folder and its training log. Repeat for each model.')
 	parser.add_argument('--timeout', type=float, default=None,
 						help='With --run: time limit in seconds to evaluate every model under (default: the smallest timeout of the runs\' configs)')
-	parser.add_argument('-o', '--output', default=None, help='Folder to write the graphs to (default: logs/<jobid>_plots for --log logs/<jobid>.out, else logs/<dataset>_plots; logs/compare_plots with --run)')
+	parser.add_argument('-o', '--output', default=None, help='Folder to write the graphs to (default: logs/<name>_<jobid>_plots for --log logs/<name>_<jobid>.out, else logs/<dataset>_plots; logs/<name>_vs_<name>_plots with --run)')
 	args = parser.parse_args()
 
 	if args.run:
-		output = args.output or os.path.join('logs', 'compare_plots')
+		output = args.output or os.path.join('logs', '_vs_'.join(name for name, _, _ in args.run) + '_plots')
 		os.makedirs(output, exist_ok=True)
 		colors = [SERIES_1, SERIES_2]
 		if len(args.run) > len(colors):

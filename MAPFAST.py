@@ -64,20 +64,31 @@ class MAPFAST:
 		'''
 		Function to get the split for training, testing and validation data. When test_details is provided, the function performs 90:10 split on the remaining data for train and valid list. Else, it performs 80:10:10 for train, valid and test data.
 
+		The split is made over the instances, not their augmented copies, so that no copy of a test or validation
+		instance is trained on: the training list holds every augmented copy of its instances, and the validation
+		and test lists only the original (transition 0) of theirs. With augmentation 1 the split is the same as
+		splitting the copies.
+
 		Returns: Tuple of three lists
 				1. File names for training data
 				2. File names for test data
 				3. File names for validation data
 		'''
-		file_list = set(self.files.keys())
+		file_list = set(self.yaml_details.keys())
+
+		def copies(instances):
+			return [i + '_' + str(_) for i in instances for _ in range(self.augmentation)]
+
+		def originals(instances):
+			return [i + '_0' for i in instances]
 
 		if self.test_details:
-			m = list(file_list - set(self.test_details.keys()))
+			test_list = list(self.test_details.keys())
+			m = list(file_list - set(self.files[f] for f in test_list))
 			random.shuffle(m)
 			train_size = (1 + (len(m) // 100)) * 90
-			train_list = m[:train_size]
-			valid_list = m[train_size:]
-			test_list = list(self.test_details.keys())
+			train_list = copies(m[:train_size])
+			valid_list = originals(m[train_size:])
 		else:
 			file_list = list(file_list)
 			file_list.sort()
@@ -85,10 +96,13 @@ class MAPFAST:
 			train_size = (1 + (len(file_list) // 100)) * 80
 			valid_size = (len(file_list) - train_size) // 2
 			
-			train_list = file_list[:train_size]
-			valid_list = file_list[train_size:train_size+valid_size]
-			test_list = file_list[train_size+valid_size:]
+			train_list = copies(file_list[:train_size])
+			valid_list = originals(file_list[train_size:train_size+valid_size])
+			test_list = originals(file_list[train_size+valid_size:])
 
+		if self.augmentation > 1:
+			# the copies of an instance would otherwise follow each other in every batch
+			random.shuffle(train_list)
 		return train_list, test_list, valid_list
 
 	def compute_y2(self, file_name):

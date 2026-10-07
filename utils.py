@@ -299,38 +299,39 @@ def get_transition(image_data, start, goal, map_details, transition):
 			2. List of start locations after transition
 			3. List of goal locations after transition
 	'''
+	# the image is channels first, (3, height, width), as read by torchvision: rows are axis 1, columns axis 2
 	if transition == 0:
 		#No transition
 		return image_data, start, goal
+	image_data = np.asarray(image_data)
 	if transition == 1:
 		#Horizantal flip
 		new_start = horizontal_flip(start, map_details)
 		new_goal = horizontal_flip(goal, map_details)
-		new_image_data = np.flipud(image_data)
+		new_image_data = np.flip(image_data, axis=1)
 		return new_image_data, new_start, new_goal
 	if transition == 2:
 		#Vertical flip
 		new_start = vertical_flip(start, map_details)
 		new_goal = vertical_flip(goal, map_details)
-		new_image_data = np.fliplr(image_data)
+		new_image_data = np.flip(image_data, axis=2)
 		return new_image_data, new_start, new_goal
 	if transition == 3:
 		#90 degree rotation
 		new_start = ninety_degree_rotation(start, map_details)
 		new_goal = ninety_degree_rotation(goal, map_details)
-		new_image_data = np.rot90(image_data, axes=(1,0))
+		new_image_data = np.rot90(image_data, axes=(2, 1))
 		return new_image_data, new_start, new_goal
 	if transition == 4:
 		#180 degree rotation
 		new_start = one_eighty_degree_rotation(start, map_details)
 		new_goal = one_eighty_degree_rotation(goal, map_details)
-		image_data = np.rot90(image_data)
-		new_image_data = np.rot90(image_data)
+		new_image_data = np.rot90(image_data, 2, axes=(1, 2))
 		return new_image_data, new_start, new_goal
 	if transition == 5:
 		#270 degree rotation
 		new_start = two_seventy_degree_rotation(start, map_details)
 		new_goal = two_seventy_degree_rotation(goal, map_details)
-		new_image_data = np.rot90(image_data)
+		new_image_data = np.rot90(image_data, axes=(1, 2))
 		return new_image_data, new_start, new_goal
 	return image_data, start, goal
