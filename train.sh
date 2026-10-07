@@ -1,5 +1,5 @@
 #!/bin/bash
-# Train, test and analyse MAPFAST on one dataset
+# Train, test, analyse and plot MAPFAST on one dataset (graphs in <dataset>/plots/)
 # usage: sbatch train.sh [dataset], e.g. sbatch train.sh datasets/nine_solvers
 #
 # The first job creates the virtual environment pytorch.venvsource/ (or repairs it, if its torch
@@ -36,6 +36,8 @@ if ! [ -f "$VENV/bin/activate" ] || ! "$VENV/bin/python" -c "import torch, torch
 	"$VENV/bin/pip" install --no-cache-dir torch torchvision --index-url "$TORCH_INDEX"
 	"$VENV/bin/pip" install --no-cache-dir numpy pillow
 fi
+# for plots.py; installed on its own so that an older venv without it is not rebuilt
+"$VENV/bin/python" -c "import matplotlib" 2>/dev/null || "$VENV/bin/pip" install --no-cache-dir matplotlib
 
 source "$VENV/bin/activate"
 
@@ -48,3 +50,5 @@ echo "Testing model..."
 python -u main.py -T 0 -C "$DATASET"
 echo "Running Analysis..."
 python -u analysis.py -C "$DATASET"
+echo "Plotting..."
+python -u plots.py -C "$DATASET" --log "logs/$SLURM_JOB_ID.out"
