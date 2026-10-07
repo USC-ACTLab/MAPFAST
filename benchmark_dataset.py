@@ -191,7 +191,7 @@ if __name__ == '__main__':
 	parser.add_argument('--benchmarks', required=True, help='MAPF Benchmarking benchmarks/ directory, with <map>/<map>.map for every map')
 	parser.add_argument('--name', default=None, help='Name of the dataset (default: the base name of prefix)')
 	parser.add_argument('--solvers', nargs='+', default=None, help='Solver portfolio (default: every solver in the files)')
-	parser.add_argument('--timeout', type=float, default=30, help='Time limit of the benchmark runs in seconds, charged to unsolved runs by analysis.py (default 30, as in benchmark.sh)')
+	parser.add_argument('--timeout', type=float, default=60, help='Time limit of the benchmark runs in seconds, charged to unsolved runs by analysis.py (default 60, as in benchmark.sh)')
 	parser.add_argument('--jobs', type=int, default=os.cpu_count(), help='Scenario files to render in parallel (default: all CPUs)')
 	args = parser.parse_args()
 

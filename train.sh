@@ -1,5 +1,5 @@
 #!/bin/bash
-# Train, test, analyse and plot MAPFAST on one dataset (graphs in <dataset>/plots/)
+# Train, test, analyse and plot MAPFAST on one dataset (graphs in logs/<jobid>_plots/)
 # usage: sbatch train.sh [dataset], e.g. sbatch train.sh datasets/nine_solvers
 #
 # The first job creates the virtual environment pytorch.venvsource/ (or repairs it, if its torch

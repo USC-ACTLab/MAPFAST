@@ -1,0 +1,53 @@
+Testing model...
+Current device: cuda:0
+Running Analysis...
+BCP:
+	fast: 
+		count: 1273 
+		percentage: 0.5124798711755234
+	solved: 
+		count: 2148 
+		percentage: 0.8647342995169082
+CBS:
+	fast: 
+		count: 471 
+		percentage: 0.18961352657004832
+	solved: 
+		count: 1036 
+		percentage: 0.4170692431561997
+CBSH:
+	fast: 
+		count: 735 
+		percentage: 0.29589371980676327
+	solved: 
+		count: 2264 
+		percentage: 0.9114331723027376
+SAT:
+	fast: 
+		count: 5 
+		percentage: 0.002012882447665056
+	solved: 
+		count: 959 
+		percentage: 0.3860708534621578
+Our Model:
+	fast: 
+		count: 1760 
+		percentage: 0.7085346215780999
+	solved: 
+		count: 2345 
+		percentage: 0.9440418679549114
+
+Total Runtime:
+BCP: 148724.31356339983
+CBS: 461923.8644501102
+CBSH: 125267.23604947995
+SAT: 509336.07386903977
+Our Model: 90887.14897966993
+Optimal: 53226.55811520001
+
+Custom Score:
+BCP: 793.1704373532223
+CBS: 192.6838383498513
+CBSH: 604.4733396054454
+SAT: 66.39166813315819
+Our Model: 827.280716558324

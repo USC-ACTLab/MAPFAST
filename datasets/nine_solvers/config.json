@@ -72,6 +72,6 @@
 			"reloc": 7,
 			"bcp2": 8
 		},
-		"timeout": 30
+		"timeout": 60
 	}
 }

@@ -9,9 +9,6 @@ pytorch.venvsource/
 .venv/
 venv/
 
-# Slurm job logs (keep the folder: sbatch fails to start a job whose log folder is missing)
-logs/*
-!logs/.gitkeep
 
 # Training and testing outputs, written into each datasets/<name>/
 model_weights/

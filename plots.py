@@ -9,7 +9,13 @@ Graphs of a MAPFAST training run and of its test predictions:
 
 	python plots.py -C datasets/nine_solvers --log logs/1234.out
 
-Each graph is written to <dataset>/plots/. Without --log, loss.png is skipped; without the
+With --run, several trained models are compared on the same graphs instead (see plot_comparison), all
+evaluated under the same time limit (see apply_time_limit):
+
+	python plots.py --run MAPFAST datasets/three_solvers logs/1234.out --run MAPFASTv2 datasets/nine_solvers logs/1235.out -o logs/compare_1236
+
+The graphs are written next to the log, to logs/<jobid>_plots/ for --log logs/<jobid>.out
+(logs/<dataset>_plots/ without --log). Without --log, loss.png is skipped; without the
 prediction_output of the config (written by main.py -T 0), only loss.png is drawn.
 The accuracy, coverage and runtime are computed as in analysis.py.
 '''
@@ -216,31 +222,170 @@ def plot_confusion(keys, picks, mapping, out):
 	ax.set_title('Predicted against actual fastest solver')
 	save(fig, out)
 
+# agent-count ranges, so that datasets with different agent counts share one x axis
+AGENT_BINS = [(1, 10), (11, 20), (21, 50), (51, 100), (101, 200), (201, None)]
+
+def agent_bin_label(low, high):
+	return '>{}'.format(low - 1) if high is None else '\u2264{}'.format(high) if low == 1 else '{}\u2013{}'.format(low, high)
+
+def accuracy_by_agents(yaml_details, map_details, keys, chosen):
+	'''
+	Returns: List of (bin index, accuracy, number of instances) for every agent-count range of AGENT_BINS
+	with test instances, where `chosen` is the solver picked for each of `keys`
+	'''
+	agents = np.array([map_details[k]['no_agents'] for k in keys])
+	correct = np.array([yaml_details[k]['SOLVER'] == s for k, s in zip(keys, chosen)])
+	rows = []
+	for i, (low, high) in enumerate(AGENT_BINS):
+		inside = (agents >= low) & (agents <= (high if high is not None else agents.max()))
+		if inside.any():
+			rows.append((i, correct[inside].mean(), int(inside.sum())))
+	return rows
+
+def plot_accuracy_lines(lines, title, out):
+	'''
+	Line chart of accuracy against the agent-count ranges of AGENT_BINS, one line per (label, color, rows)
+	of `lines`, with rows as returned by accuracy_by_agents.
+	'''
+	fig, ax = plt.subplots(figsize=(8, 4.5))
+	used = sorted(set(r[0] for _, _, rows in lines for r in rows))
+	for label, color, rows in lines:
+		ax.plot([r[0] for r in rows], [r[1] for r in rows], 'o-', color=color, markersize=8,
+				markeredgecolor=SURFACE, markeredgewidth=2, label=label)
+	ax.set_xticks(used)
+	ax.set_xticklabels([agent_bin_label(*AGENT_BINS[i]) for i in used])
+	ax.set_ylim(0, 1.05)
+	ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
+	ax.set_xlabel('Agents')
+	ax.set_ylabel('Accuracy (picks the fastest)')
+	ax.set_title(title)
+	ax.legend(loc='lower left')
+	save(fig, out)
+
 def plot_accuracy_by_agents(yaml_details, map_details, keys, picks, mapping, out):
 	'''
 	Line chart of the accuracy of the model and of the single solver with the best overall accuracy,
 	against the number of agents of the test instances.
 	'''
-	agents = np.array([map_details[k]['no_agents'] for k in keys])
 	best = max(mapping, key=lambda s: sum(yaml_details[k]['SOLVER'] == s for k in keys))
-	counts = sorted(set(agents))
+	plot_accuracy_lines([
+		('Model', SERIES_1, accuracy_by_agents(yaml_details, map_details, keys, picks['Model'])),
+		('Always {} (best single solver)'.format(best), SERIES_2, accuracy_by_agents(yaml_details, map_details, keys, picks[best])),
+	], 'Accuracy by number of agents', out)
+
+def load_run(config_path):
+	'''
+	Loads the dataset and test predictions of a dataset folder (or its config.json).
+
+	Returns: Json object with yaml_details, map_details, mapping, timeout, keys, picks and result
+	(see selections and scores), or None if main.py -T 0 has not written the predictions yet
+	'''
+	from utils import read_config
+	config = read_config(config_path)['Analysis']
+	if not os.path.exists(config['prediction_output']):
+		print('no predictions at', config['prediction_output'], '- run main.py -T 0 first')
+		return None
+	run = {'mapping': config['mapping'], 'timeout': config.get('timeout', 300)}
+	for name in ('yaml_details', 'map_details', 'prediction_output'):
+		with open(config[name]) as f:
+			run[name] = json.load(f)
+	run['keys'], run['picks'] = selections(run['yaml_details'], run['prediction_output'], run['mapping'])
+	run['result'] = scores(run['yaml_details'], run['keys'], run['picks'], run['timeout'])
+	return run
+
+def apply_time_limit(run, limit):
+	'''
+	Evaluates a run as if its benchmark had used a time limit of `limit` seconds: runs slower than that
+	count as unsolved (costing `limit` seconds), and test instances that no solver solves within it are
+	left out, as MAPF Benchmarking leaves out instances that no solver solved.
+
+	Returns: Copy of run (see load_run) with yaml_details, keys, picks, result and timeout updated,
+	and 'dropped' the number of test instances left out
+	'''
+	yaml_details = {}
+	for key, record in run['yaml_details'].items():
+		yaml_details[key] = {s: (-1 if s != 'SOLVER' and t > limit else t) for s, t in record.items()}
+	keep = [i for i, k in enumerate(run['keys']) if yaml_details[k][yaml_details[k]['SOLVER']] != -1]
+	keys = [run['keys'][i] for i in keep]
+	picks = {name: [chosen[i] for i in keep] for name, chosen in run['picks'].items()}
+	return {**run, 'yaml_details': yaml_details, 'keys': keys, 'picks': picks, 'timeout': limit,
+			'result': scores(yaml_details, keys, picks, limit), 'dropped': len(run['keys']) - len(keys)}
+
+def plot_comparison(runs, output, limit=None):
+	'''
+	Graphs that put several trained models on the same axes, for `runs` a list of (name, color, run, log),
+	with run as returned by load_run (or None) and log as returned by read_training_log (or None):
+
+		compare_loss.png			mean training loss of each epoch
+		compare_accuracy.png		accuracy and coverage of each model on its own test set
+		compare_runtime.png		total runtime of each model relative to its oracle and to its best single solver
+		compare_accuracy_by_agents.png	accuracy of each model against the number of agents
+
+	The models may have different solver portfolios and test sets, so runtimes are compared as ratios.
+	`limit` is the common time limit the runs were evaluated under (see apply_time_limit), shown in the titles.
+	'''
+	under = '' if limit is None else ' ({:g} s time limit for both)'.format(limit)
+	logged = [(name, color, log) for name, color, _, log in runs if log and log['epochs']]
+	if logged:
+		fig, ax = plt.subplots(figsize=(8, 4.5))
+		for name, color, log in logged:
+			epochs = np.array(log['epochs'])
+			x = np.arange(len(epochs))
+			ax.plot(x, epochs[:, 1], 'o-', color=color, markersize=8, markeredgecolor=SURFACE, markeredgewidth=2, label=name)
+			ax.annotate('{:.3f}'.format(epochs[-1, 1]), (x[-1], epochs[-1, 1]), xytext=(6, 6), textcoords='offset points', color=TEXT_2)
+		ax.set_xlabel('Epoch')
+		ax.set_ylabel('Mean training loss')
+		ax.set_ylim(bottom=0)
+		ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
+		ax.set_title('Training loss')
+		ax.legend(loc='upper right')
+		save(fig, os.path.join(output, 'compare_loss.png'))
+
+	tested = [(name, color, run) for name, color, run, _ in runs if run]
+	if not tested:
+		return
+
+	metrics = ['Accuracy\n(picks the fastest)', 'Coverage\n(picks a solver that solves it)']
 	fig, ax = plt.subplots(figsize=(8, 4.5))
-	for name, color in (('Model', SERIES_1), (best, SERIES_2)):
-		correct = np.array([yaml_details[k]['SOLVER'] == s for k, s in zip(keys, picks[name])])
-		accuracy = [correct[agents == n].mean() for n in counts]
-		label = 'Model' if name == 'Model' else 'Always {} (best single solver)'.format(name)
-		ax.plot(counts, accuracy, 'o-', color=color, markersize=8, markeredgecolor=SURFACE, markeredgewidth=2, label=label)
-	ax.set_xscale('log')
-	ax.set_xticks(counts)
-	ax.set_xticklabels(['{}\n(n={})'.format(n, (agents == n).sum()) for n in counts])
-	ax.minorticks_off()
-	ax.set_ylim(0, 1.05)
+	width = 0.8 / len(tested)
+	for i, (name, color, run) in enumerate(tested):
+		values = run['result']['Model'][:2]
+		x = np.arange(len(metrics)) + (i - (len(tested) - 1) / 2) * width
+		ax.bar(x, values, width - 0.04, color=color, label=name)
+		for xi, v in zip(x, values):
+			ax.annotate('{:.0%}'.format(v), (xi, v), xytext=(0, 4), textcoords='offset points', ha='center', color=TEXT)
+	ax.set_xticks(range(len(metrics)))
+	ax.set_xticklabels(metrics)
+	ax.set_ylim(0, 1.1)
 	ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
-	ax.set_xlabel('Agents (test instances)')
-	ax.set_ylabel('Accuracy (picks the fastest)')
-	ax.set_title('Accuracy by number of agents')
-	ax.legend(loc='lower left')
-	save(fig, out)
+	ax.grid(axis='x', visible=False)
+	ax.set_title('Accuracy and coverage on each model\'s test set' + under)
+	ax.legend(loc='upper left')
+	save(fig, os.path.join(output, 'compare_accuracy.png'))
+
+	metrics = ['Relative to the oracle\n(always the fastest solver)', 'Relative to the best single solver']
+	fig, ax = plt.subplots(figsize=(8, 4.5))
+	for i, (name, color, run) in enumerate(tested):
+		result = run['result']
+		model = result['Model'][2]
+		best = min(run['mapping'], key=lambda s: result[s][2])
+		values = [model / result['Oracle'][2], model / result[best][2]]
+		x = np.arange(len(metrics)) + (i - (len(tested) - 1) / 2) * width
+		ax.bar(x, values, width - 0.04, color=color, label='{} (best single solver: {})'.format(name, best))
+		for xi, v in zip(x, values):
+			ax.annotate('{:.2f}\u00d7'.format(v), (xi, v), xytext=(0, 4), textcoords='offset points', ha='center', color=TEXT)
+	ax.axhline(1, color=TEXT_2, linewidth=1, linestyle='--')
+	ax.set_xticks(range(len(metrics)))
+	ax.set_xticklabels(metrics)
+	ax.set_ylim(0, ax.get_ylim()[1] * 1.1)
+	ax.grid(axis='x', visible=False)
+	ax.set_ylabel('Model\'s total runtime \u00f7 reference')
+	ax.set_title('Total runtime on each model\'s test set, lower is better' + under)
+	ax.legend(loc='upper right')
+	save(fig, os.path.join(output, 'compare_runtime.png'))
+
+	plot_accuracy_lines([(name, color, accuracy_by_agents(run['yaml_details'], run['map_details'], run['keys'], run['picks']['Model']))
+						 for name, color, run in tested], 'Accuracy by number of agents' + under, os.path.join(output, 'compare_accuracy_by_agents.png'))
 
 def save(fig, out):
 	fig.tight_layout()
@@ -249,17 +394,45 @@ def save(fig, out):
 	print('wrote', out)
 
 if __name__ == '__main__':
-	from utils import read_config
-
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-C', '--config', default='datasets/three_solvers', help='Give the dataset folder, or the location of its config.json file')
 	parser.add_argument('--log', default=None, help='Slurm log of the training run (logs/<jobid>.out), for the loss graph')
-	parser.add_argument('-o', '--output', default=None, help='Folder to write the graphs to (default: <dataset>/plots)')
+	parser.add_argument('--run', nargs=3, action='append', metavar=('NAME', 'DATASET', 'LOG'),
+						help='Compare several models on the same graphs instead: a name, its dataset folder and its training log. Repeat for each model.')
+	parser.add_argument('--timeout', type=float, default=None,
+						help='With --run: time limit in seconds to evaluate every model under (default: the smallest timeout of the runs\' configs)')
+	parser.add_argument('-o', '--output', default=None, help='Folder to write the graphs to (default: logs/<jobid>_plots for --log logs/<jobid>.out, else logs/<dataset>_plots; logs/compare_plots with --run)')
 	args = parser.parse_args()
 
-	config = read_config(args.config)['Analysis']
-	dataset_dir = args.config if os.path.isdir(args.config) else os.path.dirname(args.config)
-	output = args.output or os.path.join(dataset_dir, 'plots')
+	if args.run:
+		output = args.output or os.path.join('logs', 'compare_plots')
+		os.makedirs(output, exist_ok=True)
+		colors = [SERIES_1, SERIES_2]
+		if len(args.run) > len(colors):
+			raise SystemExit('at most {} runs can be compared'.format(len(colors)))
+		runs = []
+		for (name, dataset, log_file), color in zip(args.run, colors):
+			log = read_training_log(log_file) if os.path.exists(log_file) else None
+			runs.append((name, color, load_run(dataset), log))
+		# evaluate every model under the same time limit: the strictest of their benchmarks
+		tested = [r[2] for r in runs if r[2]]
+		limit = args.timeout or (min(r['timeout'] for r in tested) if tested else None)
+		for i, (name, color, run, log) in enumerate(runs):
+			if run:
+				run = apply_time_limit(run, limit)
+				runs[i] = (name, color, run, log)
+				print('{}: {} test instances under a {:g} s time limit ({} left out: no solver solves them within it)'.format(
+					name, len(run['keys']), limit, run['dropped']))
+		plot_comparison(runs, output, limit)
+		sys.exit(0)
+
+	if args.output:
+		output = args.output
+	elif args.log:
+		output = os.path.splitext(args.log)[0] + '_plots'
+	else:
+		dataset_dir = args.config if os.path.isdir(args.config) else os.path.dirname(args.config)
+		output = os.path.join('logs', os.path.basename(os.path.normpath(dataset_dir)) + '_plots')
 	os.makedirs(output, exist_ok=True)
 
 	if args.log:
@@ -269,21 +442,11 @@ if __name__ == '__main__':
 		else:
 			print('no training progress lines in', args.log)
 
-	if not os.path.exists(config['prediction_output']):
-		print('no predictions at', config['prediction_output'], '- run main.py -T 0 first')
+	run = load_run(args.config)
+	if run is None:
 		sys.exit(0)
-	with open(config['yaml_details']) as f:
-		yaml_details = json.load(f)
-	with open(config['map_details']) as f:
-		map_details = json.load(f)
-	with open(config['prediction_output']) as f:
-		predictions = json.load(f)
-	mapping = config['mapping']
-	timeout = config.get('timeout', 300)
-
-	keys, picks = selections(yaml_details, predictions, mapping)
-	result = scores(yaml_details, keys, picks, timeout)
+	keys, picks, result, mapping, timeout = run['keys'], run['picks'], run['result'], run['mapping'], run['timeout']
 	plot_accuracy_coverage(result, os.path.join(output, 'accuracy_coverage.png'))
 	plot_runtime(result, timeout, os.path.join(output, 'runtime.png'))
 	plot_confusion(keys, picks, mapping, os.path.join(output, 'confusion.png'))
-	plot_accuracy_by_agents(yaml_details, map_details, keys, picks, mapping, os.path.join(output, 'accuracy_by_agents.png'))
+	plot_accuracy_by_agents(run['yaml_details'], run['map_details'], keys, picks, mapping, os.path.join(output, 'accuracy_by_agents.png'))

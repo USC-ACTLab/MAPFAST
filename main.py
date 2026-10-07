@@ -73,7 +73,13 @@ if __name__ == '__main__':
 
 	config = read_config(args.config)
 
+	# the same seed for every dataset: the split, the weight initialisation and the batch order are reproducible
 	random.seed(42)
+	np.random.seed(42)
+	torch.manual_seed(42)
+	torch.cuda.manual_seed_all(42)
+	torch.backends.cudnn.deterministic = True
+	torch.backends.cudnn.benchmark = False
 
 	if int(args.type):
 		if 'Training' not in config:

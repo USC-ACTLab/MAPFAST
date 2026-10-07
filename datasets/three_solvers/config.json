@@ -37,7 +37,7 @@
 			"pair": 0
 		},
 		"model_loc": "model_weights/",
-		"model_name": "model_sp_320_14_units_epoch_1.pth",
+		"model_name": "model_sp_320_14_units_epoch_9.pth",
 		"prediction_output": "y_pred_true_sp_320_14.json",
 		"mapping": {
 			"BCP": 0,
@@ -56,7 +56,8 @@
 			"CBS": 1,
 			"CBSH": 2,
 			"SAT": 3
-		}
+		},
+		"timeout": 300
 	},
 	"Visualize": {
 		"yaml_details": "yaml_details.json",
