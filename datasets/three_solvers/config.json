@@ -1,0 +1,84 @@
+{
+	"Training": {
+		"yaml_details": "yaml_details.json",
+		"agent_details": "agent_details.json",
+		"map_details": "map_details.json",
+		"test_details": "",
+		"augmentation": 1,
+		"batch_size": 16,
+		"epochs": 10,
+		"log_interval": 1000,
+		"input_location": "images/",
+		"output_units": {
+			"cl": 1,
+			"fin": 0,
+			"pair": 0
+		},
+		"model_loc": "model_weights/",
+		"model_name": "sp_320_14_units",
+		"mapping": {
+			"BCP": 0,
+			"CBS": 1,
+			"CBSH": 2,
+			"SAT": 3
+		}
+	},
+	"Testing": {
+		"yaml_details": "yaml_details.json",
+		"agent_details": "agent_details.json",
+		"map_details": "map_details.json",
+		"test_details": "",
+		"augmentation": 1,
+		"batch_size": 16,
+		"input_location": "images/",
+		"output_units": {
+			"cl": 1,
+			"fin": 0,
+			"pair": 0
+		},
+		"model_loc": "model_weights/",
+		"model_name": "model_sp_320_14_units_epoch_1.pth",
+		"prediction_output": "y_pred_true_sp_320_14.json",
+		"mapping": {
+			"BCP": 0,
+			"CBS": 1,
+			"CBSH": 2,
+			"SAT": 3
+		}
+	},
+	"Analysis": {
+		"yaml_details": "yaml_details.json",
+		"agent_details": "agent_details.json",
+		"map_details": "map_details.json",
+		"prediction_output": "y_pred_true_sp_320_14.json",
+		"mapping": {
+			"BCP": 0,
+			"CBS": 1,
+			"CBSH": 2,
+			"SAT": 3
+		}
+	},
+	"Visualize": {
+		"yaml_details": "yaml_details.json",
+		"agent_details": "agent_details.json",
+		"map_details": "map_details.json",
+		"test_details": "",
+		"augmentation": 1,
+		"input_location": "images/",
+		"output_units": {
+			"cl": 1,
+			"fin": 0,
+			"pair": 0
+		},
+		"render_map": 0,
+		"map_source": 0, 
+		"model_loc": "model_weights/",
+		"model_name": "model_sp_320_14_units_epoch_1.pth",
+		"mapping": {
+			"BCP": 0,
+			"CBS": 1,
+			"CBSH": 2,
+			"SAT": 3
+		}
+	}
+}

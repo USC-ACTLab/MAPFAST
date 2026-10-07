@@ -24,10 +24,9 @@ def train(device, config):
 	pair_units = out_units['pair']
 	model_loc = config['model_loc']
 	mapping = config['mapping']
-	is_image = config['is_image']
 	input_location = config['input_location']
 
-	mapfast = MAPFAST(device, yaml_details, agent_details, map_details, input_location, mapping, test_details, augmentation, is_image)
+	mapfast = MAPFAST(device, yaml_details, agent_details, map_details, input_location, mapping, test_details, augmentation)
 	train_list, test_list, valid_list = mapfast.get_train_valid_test_list()
 	print('\n\n---------------- Training started ----------------\n\n')
 	net = mapfast.train_model(train_list, valid_list, model_loc, model_name, batch_size, epochs, log_interval, cl_units, fin_pred_units, pair_units)
@@ -45,7 +44,6 @@ def test(device, config):
 
 	augmentation = config['augmentation']
 	batch_size = config['batch_size']
-	is_image = config['is_image']
 	input_location = config['input_location']
 	out_units = config['output_units']
 	model_name = config['model_name']
@@ -55,7 +53,7 @@ def test(device, config):
 	model_loc = config['model_loc']
 	mapping = config['mapping']
 
-	mapfast = MAPFAST(device, yaml_details, agent_details, map_details, input_location, mapping, test_details, augmentation, is_image)
+	mapfast = MAPFAST(device, yaml_details, agent_details, map_details, input_location, mapping, test_details, augmentation)
 
 	train_list, test_list, valid_list = mapfast.get_train_valid_test_list()
 
@@ -69,11 +67,13 @@ if __name__ == '__main__':
 	print('Current device:', device)
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-C', '--config', default='json_files/config.json', help='Give the location of config.json file')
+	parser.add_argument('-C', '--config', default='datasets/three_solvers', help='Give the dataset folder, or the location of its config.json file')
 	parser.add_argument('-T', '--type', default=1, help='Training => 1, Testing => 0')
 	args = parser.parse_args()
 
-	config = read_json(args.config)
+	config = read_config(args.config)
+
+	random.seed(42)
 
 	if int(args.type):
 		if 'Training' not in config:

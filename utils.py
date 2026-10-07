@@ -20,6 +20,25 @@ def read_json(file):
 		print(file, 'was not found!')
 		sys.exit(0)
 
+CONFIG_PATHS = ('yaml_details', 'agent_details', 'map_details', 'test_details', 'input_location', 'model_loc', 'prediction_output')
+
+def read_config(path):
+	'''
+	Reads a config.json, given its path or the dataset folder that contains it (e.g. datasets/nine_solvers).
+	The file and folder paths in it are relative to the folder of the config.json.
+
+	Returns: Json object of the config, with those paths joined to the folder of the config.json
+	'''
+	if os.path.isdir(path):
+		path = os.path.join(path, 'config.json')
+	config = read_json(path)
+	root = os.path.dirname(path)
+	for section in config.values():
+		for key in CONFIG_PATHS:
+			if section.get(key):
+				section[key] = os.path.join(root, section[key])
+	return config
+
 def get_inv_mapping(mapping):
 	'''
 	Given a Json object which stores name of solvers as key and a number a value, find the inverse mapping(number-solver)
