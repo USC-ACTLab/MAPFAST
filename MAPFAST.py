@@ -19,8 +19,6 @@ import torch.optim as optim
 from torchvision.io import read_image
 from torchvision import transforms
 
-random.seed(42)
-
 from utils import *
 
 class MAPFAST:
@@ -38,11 +36,10 @@ class MAPFAST:
 		Optional Arguments:
 			7. test_details -> Default value of None. It is a json object which contains names of files as keys. This is provided when different models have to be trained and tested with same data.
 			8. augmentation -> Default value of 1. Refer the get_transition function in utils.py for more details
-			9. is_image -> Default value of 1. When set to 0, the input can be given as numpy arrays.
 
 	Returns: None
 	'''
-	def __init__(self, device, yaml_details, agent_details, map_details, input_location, mapping, test_details=None, augmentation=1, is_image=1):
+	def __init__(self, device, yaml_details, agent_details, map_details, input_location, mapping, test_details=None, augmentation=1):
 		self.device = device
 		self.yaml_details = yaml_details
 		self.agent_details = agent_details
@@ -50,10 +47,11 @@ class MAPFAST:
 		self.input_location = input_location
 		self.test_details = test_details
 		self.augmentation = augmentation
-		self.is_image = is_image
 		
 		self.mapping = mapping
 		self.inv_mapping = get_inv_mapping(mapping)
+
+		self._model_cache = {}
 
 		file_list = list(yaml_details.keys())
 		self.files = {}
@@ -158,26 +156,19 @@ class MAPFAST:
 
 			for _ in next_batch:
 				kk = self.files[_]
-				if self.is_image:
-					# img = img_to_array(load_img(self.input_location + kk[:-4] + 'png', target_size=(320, 320)))
-					#img = img_to_array(load_img(self.input_location + kk[:-4] + 'png').resize((320, 320)))
-					img = read_image(self.input_location + kk[:-4] + 'png')
-					img_transforms = torch.nn.Sequential(
-						transforms.Resize([320, 320])
-					)
-					img = img_transforms(img)
+				# img = img_to_array(load_img(self.input_location + kk[:-4] + 'png', target_size=(320, 320)))
+				#img = img_to_array(load_img(self.input_location + kk[:-4] + 'png').resize((320, 320)))
+				img = read_image(self.input_location + kk[:-4] + 'png')
+				img_transforms = torch.nn.Sequential(
+					transforms.Resize([320, 320])
+				)
+				img = img_transforms(img)
 
-					start = self.agent_details[kk]['starts']
-					goal = self.agent_details[kk]['goals']
-					new_image, new_start, new_goal = get_transition(img, start, goal, self.map_details[kk], int(_.split('_')[-1]))
-					new_image = np.transpose(new_image, (2, 0, 1))
-				else:
-					with np.load(inp_loc + kk[:-4] + 'npz') as fi:
-						img = fi.f.arr_0
-					img.resize((3, 320, 320))
-					start = self.agent_details[kk]['starts']
-					goal = self.agent_details[kk]['goals']
-					new_image, new_start, new_goal = get_transition(img, start, goal, self.map_details[kk], int(_.split('_')[-1]))
+				start = self.agent_details[kk]['starts']
+				goal = self.agent_details[kk]['goals']
+				new_image, new_start, new_goal = get_transition(img, start, goal, self.map_details[kk], int(_.split('_')[-1]))
+				#new_image = np.transpose(new_image, (2, 0, 1))
+				new_image = np.asarray(new_image)
 
 				X.append(new_image)
 
@@ -224,7 +215,7 @@ class MAPFAST:
 		if model_loc:
 			create_model_weights(model_loc)
 		
-		net = InceptionClassificationNet(cl_units, fin_pred_units, pair_units)
+		net = InceptionClassificationNet(cl_units, fin_pred_units, pair_units, solvers=len(self.mapping))
 		net.to(self.device)
 		
 		if cl_units:
@@ -278,6 +269,10 @@ class MAPFAST:
 				loss.backward()
 				optimizer.step()
 				run_loss += loss.item()
+
+				if j % 50 == 0:
+					print('Epoch {} | Step {}/{} | avg loss {:.4f} | batch loss {:.4f}'.format(
+						i, j, train_steps, run_loss / j, loss.item()), flush=True)
 
 				del outs
 				del X
@@ -335,7 +330,7 @@ class MAPFAST:
 					print("Num Batches {} / {} | Batch_Loss {} | Valid_Loss {} | Valid_Losses {}".format(j, train_steps, loss / batch_size, sum(valid_losses) / len(valid_list), valid_losses))
 					net.train()
 
-			print('Iteration', i, ': Loss =', run_loss)
+			print('Epoch {} complete | mean loss {:.4f}'.format(i, run_loss / max(j, 1)), flush=True)
 	
 			if model_name and model_loc:
 				torch.save(net.state_dict(), model_loc + 'model_' + model_name + '_epoch_' + str(i) + '.pth')
@@ -366,7 +361,7 @@ class MAPFAST:
 
 		test_datagen = self.data_generator(test_list, batch_size)
 
-		net = InceptionClassificationNet(cl_units, fin_pred_units, pair_units)
+		net = InceptionClassificationNet(cl_units, fin_pred_units, pair_units, solvers=len(self.mapping))
 		net.to(self.device)
 
 		net.load_state_dict(torch.load(model_loc + model_name, map_location=torch.device(self.device)))
@@ -412,7 +407,7 @@ class MAPFAST:
 				if fin_pred_units:
 					temp_sig = sig(temp_out2[i]).numpy()
 					temp_sig_1 = 1 - temp_sig
-					for _ in range(4):
+					for _ in range(len(self.mapping)):
 						val = 0
 						if temp_sig[_] >= temp_sig_1[_]:
 							val = 1
@@ -421,7 +416,7 @@ class MAPFAST:
 				if pair_units:
 					temp_sig_2 = sig(temp_out3[i]).numpy()
 					temp_sig_2_1 = 1 - temp_sig_2
-					for _ in range(6):
+					for _ in range(len(self.mapping) * (len(self.mapping) - 1) // 2):
 						val = 0
 						if temp_sig_2[_] >= temp_sig_2_1[_]:
 							val = 1
@@ -437,3 +432,81 @@ class MAPFAST:
 			torch.cuda.empty_cache()
 
 		return Y_prediction_data
+
+	def get_model(self, model_loc, model_name, cl_units=1, fin_pred_units=1, pair_units=1):
+		'''
+		Builds (or reuses a cached) InceptionClassificationNet with weights loaded from disk.
+
+		Loading the checkpoint from disk and constructing the network is the slow part of
+		running inference, so the result is cached on the instance and reused for any later
+		call with the same (model_loc, model_name, cl_units, fin_pred_units, pair_units).
+
+		Returns: The loaded net in eval mode, on self.device
+		'''
+		key = (model_loc, model_name, cl_units, fin_pred_units, pair_units)
+		if key not in self._model_cache:
+			net = InceptionClassificationNet(cl_units, fin_pred_units, pair_units, solvers=len(self.mapping))
+			net.to(self.device)
+			net.load_state_dict(torch.load(model_loc + model_name, map_location=torch.device(self.device)))
+			net.eval()
+			self._model_cache[key] = net
+		return self._model_cache[key]
+
+	def predict(self, file_key, model_loc, model_name, cl_units=1, fin_pred_units=1, pair_units=1):
+		'''
+		Function to run inference on a single input
+
+		The arguments are:
+			Required Arguments:
+				1. file_key -> Name of the file (a key in self.files) to run inference on
+				2. model_loc -> Location of the model to be retrieved
+				3. model_name -> Name of the model to be retrieved
+			Optional Arguments:
+				4. cl_units -> Default value of 1. 0/1 for indicating if best solver classification neurons should be present.
+				5. fin_pred_units -> Default value of 1. 0/1 for indicating if finish prediction neurons should be present.
+				6. pair_units -> Default value of 1. 0/1 for indicating if pairwise comparison neurons should be present.
+
+		Returns: Json object with the same keys as a single entry of test_model's output, but without ground truth values
+			(since a single-shot input has none).
+		'''
+		kk = self.files[file_key]
+		img = read_image(self.input_location + kk[:-4] + 'png')
+		img_transforms = torch.nn.Sequential(
+			transforms.Resize([320, 320])
+		)
+		img = img_transforms(img)
+
+		start = self.agent_details[kk]['starts']
+		goal = self.agent_details[kk]['goals']
+		new_image, new_start, new_goal = get_transition(img, start, goal, self.map_details[kk], int(file_key.split('_')[-1]))
+		new_image = np.asarray(new_image)
+
+		X = asarray([new_image])
+
+		net = self.get_model(model_loc, model_name, cl_units, fin_pred_units, pair_units)
+
+		sig = nn.Sigmoid()
+
+		X_to = torch.from_numpy(X).float().to(self.device)
+		with torch.no_grad():
+			outs = net(X_to)
+
+		prediction = {}
+
+		if cl_units:
+			k = np.argmax(torch.Tensor.cpu(outs['cl']).numpy(), axis=1)
+			prediction['best'] = k[0].item()
+
+		if fin_pred_units:
+			temp_sig = sig(torch.Tensor.cpu(outs['fin'][0])).numpy()
+			temp_sig_1 = 1 - temp_sig
+			for _ in range(len(self.mapping)):
+				prediction[self.inv_mapping[_]] = int(temp_sig[_] >= temp_sig_1[_])
+
+		if pair_units:
+			temp_sig_2 = sig(torch.Tensor.cpu(outs['pair'][0])).numpy()
+			temp_sig_2_1 = 1 - temp_sig_2
+			for _ in range(len(self.mapping) * (len(self.mapping) - 1) // 2):
+				prediction[_] = int(temp_sig_2[_] >= temp_sig_2_1[_])
+
+		return prediction

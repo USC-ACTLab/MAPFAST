@@ -48,7 +48,7 @@ Following items are needed for training the model:
 1. yaml_details -> Json file which contains file name as key and another json object (which has 'SOLVER' storing the name of the fastest solver and solving time (in seconds) for all the solvers) as value.
 2. agent_details -> Json file which contains file name as key and its value is a json object containing the start and goal locations of the agents.
 3. map_details -> Json file which contains file name as key and another json object (which has number of agents, dimensions of the input map) as value.
-4. .png or .npz files -> Images or compressed numpy representations of the map which will be given as input to CNN. Note that the names of these images/numpy files should match the name in yaml_details/agent_details/map_details.
+4. .png files -> Images of the map which will be given as input to CNN. Note that the names of these images should match the name in yaml_details/agent_details/map_details.
 ```
 We used [MAPF benchmark](https://movingai.com/benchmarks/mapf.html) to generate the MAPF instances for training and testing. 
 
@@ -117,7 +117,7 @@ To train the model with new dataset and potentially with different solvers, the 
 
 ## Misc Info
 
-1. `main.py` provides a sample implementation where all the parameters are fetched from a `config.json` file. The location of `config.json` can also be passed as a command line argument to the python script. The default location is json_files folder.
+1. `main.py` provides a sample implementation where all the parameters are fetched from a `config.json` file. The dataset folder (or the location of its `config.json`) can be passed with `-C`; the default is `datasets/three_solvers`. Each folder in `datasets/` holds a `config.json`, the `yaml_details.json`, `agent_details.json` and `map_details.json` files and an `images/` folder, and the paths in its `config.json` are relative to the folder, e.g. `python main.py -C datasets/nine_solvers`.
 
 2. `analysis.py` prints a detailed report which includes the accuracy, coverage and custom score details as described in our paper.
 

@@ -53,7 +53,7 @@ def find_count(yaml_details, files, solver_types):
 	return jj
 
 
-def calculate_time(yaml_details, inv_mapping, files, solver_type=None):
+def calculate_time(yaml_details, inv_mapping, files, solver_type=None, timeout=300):
 	ans = 0
 	for i in range(len(files)):
 		x = yaml_details[files[i][:-2]]
@@ -64,8 +64,8 @@ def calculate_time(yaml_details, inv_mapping, files, solver_type=None):
 		if x[sol] != -1:
 			ans += x[sol]
 		else:
-			ans += 300
-	return ans
+			ans += timeout
+	return ans / 60 # originally reported in s, changed to m to match paper
 
 def print_util(yaml_details, Y_prediction_data, solver_types=None):
 	if solver_types:
@@ -103,17 +103,17 @@ def print_util(yaml_details, Y_prediction_data, solver_types=None):
 	jj = find_count(yaml_details, list(Y_prediction_data.keys()), solvers)
 
 	print(st)
-	print('\tfast:', '\n\t\tcount:', len(jj['fast'][0]), '\n\t\tpercentage:', jj['fast'][1])
-	print('\tsolved:', '\n\t\tcount:', len(jj['solved'][0]), '\n\t\tpercentage:', jj['solved'][1])
+	print('\Accuracy:', '\n\t\tcount:', len(jj['fast'][0]), '\n\t\tpercentage:', jj['fast'][1])
+	print('\tCoverage:', '\n\t\tcount:', len(jj['solved'][0]), '\n\t\tpercentage:', jj['solved'][1])
 	return solvers
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-C', '--config', default='json_files/config.json',
-						help='Give the location of config.json file')
+	parser.add_argument('-C', '--config', default='datasets/three_solvers',
+						help='Give the dataset folder, or the location of its config.json file')
 	args = parser.parse_args()
 
-	config = read_json(args.config)
+	config = read_config(args.config)
 	if 'Analysis' not in config:
 		print('Add Analysis parameters to config.json')
 		sys.exit(0)
@@ -126,22 +126,20 @@ if __name__ == '__main__':
 
 	mapping = config['mapping']
 	inv_mapping = get_inv_mapping(mapping)
+	# seconds charged to a solver that did not solve an instance: the benchmark's time limit
+	timeout = config.get('timeout', 300)
 
 	with open(config['prediction_output']) as f:
 		Y_prediction_data = json.load(f)
 
-	print_util(yaml_details, Y_prediction_data, ['BCP'])
-	print_util(yaml_details, Y_prediction_data, ['CBS'])
-	print_util(yaml_details, Y_prediction_data, ['CBSH'])
-	print_util(yaml_details, Y_prediction_data, ['SAT'])
+	for solver in mapping:
+		print_util(yaml_details, Y_prediction_data, [solver])
 	s = print_util(yaml_details, Y_prediction_data)
-	print('\nTotal Runtime:')
-	print('BCP:', calculate_time(yaml_details, inv_mapping, list(Y_prediction_data.keys()), [mapping['BCP']]*len(Y_prediction_data)))
-	print('CBS:', calculate_time(yaml_details, inv_mapping, list(Y_prediction_data.keys()), [mapping['CBS']]*len(Y_prediction_data)))
-	print('CBSH:', calculate_time(yaml_details, inv_mapping, list(Y_prediction_data.keys()), [mapping['CBSH']]*len(Y_prediction_data)))
-	print('SAT:', calculate_time(yaml_details, inv_mapping, list(Y_prediction_data.keys()), [mapping['SAT']]*len(Y_prediction_data)))
-	print('Our Model:', calculate_time(yaml_details, inv_mapping, list(Y_prediction_data.keys()), [i[0] for i in s]))
-	print('Optimal:', calculate_time(yaml_details, inv_mapping, list(Y_prediction_data.keys())))
+	print('\nTotal Runtime (m):')
+	for solver in mapping:
+		print(solver + ':', calculate_time(yaml_details, inv_mapping, list(Y_prediction_data.keys()), [mapping[solver]]*len(Y_prediction_data), timeout))
+	print('Our Model:', calculate_time(yaml_details, inv_mapping, list(Y_prediction_data.keys()), [i[0] for i in s], timeout))
+	print('Optimal:', calculate_time(yaml_details, inv_mapping, list(Y_prediction_data.keys()), timeout=timeout))
 
 
 	#print(len(keys[0].intersection(keys[1].intersection(keys[2].intersection(keys[3])))))
