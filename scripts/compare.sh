@@ -1,31 +1,30 @@
 #!/bin/bash
 # Train, test and analyse several models with train.sh (one job each), run the general-purpose model baseline (Jev, see
 # models/jev_baseline.py) on their test instances, then plot them all on the same graphs in
-# $OUT/<name>_vs_<name>..._<jobid>/, where OUT is the round's experiments folder (default experiments/round_2).
+# $OUT/<name>_vs_<name>..._<jobid>/, where OUT is the round's experiments folder (default experiments/round_3).
 # Each model is given as one of
 #   NAME=DATASET          train DATASET with train.sh
 #   NAME=@DATASET         only plot DATASET, whose predictions already exist
-# The default is this round's comparison (see experiments/EXPERIMENTS.md): MAPFAST (four solvers) and MAPFASTv2 (eight
-# solvers, without mapf_prioritized_sipp), each without and with the auxiliary outputs, all with the relative speed loss.
-# Make their datasets first, from the repository folder:
-#   python tools/derive_dataset.py datasets/full_four_solvers --name full_four_solvers_score
-#   python tools/derive_dataset.py datasets/full_four_solvers --name full_four_solvers_score_aux --aux
-#   python tools/derive_dataset.py datasets/full_nine_solvers --name full_eight_solvers_score --drop mapf_prioritized_sipp
-#   python tools/derive_dataset.py datasets/full_nine_solvers --name full_eight_solvers_score_aux --drop mapf_prioritized_sipp --aux
+# The default is round 3's comparison (see experiments/EXPERIMENTS.md): MAPFAST (four solvers) and MAPFASTv2 (eight
+# solvers, without mapf_prioritized_sipp) on movingai_10-500-agents_300s; add MAPFAST-GNN=@<dataset>/gnn once
+# scripts/sweep_gnn.sh has written its predictions. Make the eight-solver dataset first, from the repository folder:
+#   python tools/derive_dataset.py datasets/movingai_10-500-agents_300s/nine-solvers \
+#       --name movingai_10-500-agents_300s/eight-solvers --drop mapf_prioritized_sipp
 #
 # Jev baseline: for every solver portfolio among the trained models, and every K of JEV_EXAMPLES, one job asks Jev for
 # the fastest solver of each test instance of the first model with that portfolio (once that model has been tested), with
-# K training instances of the same map per request (0: zero-shot). Its predictions go to datasets/<dataset>_jev<K>/ and it
+# K training instances of the same map per request (0: zero-shot). Its predictions go to the variant <dataset>/jev<K>/ and it
 # is plotted as Jev<K>_<model name>. It needs TYPESAFE_API_KEY; JEV_EXAMPLES= (empty) leaves the baseline out.
 #
 # Logs and graphs are named after the models, e.g. $OUT/MAPFAST_<jobid>.out and $OUT/MAPFASTv2_<jobid>_plots/, and the
 # comparison job also copies each model's config and test predictions to $OUT/predictions/<name>/.
 # usage, from the repository folder: ./scripts/compare.sh [NAME=DATASET ...]
-#   e.g. TRAIN_TIME=12:00:00 ./scripts/compare.sh MAPFAST=datasets/full_four_solvers MAPFASTv2=datasets/full_nine_solvers
+#   e.g. TRAIN_TIME=12:00:00 ./scripts/compare.sh MAPFAST=datasets/movingai_10-500-agents_300s/four-solvers \
+#       MAPFASTv2=datasets/movingai_10-500-agents_300s/eight-solvers
 #   TRAIN_TIME overrides the time limit of the training jobs (train.sh's own otherwise)
 #   JEV_EXAMPLES are the numbers of examples per Jev request to run the baseline with (default "0 20")
 #   JEV_BUDGET is the most USD each Jev job may spend (default 3)
-#   OUT is the folder for this round's logs, graphs and predictions (default experiments/round_2)
+#   OUT is the folder for this round's logs, graphs and predictions (default experiments/round_3)
 # At most eight models and baselines can be plotted together.
 #
 # This script only submits jobs. If the virtual environment does not exist yet, the other jobs wait for the
@@ -34,10 +33,8 @@
 set -e
 
 DEFAULT_RUNS=(
-	MAPFAST=datasets/full_four_solvers_score
-	MAPFASTv2=datasets/full_eight_solvers_score
-	MAPFAST_aux=datasets/full_four_solvers_score_aux
-	MAPFASTv2_aux=datasets/full_eight_solvers_score_aux
+	MAPFAST=datasets/movingai_10-500-agents_300s/four-solvers
+	MAPFASTv2=datasets/movingai_10-500-agents_300s/eight-solvers
 )
 MAX_PLOTTED=8
 
@@ -125,12 +122,12 @@ submit_jev() {
 		spec=${run#*=}
 		examples=${spec%%:*}
 		dataset=${spec#*:}
-		jev_dataset="datasets/$(basename "$dataset")_jev$examples"
+		jev_dataset="$dataset/jev$examples"
 		id=$(sbatch --parsable -J "$name" "${log[@]}" --dependency="afterok:${trained[$dataset]}" \
 			--time=2:00:00 --mem=8G --cpus-per-task=2 \
 			--wrap "set -e; source pytorch.venvsource/bin/activate
 predictions=\$(python -c \"import sys; sys.path.insert(0, 'models'); from utils import read_config; print(read_config('$dataset')['Testing']['prediction_output'])\")
-python -u tools/derive_dataset.py $dataset --name $(basename "$jev_dataset")
+python -u tools/derive_dataset.py $dataset --name ${jev_dataset#datasets/}
 python -u models/jev_baseline.py $jev_dataset --test-from \"\$predictions\" --examples $examples --budget ${JEV_BUDGET:-3} --yes
 echo 'Running Analysis...'
 python -u tools/analysis.py -C $jev_dataset")
@@ -157,7 +154,7 @@ submit_comparison() {
 
 # run from the repository folder, whose paths (datasets/, models/, tools/, ...) every job uses
 cd "$(dirname "$0")/.."
-OUT="${OUT:-experiments/round_2}"
+OUT="${OUT:-experiments/round_3}"
 JEV_EXAMPLES="${JEV_EXAMPLES-0 20}"
 log=(-o "$OUT/%x_%j.out" -e "$OUT/%x_%j.err")
 

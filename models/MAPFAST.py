@@ -256,8 +256,9 @@ class MAPFAST:
 					fastest solver, 'score' for 1 - the expected relative speed score (see compute_score) of the softmax over the solvers,
 					which charges a pick by how much slower it is than the fastest solver, and a solver that fails the most.
 
-		With valid_list, model_loc and model_name, the epoch with the highest mean relative speed score of its picks on the
-		validation data is also stored at model_loc with name model_name + "_best".
+		With valid_list, model_loc and model_name, the epoch that does best on the validation data by what the loss trains
+		for (the accuracy of its picks for 'ce', their mean relative speed score for 'score') is also stored at model_loc
+		with name model_name + "_best".
 
 		Returns: The trained model
 		'''
@@ -402,13 +403,14 @@ class MAPFAST:
 				score, accuracy = self.evaluate(net, valid_list, batch_size)
 				net.train()
 				print('Epoch {} validation | mean relative speed score {:.4f} | accuracy {:.4f}'.format(i, score, accuracy), flush=True)
-				if best_score is None or score > best_score:
-					best_score, best_epoch = score, i
+				metric = score if loss == 'score' else accuracy
+				if best_score is None or metric > best_score:
+					best_score, best_epoch = metric, i
 					if model_name and model_loc:
 						torch.save(net.state_dict(), model_loc + 'model_' + model_name + '_best.pth')
 
 		if best_score is not None:
-			print('Best epoch {} | mean relative speed score {:.4f}'.format(best_epoch, best_score), flush=True)
+			print('Best epoch {} | validation {} {:.4f}'.format(best_epoch, 'mean relative speed score' if loss == 'score' else 'accuracy', best_score), flush=True)
 		return net
 
 	def test_model(self, test_list, model_loc, model_name, batch_size=16, cl_units=1, fin_pred_units=1, pair_units=1):

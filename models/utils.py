@@ -24,7 +24,7 @@ CONFIG_PATHS = ('yaml_details', 'agent_details', 'map_details', 'test_details', 
 
 def read_config(path):
 	'''
-	Reads a config.json, given its path or the dataset folder that contains it (e.g. datasets/nine_solvers).
+	Reads a config.json, given its path or the dataset folder that contains it (e.g. datasets/movingai_pilot/nine-solvers).
 	The file and folder paths in it are relative to the folder of the config.json.
 
 	Returns: Json object of the config, with those paths joined to the folder of the config.json

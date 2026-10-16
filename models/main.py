@@ -71,7 +71,7 @@ if __name__ == '__main__':
 	print('Current device:', device)
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-C', '--config', default='datasets/three_solvers', help='Give the dataset folder, or the location of its config.json file')
+	parser.add_argument('-C', '--config', default='datasets/mapfast_paper/four-solvers', help='Give the dataset folder, or the location of its config.json file')
 	parser.add_argument('-T', '--type', default=1, help='Training => 1, Testing => 0')
 	args = parser.parse_args()
 

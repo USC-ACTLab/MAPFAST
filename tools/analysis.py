@@ -112,7 +112,7 @@ def print_util(yaml_details, Y_prediction_data, solver_types=None):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-C', '--config', default='datasets/three_solvers',
+	parser.add_argument('-C', '--config', default='datasets/mapfast_paper/four-solvers',
 						help='Give the dataset folder, or the location of its config.json file')
 	args = parser.parse_args()
 

@@ -1,19 +1,21 @@
 '''
-Turn the MAPFAST dataset written by MAPF Benchmarking (benchmark.py, or the
-aggregate job of benchmark.sh) into a dataset folder MAPFAST trains on, datasets/<name>/:
+Turn the MAPFAST dataset of an experiment of MAPF Benchmarking (its merged
+{yaml,agent,map}_details.json) into a dataset folder MAPFAST trains on, datasets/<name>/, where <name> is
+<benchmark>/<portfolio>, e.g. movingai_10-500-agents_300s/four-solvers (see tools/rename_datasets.py):
 
 	yaml_details.json, agent_details.json, map_details.json
 	images/<instance>.png		one shortest path embedding image per instance
 	config.json			Training, Testing and Analysis config for main.py and analysis.py, with paths relative to the folder
 
-	python tools/benchmark_dataset.py ~/MAPF-Benchmarking/output/all_6826438 --benchmarks ~/MAPF-Benchmarking/benchmarks --name nine_solvers --jobs 16
+	python tools/benchmark_dataset.py ~/MAPF-Benchmarking/experiments/movingai_10-500-agents_300s --benchmarks ~/MAPF-Benchmarking/benchmarks --name movingai_10-500-agents_300s/nine-solvers --jobs 16
 
-The first argument is the prefix of the three <prefix>_{yaml,agent,map}_details.json files.
+The first argument is the experiment's folder (or, for results of the old layout, the prefix of its
+<prefix>_{yaml,agent,map}_details.json files).
 
 MAPF Benchmarking writes coordinates as (x, y) = (column, row) and mp_dim as [width, height];
 MAPFAST uses [row, column] and [height, width], so both are converted here.
 
-The images use the encoding of MAPFAST's original images (datasets/three_solvers/images): white free cells, red obstacles,
+The images use the encoding of MAPFAST's original images (datasets/mapfast_paper/four-solvers/images): white free cells, red obstacles,
 black cells on the shortest path of some agent, green starts and blue goals, at one pixel per cell
 (main.py resizes them to 320 x 320).
 '''
@@ -180,32 +182,34 @@ def make_config(name, mapping, timeout, augmentation=1):
 		'model_loc': 'model_weights/',
 		'mapping': mapping,
 	}
-	prediction_output = 'y_pred_true_{}.json'.format(name)
+	# file names inside the folder, from its path below datasets/ (e.g. movingai_10-200-agents_60s/four-solvers)
+	tag = name.replace('/', '_')
+	prediction_output = 'y_pred_true_{}.json'.format(tag)
 	return {
-		'Training': {**common, 'epochs': 10, 'log_interval': 1000, 'model_name': name, 'loss': 'score'},
-		'Testing': {**common, 'model_name': 'model_{}_best.pth'.format(name), 'prediction_output': prediction_output},
+		'Training': {**common, 'epochs': 10, 'log_interval': 1000, 'model_name': tag, 'loss': 'ce'},
+		'Testing': {**common, 'model_name': 'model_{}_best.pth'.format(tag), 'prediction_output': prediction_output},
 		'Analysis': {**files, 'prediction_output': prediction_output, 'mapping': mapping, 'timeout': timeout},
 	}
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Build a MAPFAST dataset from the MAPFAST files of MAPF Benchmarking')
-	parser.add_argument('prefix', help='Prefix of the <prefix>_{yaml,agent,map}_details.json files, e.g. ~/MAPF-Benchmarking/output/all_6826438')
+	parser.add_argument('prefix', help='Experiment folder of MAPF Benchmarking, e.g. ~/MAPF-Benchmarking/experiments/movingai_10-500-agents_300s (or the prefix of <prefix>_{yaml,agent,map}_details.json files)')
 	parser.add_argument('--benchmarks', required=True, help='MAPF Benchmarking benchmarks/ directory, with <map>/<map>.map for every map')
-	parser.add_argument('--name', default=None, help='Name of the dataset (default: the base name of prefix)')
+	parser.add_argument('--name', default=None, help='Path of the dataset below datasets/, <benchmark>/<portfolio>, e.g. movingai_10-500-agents_300s/four-solvers (default: the base name of prefix)')
 	parser.add_argument('--solvers', nargs='+', default=None, help='Solver portfolio (default: every solver in the files)')
 	parser.add_argument('--solved-by', nargs='+', default=None,
 						help='Keep only the instances that one of these solvers solved, e.g. the --solvers of another dataset built from the same benchmark, so that both hold the same instances')
-	parser.add_argument('--timeout', type=float, default=60, help='Time limit of the benchmark runs in seconds, charged to unsolved runs by analysis.py (default 60, as in benchmark.sh)')
+	parser.add_argument('--timeout', type=float, default=300, help='Time limit of the benchmark runs in seconds, charged to unsolved runs by analysis.py (default 300, the full limit of scripts/generate_benchmark.sh)')
 	parser.add_argument('--augmentation', type=int, default=1, choices=range(1, 7),
 						help='Copies of each training instance, flipped and rotated (see get_transition in utils.py); 6 uses every transition (default 1: none)')
 	parser.add_argument('--jobs', type=int, default=os.cpu_count(), help='Scenario files to render in parallel (default: all CPUs)')
 	args = parser.parse_args()
 
 	prefix = os.path.expanduser(args.prefix)
-	name = args.name or os.path.basename(prefix)
+	name = args.name or os.path.basename(os.path.normpath(prefix))
 	details = []
 	for d in DETAILS:
-		with open('{}_{}.json'.format(prefix, d)) as f:
+		with open(os.path.join(prefix, d + '.json') if os.path.isdir(prefix) else '{}_{}.json'.format(prefix, d)) as f:
 			details.append(json.load(f))
 	yaml_details, agent_details, map_details = convert(*details, args.solvers, args.solved_by)
 	solvers = [s for s in next(iter(yaml_details.values())) if s != 'SOLVER']

@@ -12,11 +12,8 @@ It is only used as a baseline: scripts/compare.sh runs it on the test instances 
 check the response format on a few instances before a round (--limit):
 
 	export TYPESAFE_API_KEY=...
-	python tools/derive_dataset.py datasets/full_four_solvers --name full_four_solvers_jev
-	python models/jev_baseline.py datasets/full_four_solvers_jev --test-from datasets/full_four_solvers/y_pred_true_full_four_solvers.json --limit 5
-	python models/jev_baseline.py datasets/full_four_solvers_jev --test-from datasets/full_four_solvers/y_pred_true_full_four_solvers.json --yes
-	python tools/derive_dataset.py datasets/full_four_solvers --name full_four_solvers_jev20
-	python models/jev_baseline.py datasets/full_four_solvers_jev20 --test-from datasets/full_four_solvers/y_pred_true_full_four_solvers.json --examples 20 --yes
+	python tools/derive_dataset.py datasets/movingai_10-500-agents_300s/four-solvers --name movingai_10-500-agents_300s/four-solvers/jev20
+	python models/jev_baseline.py datasets/movingai_10-500-agents_300s/four-solvers/jev20 --test-from datasets/movingai_10-500-agents_300s/four-solvers/y_pred_true_movingai_10-500-agents_300s_four-solvers.json --examples 20 --limit 5 --yes
 
 The test instances are those of --test-from, the predictions of a model trained on the same instances, so that both
 are evaluated on exactly the same problems; every other instance of the dataset counts as training data for --examples.
@@ -130,7 +127,7 @@ def input_tokens(response, state):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Pick solvers with Jev, as a general-purpose classifier baseline')
-	parser.add_argument('config', help='Dataset folder (or its config.json) to write the predictions for, e.g. datasets/full_four_solvers_jev')
+	parser.add_argument('config', help='Dataset folder (or its config.json) to write the predictions for, e.g. datasets/movingai_10-500-agents_300s/four-solvers/jev20')
 	parser.add_argument('--test-from', required=True, help='Predictions of a model trained on the same dataset (main.py -T 0), whose instances are the test set')
 	parser.add_argument('--examples', type=int, default=0, help='Training instances of the same map to put in each state (default 0: none)')
 	parser.add_argument('--no-coords', action='store_true', help='Leave the agents\' start and goal cells out of the state')

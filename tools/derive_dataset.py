@@ -1,13 +1,13 @@
 '''
 Make a dataset folder from another one, with fewer solvers or only a new config, without copying or
-re-rendering its images: datasets/<name>/ gets
+re-rendering its images: datasets/<name>/ gets (name a variant of a dataset as a folder in it, e.g.
+movingai_10-500-agents_300s/eight-solvers/score; see tools/rename_datasets.py)
 
 	yaml_details.json		the source's, without the dropped solvers and with SOLVER relabelled as the fastest of the others
 	config.json			a fresh config (see make_config in benchmark_dataset.py), whose other files are the source's
 
-	python tools/derive_dataset.py datasets/full_nine_solvers --name full_eight_solvers --drop mapf_prioritized_sipp
-	python tools/derive_dataset.py datasets/full_four_solvers --name full_four_solvers_score
-	python tools/derive_dataset.py datasets/full_four_solvers --name full_four_solvers_score_aux --aux
+	python tools/derive_dataset.py datasets/movingai_10-500-agents_300s/nine-solvers --name movingai_10-500-agents_300s/eight-solvers --drop mapf_prioritized_sipp
+	python tools/derive_dataset.py datasets/movingai_10-500-agents_300s/four-solvers --name movingai_10-500-agents_300s/four-solvers/aux --aux
 
 The instances that only dropped solvers solved are left out. The training, validation and test split depends only on
 the instances, so a dataset that keeps them all is split exactly as its source.
@@ -24,9 +24,10 @@ def read_json(path):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Make a dataset folder from another one, with fewer solvers or only a new config')
-	parser.add_argument('source', help='Dataset folder to derive from, e.g. datasets/full_nine_solvers')
-	parser.add_argument('--name', required=True, help='Name of the new dataset, written to datasets/<name>/')
+	parser.add_argument('source', help='Dataset folder to derive from, e.g. datasets/movingai_10-500-agents_300s/nine-solvers')
+	parser.add_argument('--name', required=True, help='Path of the new dataset below datasets/, e.g. movingai_10-500-agents_300s/eight-solvers')
 	parser.add_argument('--drop', nargs='+', default=[], help='Solvers to leave out of the portfolio')
+	parser.add_argument('--loss', choices=['ce', 'score'], default='ce', help='Loss of main.py: cross-entropy (default) or the relative speed loss of round 2')
 	parser.add_argument('--aux', action='store_true', help='Also train MAPFAST\'s auxiliary outputs (finish prediction and pairwise comparison neurons)')
 	args = parser.parse_args()
 
@@ -53,6 +54,7 @@ if __name__ == '__main__':
 
 	new_config = make_config(args.name, {s: i for i, s in enumerate(solvers)}, config['Analysis'].get('timeout', 300),
 							 config['Training'].get('augmentation', 1))
+	new_config['Training']['loss'] = args.loss
 	if args.aux:
 		for section in new_config.values():
 			if 'output_units' in section:

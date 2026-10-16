@@ -1,12 +1,12 @@
 #!/bin/bash
 # Train, test, analyse and plot MAPFAST on one dataset (log logs/<job name>_<jobid>.out, graphs in logs/<job name>_<jobid>_plots/)
-# The job name (-J) defaults to MAPFAST_training, e.g. sbatch -J MAPFASTv2 scripts/train.sh datasets/nine_solvers
-# usage: sbatch scripts/train.sh [dataset], e.g. sbatch scripts/train.sh datasets/nine_solvers
+# The job name (-J) defaults to MAPFAST_training, e.g. sbatch -J MAPFASTv2 scripts/train.sh datasets/movingai_pilot/nine-solvers
+# usage: sbatch scripts/train.sh [dataset], e.g. sbatch scripts/train.sh datasets/movingai_pilot/nine-solvers
 #
 # The first job creates the virtual environment pytorch.venvsource/ (or repairs it, if its torch
 # is not the CUDA 12.8 build that the cluster's GPU driver supports). Set PYTHON_MODULE to the
 # name `module avail python` shows if python/3.11 is not one, e.g.
-#   sbatch --export=ALL,PYTHON_MODULE=<name from module avail python> scripts/train.sh datasets/nine_solvers
+#   sbatch --export=ALL,PYTHON_MODULE=<name from module avail python> scripts/train.sh datasets/movingai_pilot/nine-solvers
 
 #SBATCH -p gpu --gres=gpu:1
 #SBATCH --nodes=1
@@ -20,7 +20,7 @@
 #SBATCH --mail-user=milan_capoor@brown.edu
 
 set -e
-DATASET="${1:-datasets/three_solvers}"
+DATASET="${1:-datasets/mapfast_paper/four-solvers}"
 VENV=pytorch.venvsource
 PYTHON_MODULE="${PYTHON_MODULE:-python/3.11}"
 # PyTorch wheels built for CUDA 12.8; newer builds need a newer driver than the GPU nodes have

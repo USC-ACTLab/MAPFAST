@@ -7,12 +7,12 @@ Graphs of a MAPFAST training run and of its test predictions:
 	confusion.png			predicted against actual fastest solver
 	accuracy_by_agents.png	accuracy of the model and of the best solver against the number of agents
 
-	python tools/plots.py -C datasets/nine_solvers --log logs/MAPFASTv2_1234.out
+	python tools/plots.py -C datasets/movingai_pilot/nine-solvers --log logs/MAPFASTv2_1234.out
 
 With --run, several trained models are compared on the same graphs instead (see plot_comparison), all
 evaluated under the same time limit (see apply_time_limit):
 
-	python tools/plots.py --run MAPFAST datasets/three_solvers logs/MAPFAST_1234.out --run MAPFASTv2 datasets/nine_solvers logs/MAPFASTv2_1235.out -o logs/MAPFAST_vs_MAPFASTv2_1236
+	python tools/plots.py --run MAPFAST datasets/mapfast_paper/four-solvers logs/MAPFAST_1234.out --run MAPFASTv2 datasets/movingai_pilot/nine-solvers logs/MAPFASTv2_1235.out -o logs/MAPFAST_vs_MAPFASTv2_1236
 
 The graphs are written next to the log, to logs/<name>_<jobid>_plots/ for --log logs/<name>_<jobid>.out
 (logs/<dataset>_plots/ without --log). Without --log, loss.png is skipped; without the
@@ -449,7 +449,7 @@ def save(fig, out):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-C', '--config', default='datasets/three_solvers', help='Give the dataset folder, or the location of its config.json file')
+	parser.add_argument('-C', '--config', default='datasets/mapfast_paper/four-solvers', help='Give the dataset folder, or the location of its config.json file')
 	parser.add_argument('--log', default=None, help='Slurm log of the training run (logs/<name>_<jobid>.out), for the loss graph')
 	parser.add_argument('--run', nargs=3, action='append', metavar=('NAME', 'DATASET', 'LOG'),
 						help='Compare several models on the same graphs instead: a name, its dataset folder and its training log. Repeat for each model.')
