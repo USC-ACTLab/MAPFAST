@@ -115,9 +115,21 @@ Example mapping is shown below.
 
 To train the model with new dataset and potentially with different solvers, the necessary `yaml_details`, `agent_details`, `map_details` json files and the input  (image/numpy) has to be generated accordingly. The mapping json has to be changed to reflect the solvers in the portfolio. No other changes inside the code is necessary to train with a new dataset.
 
+## Repository layout
+
+| Folder | What |
+|---|---|
+| `models/` | The model and its entry point: `MAPFAST.py`, `utils.py` (network and helpers), `main.py` (train/test), `jev_baseline.py` (general-purpose model baseline) |
+| `tools/` | Dataset building and evaluation: `benchmark_dataset.py`, `derive_dataset.py`, `analysis.py`, `plots.py` |
+| `scripts/` | Slurm job scripts: `train.sh`, `compare.sh` (which also runs the Jev baseline), `generate_benchmark.sh` (benchmark every solver, then build the datasets) |
+| `datasets/` | One folder per dataset, with its `config.json` |
+| `experiments/` | Logs, graphs and predictions of each round, and `EXPERIMENTS.md` |
+
+Run everything from this folder, e.g. `python models/main.py -C datasets/nine_solvers` or `./scripts/compare.sh`.
+
 ## Misc Info
 
-1. `main.py` provides a sample implementation where all the parameters are fetched from a `config.json` file. The dataset folder (or the location of its `config.json`) can be passed with `-C`; the default is `datasets/three_solvers`. Each folder in `datasets/` holds a `config.json`, the `yaml_details.json`, `agent_details.json` and `map_details.json` files and an `images/` folder, and the paths in its `config.json` are relative to the folder, e.g. `python main.py -C datasets/nine_solvers`.
+1. `main.py` provides a sample implementation where all the parameters are fetched from a `config.json` file. The dataset folder (or the location of its `config.json`) can be passed with `-C`; the default is `datasets/three_solvers`. Each folder in `datasets/` holds a `config.json`, the `yaml_details.json`, `agent_details.json` and `map_details.json` files and an `images/` folder, and the paths in its `config.json` are relative to the folder, e.g. `python models/main.py -C datasets/nine_solvers`.
 
 2. `analysis.py` prints a detailed report which includes the accuracy, coverage and custom score details as described in our paper.
 

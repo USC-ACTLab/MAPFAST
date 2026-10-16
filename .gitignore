@@ -14,3 +14,5 @@ venv/
 model_weights/
 y_pred_true*
 runs/
+# but keep the test predictions archived with each round of experiments
+!experiments/**/y_pred_true*
