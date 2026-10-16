@@ -16,3 +16,7 @@ y_pred_true*
 runs/
 # but keep the test predictions archived with each round of experiments
 !experiments/**/y_pred_true*
+
+# GNN graphs (tools/build_graphs.py) and the sweep's model weights: large, and rebuilt from the datasets
+graphs_s*.pkl
+experiments/gnn_sweep/*/*/model.pt
