@@ -9,7 +9,8 @@
 #      Jev with 20 examples, held until the sweep has chosen MAPFAST-GNN's best configuration.
 # Steps 1 and 2 are safe to run again: what is already moved or extended is skipped.
 # usage, from MAPFAST on the cluster login node, after pulling both repositories (git restore datasets, then git pull):
-#   TYPESAFE_API_KEY=... ./experiments/round_3/queue.sh
+#   ./experiments/round_3/queue.sh
+#   TYPESAFE_API_KEY  the Jev API key (default: the contents of typesafe_key.txt in the repository folder, not tracked)
 #   ROUND2   job ids step 1 waits for, separated by colons (default: all your queued and running jobs)
 #   BENCH    MAPF Benchmarking folder (default ~/MAPF-Benchmarking)
 # If a job fails, the jobs after it stay pending as DependencyNeverSatisfied: cancel them (scancel), fix the cause, and
@@ -20,7 +21,10 @@ cd "$(dirname "$0")/../.."
 LOGS=experiments/round_3/logs
 mkdir -p "$LOGS"
 export BENCH=$(readlink -f "${BENCH:-$HOME/MAPF-Benchmarking}")
-[ -n "$TYPESAFE_API_KEY" ] || { echo "set TYPESAFE_API_KEY (the Jev baselines of step 3 need it)" >&2; exit 1; }
+if [ -z "$TYPESAFE_API_KEY" ] && [ -f typesafe_key.txt ]; then
+    export TYPESAFE_API_KEY=$(tr -d '[:space:]' < typesafe_key.txt)
+fi
+[ -n "$TYPESAFE_API_KEY" ] || { echo "put the Jev API key in typesafe_key.txt or TYPESAFE_API_KEY (step 3 needs it)" >&2; exit 1; }
 ROUND2="${ROUND2-$(squeue --me -h -o %i | paste -sd:)}"
 after=()
 [ -z "$ROUND2" ] || after=(--dependency="afterany:$ROUND2")

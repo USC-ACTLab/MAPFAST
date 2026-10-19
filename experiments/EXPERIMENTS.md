@@ -119,7 +119,7 @@ Queue: [`round_3/queue.sh`](round_3/queue.sh), plain Slurm jobs kept out of the 
 ```bash
 cd ~/MAPF-Benchmarking && git pull
 cd ~/MAPFASTv2 && git restore datasets && git pull     # the restore brings back the tracked datasets deleted on the cluster
-TYPESAFE_API_KEY=... ./experiments/round_3/queue.sh
+./experiments/round_3/queue.sh                          # reads the Jev key from typesafe_key.txt (not tracked)
 ```
 
 1. Once round 2's jobs have ended: MAPF Benchmarking's old `output/` and `logs/` into its `experiments/`, and the datasets into their folders (`tools/rename_datasets.py`).

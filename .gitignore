@@ -20,3 +20,5 @@ runs/
 # GNN graphs (tools/build_graphs.py) and the sweep's model weights: large, and rebuilt from the datasets
 graphs_s*.pkl
 experiments/gnn_sweep/*/*/model.pt
+
+typesafe_key.txt
