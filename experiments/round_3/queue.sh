@@ -4,8 +4,10 @@
 #   1. once round 2's jobs have ended: MAPF Benchmarking's old output/ and logs/ into its experiments/, and MAPFAST's
 #      datasets into datasets/<benchmark>/<portfolio>/;
 #   2. the 300 s / 500-agent extension of round 1's benchmark and its datasets (generate_benchmark.sh extend);
-#   3. once the datasets exist: the eight-solver dataset, the MAPFAST-GNN sweep (sweep_gnn.sh) and the comparison
-#      (compare.sh), held until the sweep has chosen MAPFAST-GNN's best configuration.
+#   3. once the datasets exist: the eight-solver dataset, the auxiliary-output variants (15 epochs), the MAPFAST-GNN sweep
+#      (sweep_gnn.sh) and the comparison (compare.sh) of MAPFAST, MAPFASTv2, both with auxiliary outputs, MAPFAST-GNN and
+#      Jev with 20 examples, held until the sweep has chosen MAPFAST-GNN's best configuration.
+# Steps 1 and 2 are safe to run again: what is already moved or extended is skipped.
 # usage, from MAPFAST on the cluster login node, after pulling both repositories (git restore datasets, then git pull):
 #   TYPESAFE_API_KEY=... ./experiments/round_3/queue.sh
 #   ROUND2   job ids step 1 waits for, separated by colons (default: all your queued and running jobs)
@@ -51,9 +53,14 @@ source pytorch.venvsource/bin/activate
 D=datasets/movingai_10-500-agents_300s
 python tools/derive_dataset.py $D/nine-solvers --name ${D#datasets/}/eight-solvers --drop mapf_prioritized_sipp
 python tools/derive_dataset.py $D/eight-solvers --name ${D#datasets/}/eight-solvers/gnn
+for portfolio in four-solvers eight-solvers; do
+    python tools/derive_dataset.py $D/$portfolio --name ${D#datasets/}/$portfolio/aux --aux --epochs 15
+done
 ./scripts/sweep_gnn.sh $D/eight-solvers 2>&1 | tee $LOGS/gnn_jobs.txt
 SELECT=$(sed -n 's/^select: job \([0-9]*\).*/\1/p' $LOGS/gnn_jobs.txt)
-OUT=experiments/round_3 TRAIN_TIME=12:00:00 ./scripts/compare.sh MAPFAST=$D/four-solvers MAPFASTv2=$D/eight-solvers \
+# Jev zero-shot was far behind in round 2 (5-6x bcp2's runtime), so only Jev with 20 examples (7 runs, at most 8 plot)
+OUT=experiments/round_3 TRAIN_TIME=24:00:00 JEV_EXAMPLES=20 ./scripts/compare.sh \
+    MAPFAST=$D/four-solvers MAPFASTv2=$D/eight-solvers MAPFAST_aux=$D/four-solvers/aux MAPFASTv2_aux=$D/eight-solvers/aux \
     MAPFAST-GNN=@$D/eight-solvers/gnn 2>&1 | tee $LOGS/compare_jobs.txt
 PLOT=$(sed -n 's/^Comparison: job \([0-9]*\).*/\1/p' $LOGS/compare_jobs.txt)
 # the comparison waits for the models it trained; hold it until MAPFAST-GNN's best configuration is chosen too

@@ -125,7 +125,8 @@ if __name__ == '__main__':
 	for name in unknown:
 		print('datasets/{:<40}    not recognised, left where it is'.format(name))
 	if not moves:
-		sys.exit('nothing to move')
+		print('nothing to move')
+		sys.exit(0)
 	if not args.apply:
 		print('Nothing was moved: check the plan, then run again with --apply')
 		sys.exit(0)

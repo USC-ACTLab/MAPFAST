@@ -28,6 +28,7 @@ if __name__ == '__main__':
 	parser.add_argument('--name', required=True, help='Path of the new dataset below datasets/, e.g. movingai_10-500-agents_300s/eight-solvers')
 	parser.add_argument('--drop', nargs='+', default=[], help='Solvers to leave out of the portfolio')
 	parser.add_argument('--loss', choices=['ce', 'score'], default='ce', help='Loss of main.py: cross-entropy (default) or the relative speed loss of round 2')
+	parser.add_argument('--epochs', type=int, default=None, help='Training epochs of main.py (default: the source\'s)')
 	parser.add_argument('--aux', action='store_true', help='Also train MAPFAST\'s auxiliary outputs (finish prediction and pairwise comparison neurons)')
 	args = parser.parse_args()
 
@@ -55,6 +56,7 @@ if __name__ == '__main__':
 	new_config = make_config(args.name, {s: i for i, s in enumerate(solvers)}, config['Analysis'].get('timeout', 300),
 							 config['Training'].get('augmentation', 1))
 	new_config['Training']['loss'] = args.loss
+	new_config['Training']['epochs'] = args.epochs or config['Training'].get('epochs', 10)
 	if args.aux:
 		for section in new_config.values():
 			if 'output_units' in section:

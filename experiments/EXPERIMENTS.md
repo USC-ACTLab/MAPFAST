@@ -8,7 +8,7 @@ Each round has its own folder: Slurm logs (`<job name>_<job id>.out/.err`), per-
 | [dataset_build/](dataset_build/) | Building the datasets from MAPF Benchmarking (Oct 9; round 3's later) |
 | [round_1/](round_1/) | MAPFAST vs MAPFASTv2, cross-entropy (Oct 15) |
 | [round_2/](round_2/) | Relative speed loss, best epoch, no SIPP, auxiliary outputs, Jev baseline |
-| [round_3/](round_3/) | 300 s limit and up to 500 agents; GNN selector against MAPFAST, MAPFASTv2, Jev and every solver (queued) |
+| [round_3/](round_3/) | 300 s limit and up to 500 agents; MAPFAST-GNN against MAPFAST, MAPFASTv2 (also with 15-epoch auxiliary outputs), Jev and every solver (queued) |
 | [gnn_sweep/](gnn_sweep/) | The GNN's hyperparameter sweeps, one folder per dataset |
 
 ## Round 0: pilot (Oct 7)
@@ -80,9 +80,21 @@ Runs, with `TYPESAFE_API_KEY` set:
 
 The Jev jobs start once the first model of their portfolio has been tested (`Jev0_MAPFAST`, `Jev20_MAPFAST`, `Jev0_MAPFASTv2`, `Jev20_MAPFASTv2`).
 
-Results: _to fill in_. `compare.sh` writes the logs, graphs and predictions to `experiments/round_2/` on the cluster; copy that folder back here and link `compare_total_runtime.png` and `compare_runtime.png`.
+Results (Oct 19; 1,557 test instances, 60 s limit; graphs in `round_2/` on the cluster):
 
-First result: **MAPFASTv2 picked bcp2 on every test instance.** Without SIPP there is little to gain: another solver beats bcp2 on 289 of 1,557 test instances, by a median of 0.04 s, and a perfect selector saves 5.5 of 75 min (7%). The relative speed loss rewards those wins only slightly (the + 1 s in its score), and always-bcp2 already scores 0.973 of 1, so leaving bcp2 rarely pays off; the best epoch was chosen on the same score.
+| | Total runtime (min) |
+|---|---|
+| MAPFASTv2 oracle / MAPFAST oracle | 69.5 / 73.0 |
+| always bcp2 | 75.0 |
+| MAPFAST, MAPFASTv2 | 75.0, 75.0 |
+| MAPFAST_aux, MAPFASTv2_aux | 75.7, 76.9 |
+| Jev, 20 examples (four / eight solvers) | 82.1 / 79.8 |
+| Jev, zero-shot (four / eight solvers) | 424.8 / 383.7 |
+| best other solver (cbsh2_rtc_chbp) | 372.8 |
+
+- **MAPFAST and MAPFASTv2 picked bcp2 on every test instance.** Their training loss was flat from the first epoch (0.014 and 0.027): with the relative speed loss, always bcp2 is already near its optimum. Without SIPP there is little to gain: another solver beats bcp2 on 289 of 1,557 test instances, by a median of 0.04 s, and a perfect selector saves 5.5 of 75 min (7%).
+- **The auxiliary outputs made it leave bcp2, and lose time** (0.7 and 1.9 min). Their losses kept falling over the 10 epochs, mostly the auxiliary heads.
+- **Jev:** with 20 examples it stays close to bcp2 but behind every trained model; zero-shot it is 5–6 times slower than bcp2, behind most single solvers.
 
 ## Round 3: harder instances, GNN selector (queued)
 
@@ -93,13 +105,14 @@ Plan:
 - **Three selectors, from basic to new:**
   - **MAPFAST:** the original CNN on the four-solver portfolio, cross-entropy on the fastest solver (the best epoch by validation accuracy).
   - **MAPFASTv2:** the same network and loss on the eight-solver portfolio.
+  - **MAPFAST_aux, MAPFASTv2_aux:** both with MAPFAST's auxiliary outputs, trained for **15 epochs** instead of 10, since their losses were still falling in round 2: can the extra outputs get past bcp2?
   - **MAPFAST-GNN** (`models/gnn.py`, `models/train_gnn.py`): a new architecture and objective, on the eight-solver portfolio.
     - Input: the map as a grid graph, coarsened to at most 64 × 64 blocks, with per-block features (free space, starts, goals, cells on agents' shortest paths, path overlap) and global ones (agents, density, path lengths).
     - **Regret loss:** the expected seconds a pick loses to the fastest solver, with a timeout costing the full 300 s, so the 0.04 s wins over bcp2 barely count and timeouts count the most.
     - **Fallback rule:** it leaves the default solver (lowest total training runtime, e.g. bcp2) only when its top pick's probability reaches a threshold tuned on the validation set, so at worst it matches always-bcp2.
     - **Selection by runtime, not accuracy:** epochs, thresholds and configurations are ranked by validation speedup over always-bcp2. Accuracy rewards picking bcp2, which is what made round 2 collapse.
     - A sweep of 144 configurations (GCN, GraphSAGE, GIN; width 32–256; depth 2–8; two learning rates; cross-entropy or regret loss; `scripts/sweep_gnn.sh`, figure `gnn_sweep/movingai_10-500-agents_300s/eight-solvers/sweep.png`).
-- **Comparison** into `round_3/`: MAPFAST, MAPFASTv2, MAPFAST-GNN, Jev (zero-shot and 20 examples) on both portfolios, and every single solver and both oracles (`compare_total_runtime.png`). Everything is tested on the same instances: MAPFAST-GNN uses MAPFASTv2's split.
+- **Comparison** into `round_3/`: MAPFAST, MAPFASTv2, their auxiliary-output versions, MAPFAST-GNN, Jev with 20 examples on both portfolios (zero-shot dropped: far behind in round 2), and every single solver and both oracles (`compare_total_runtime.png`). Training jobs get 24 h, as the datasets are larger and the auxiliary models train for 15 epochs. Everything is tested on the same instances: MAPFAST-GNN uses MAPFASTv2's split.
 
 Queue: [`round_3/queue.sh`](round_3/queue.sh), plain Slurm jobs kept out of the reusable scripts. From `~/MAPFASTv2` on the cluster login node:
 
@@ -111,7 +124,7 @@ TYPESAFE_API_KEY=... ./experiments/round_3/queue.sh
 
 1. Once round 2's jobs have ended: MAPF Benchmarking's old `output/` and `logs/` into its `experiments/`, and the datasets into their folders (`tools/rename_datasets.py`).
 2. The 300 s / 500-agent extension and the datasets (`generate_benchmark.sh extend movingai_10-200-agents_60s`); this job queues step 3 once it knows the dataset job.
-3. The eight-solver dataset, the MAPFAST-GNN sweep (`sweep_gnn.sh`) and the comparison (`compare.sh`), held until the sweep has chosen MAPFAST-GNN's best configuration.
+3. The eight-solver dataset, the auxiliary-output variants, the MAPFAST-GNN sweep (`sweep_gnn.sh`) and the comparison (`compare.sh`), held until the sweep has chosen MAPFAST-GNN's best configuration.
 
 If a job fails, the jobs after it stay pending as `DependencyNeverSatisfied`: cancel them (`scancel`), fix the cause, and run the rest of the steps by hand.
 
