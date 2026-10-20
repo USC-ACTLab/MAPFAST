@@ -22,6 +22,7 @@
 #   ./scripts/generate_benchmark.sh extend <experiment>   pass 2 and the datasets, from a finished pass 1 (an experiment
 #                                                     of MAPF Benchmarking, e.g. movingai_10-200-agents_60s); submitting
 #                                                     it again with the same settings resumes it, skipping the work done
+#                                                     (RETRY=1 also redoes the runs that were killed or crashed)
 #   ./scripts/generate_benchmark.sh build <experiment>    only build the datasets, from a finished experiment
 #
 #   BENCH            MAPF Benchmarking folder (default ~/MAPF-Benchmarking)
@@ -31,7 +32,11 @@
 #   INITIAL_TIMEOUT  time limit of pass 1, in seconds (default 60)
 #   TIMEOUT          time limit of pass 2 and of the datasets, in seconds (default 300)
 #   BENCH_TIME       time limit of each map's job in pass 1 (default 24:00:00)
-#   SHARDS           jobs of pass 2 (default 20, 12 CPUs each); SHARD_TIME their time limit (default 24:00:00)
+#   SHARDS           jobs of pass 2 (default 20); SHARD_TIME their time limit (default 24:00:00), SHARD_JOBS their
+#                    runs at a time (default 12, one CPU each) and SHARD_MEM their memory (default 96G: with 32G
+#                    the out-of-memory killer ended about 1 in 20 runs)
+#   RETRY            1: pass 2 also redoes the groups of runs whose failure was a run killed (usually out of memory)
+#                    or crashed, which says nothing about the instance (tools/extend_benchmark.py --retry)
 #   PASS1, PASS2     names of the two experiments (default movingai_<agents>_<time limit>s)
 #   AUGMENTATION     augmented copies of each training instance (default 6, every flip and rotation)
 #
@@ -106,13 +111,16 @@ submit_extend() {
 	local source=$1 after=() name="$PASS2" logs="$BENCH/experiments/$PASS2/logs" array merge
 	[ -z "$2" ] || after=(--dependency="afterok:$2")
 	mkdir -p "$logs"
-	local options="$source --timeout $TIMEOUT --agents $EXTRA_AGENTS --name $name"
+	local options="$source --timeout $TIMEOUT --agents $EXTRA_AGENTS --name $name" retry=""
+	[ "$RETRY" != 1 ] || retry=" --retry"
 	local setup="cd '$BENCH' && module load boost yaml-cpp gurobi && source .venv/bin/activate && export MPLBACKEND=Agg"
 	array=$(sbatch --parsable -J benchmark_extend "${after[@]}" --array="0-$((SHARDS - 1))" \
-		--nodes=1 --cpus-per-task=12 --time="$SHARD_TIME" --mem=32G \
+		--nodes=1 --cpus-per-task="$SHARD_JOBS" --time="$SHARD_TIME" --mem="$SHARD_MEM" \
 		-o "$logs/shard%a.out" -e "$logs/shard%a.err" --open-mode=append \
-		--wrap "$setup && python -u tools/extend_benchmark.py run $options --shard \$SLURM_ARRAY_TASK_ID --shards $SHARDS --jobs 12")
-	merge=$(sbatch --parsable -J benchmark_extend_merge --dependency="afterok:$array" \
+		--wrap "$setup && python -u tools/extend_benchmark.py run $options --shard \$SLURM_ARRAY_TASK_ID --shards $SHARDS --jobs $SHARD_JOBS$retry")
+	# afterany: a shard whose runs were killed for memory ends as OUT_OF_MEMORY although it finished its groups; the
+	# merge itself fails (and so the dataset job does not start) if a group is unfinished
+	merge=$(sbatch --parsable -J benchmark_extend_merge --dependency="afterany:$array" \
 		--nodes=1 --cpus-per-task=1 --time=2:00:00 --mem=16G \
 		-o "$logs/merge.out" -e "$logs/merge.err" --open-mode=append \
 		--wrap "$setup && python -u tools/extend_benchmark.py merge $options")
@@ -171,6 +179,8 @@ TIMEOUT="${TIMEOUT:-300}"
 EXTRA_AGENTS="${EXTRA_AGENTS-250 300 350 400 450 500}"
 SHARDS="${SHARDS:-20}"
 SHARD_TIME="${SHARD_TIME:-24:00:00}"
+SHARD_JOBS="${SHARD_JOBS:-12}"
+SHARD_MEM="${SHARD_MEM:-96G}"
 # the experiments of the two passes in MAPF Benchmarking, named after what they hold
 agents_first=(${AGENTS:-10})
 extra=($EXTRA_AGENTS)
@@ -196,7 +206,8 @@ case "$1" in
 	extend)
 		[ -n "$2" ] || { echo "usage: ./scripts/generate_benchmark.sh extend <experiment of MAPF Benchmarking>" >&2; exit 1; }
 		[ -f "$BENCH/experiments/$2/results.csv" ] || { echo "no $BENCH/experiments/$2/results.csv" >&2; exit 1; }
-		(cd "$BENCH" && MPLBACKEND=Agg python tools/extend_benchmark.py plan "$2" --timeout "$TIMEOUT" --agents $EXTRA_AGENTS) >&2
+		(cd "$BENCH" && MPLBACKEND=Agg python tools/extend_benchmark.py plan "$2" --timeout "$TIMEOUT" --agents $EXTRA_AGENTS \
+			--name "$PASS2" $([ "$RETRY" != 1 ] || echo --retry)) >&2
 		extended=$(submit_extend "$2")
 		submit_build --after "$extended" "$PASS2"
 		;;

@@ -4,11 +4,7 @@
 __pycache__/
 *.py[cod]
 
-# Virtual environments (train.sh activates pytorch.venvsource/)
 pytorch.venvsource/
-.venv/
-venv/
-
 
 # Training and testing outputs, written into each datasets/<name>/
 model_weights/
@@ -19,6 +15,7 @@ runs/
 
 # GNN graphs (tools/build_graphs.py) and the sweep's model weights: large, and rebuilt from the datasets
 graphs_s*.pkl
-experiments/gnn_sweep/*/*/model.pt
 
+
+experiments/
 typesafe_key.txt

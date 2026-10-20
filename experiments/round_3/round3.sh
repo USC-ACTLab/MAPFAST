@@ -6,7 +6,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=milan_capoor@brown.edu
 # Round 3 (see experiments/EXPERIMENTS.md). One-off: delete after the round. From MAPFAST on the cluster:
-#   sbatch experiments/round_3/queue.sh
+#   sbatch experiments/round_3/round3.sh
 # This job submits the benchmark extension, then submits itself again ("models") to run
 # once the datasets exist, which derives the variants and submits the GNN sweep and the comparison.
 
@@ -17,10 +17,11 @@ export TYPESAFE_API_KEY=$(tr -d '[:space:]' < typesafe_key.txt)
 D=datasets/movingai_10-500-agents_300s
 
 if [ "$1" != models ]; then
-    # 1. the 300 s / 500-agent extension and its datasets
-    ./scripts/generate_benchmark.sh extend movingai_10-200-agents_60s 2>&1 | tee experiments/round_3/benchmark_jobs.txt
+    # 1. the 300 s / 500-agent extension and its datasets; the first attempt ran with 32G per shard, so redo the runs
+    #    the out-of-memory killer ended (and those whose reason was not recorded yet)
+    RETRY=1 ./scripts/generate_benchmark.sh extend movingai_10-200-agents_60s 2>&1 | tee experiments/round_3/benchmark_jobs.txt
     DATASETS=$(sed -n 's/^Datasets: *job \([0-9]*\).*/\1/p' experiments/round_3/benchmark_jobs.txt)
-    sbatch -J round3_models --dependency=afterok:$DATASETS experiments/round_3/queue.sh models
+    sbatch -J round3_models --dependency=afterok:$DATASETS experiments/round_3/round3.sh models
     exit
 fi
 
@@ -36,10 +37,10 @@ SELECT=$(sed -n 's/^select: job \([0-9]*\).*/\1/p' experiments/round_3/gnn_jobs.
 
 OUT=experiments/round_3 TRAIN_TIME=24:00:00 JEV_EXAMPLES=20 ./scripts/compare.sh \
     MAPFAST=$D/four-solvers \
-    MAPFASTv2=$D/eight-solvers \ 
-    MAPFAST_aux=$D/four-solvers/aux \ 
+    MAPFASTv2=$D/eight-solvers \
+    MAPFAST_aux=$D/four-solvers/aux \
     MAPFASTv2_aux=$D/eight-solvers/aux \
-    MAPFAST_GNN=$D/eight-solvers/gnn \ 
+    MAPFAST_GNN=@$D/eight-solvers/gnn \
     2>&1 | tee experiments/round_3/compare_jobs.txt
 
 PLOT=$(sed -n 's/^Comparison: job \([0-9]*\).*/\1/p' experiments/round_3/compare_jobs.txt)
