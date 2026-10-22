@@ -1,7 +1,7 @@
 '''
 General-purpose classifier baseline: asks TypeSafe AI's Jev (https://docs.typesafe.ai/), a hosted model that answers
 typed questions about a text state, which solver of a dataset's portfolio is fastest on each test instance, and writes
-its picks in the format of main.py -T 0, so that analysis.py and plots.py treat it like a trained model.
+its picks in the format of main.py -T 0, so that plots.py treats it like a trained model.
 
 Jev only reads text, so each instance is described by its map, the number of agents, start-goal distances and the
 agents' start and goal cells (--no-coords leaves those out). With --examples K, the state also holds the K training
@@ -139,19 +139,18 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	config = read_config(args.config)
-	analysis, testing = config['Analysis'], config['Testing']
-	yaml_details = read_json(analysis['yaml_details'])
-	map_details = read_json(analysis['map_details'])
-	agent_details = read_json(testing['agent_details'])
-	mapping = analysis['mapping']
+	yaml_details = read_json(config['yaml_details'])
+	map_details = read_json(config['map_details'])
+	agent_details = read_json(config['agent_details'])
+	mapping = config['mapping']
 	solvers = sorted(mapping, key=mapping.get)
-	timeout = analysis.get('timeout', 300)
+	timeout = config['timeout']
 
 	test_keys = list(read_json(args.test_from))[:args.limit]
 	test = set(k[:k.rindex('_')] for k in test_keys)
 	missing = [k for k in test if k not in yaml_details]
 	if missing:
-		raise SystemExit('{} test instances of {} are not in {}'.format(len(missing), args.test_from, analysis['yaml_details']))
+		raise SystemExit('{} test instances of {} are not in {}'.format(len(missing), args.test_from, config['yaml_details']))
 	train = [k for k in yaml_details if k not in test]
 
 	states = {}
@@ -197,9 +196,9 @@ if __name__ == '__main__':
 		correct = sum(p['best'][0] == p['best'][1] for p in predictions.values())
 		print('pilot: {} of {} picks are the fastest solver, ${:.3f} spent; predictions not written'.format(correct, len(predictions), spent))
 		sys.exit(0)
-	with open(testing['prediction_output'], 'w') as f:
+	with open(config['prediction_output'], 'w') as f:
 		json.dump(predictions, f)
-	print('wrote {} ({} instances, ${:.3f} spent)'.format(testing['prediction_output'], len(predictions), spent))
+	print('wrote {} ({} instances, ${:.3f} spent)'.format(config['prediction_output'], len(predictions), spent))
 	# the selector's own time is spent before any solver runs, so it adds to the total runtime
 	print('Jev latency: mean {:.3f} s, median {:.3f} s per instance; {:.1f} min over the test set'.format(
 		sum(latencies) / len(latencies), sorted(latencies)[len(latencies) // 2], sum(latencies) / 60))

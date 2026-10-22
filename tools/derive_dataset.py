@@ -1,7 +1,7 @@
 '''
 Make a dataset folder from another one, with fewer solvers or only a new config, without copying or
 re-rendering its images: datasets/<name>/ gets (name a variant of a dataset as a folder in it, e.g.
-movingai_10-500-agents_300s/eight-solvers/score; see tools/rename_datasets.py)
+movingai_10-500-agents_300s/eight-solvers/score)
 
 	yaml_details.json		the source's, without the dropped solvers and with SOLVER relabelled as the fastest of the others
 	config.json			a fresh config (see make_config in benchmark_dataset.py), whose other files are the source's
@@ -27,21 +27,21 @@ if __name__ == '__main__':
 	parser.add_argument('source', help='Dataset folder to derive from, e.g. datasets/movingai_10-500-agents_300s/nine-solvers')
 	parser.add_argument('--name', required=True, help='Path of the new dataset below datasets/, e.g. movingai_10-500-agents_300s/eight-solvers')
 	parser.add_argument('--drop', nargs='+', default=[], help='Solvers to leave out of the portfolio')
-	parser.add_argument('--loss', choices=['ce', 'score'], default='ce', help='Loss of main.py: cross-entropy (default) or the relative speed loss of round 2')
+	parser.add_argument('--loss', choices=['ce', 'score', 'custom'], default='ce', help='Loss of main.py: cross-entropy (default), the relative speed score (score) or analysis.py\'s custom score (custom); see MAPFAST.train_model')
 	parser.add_argument('--epochs', type=int, default=None, help='Training epochs of main.py (default: the source\'s)')
 	parser.add_argument('--aux', action='store_true', help='Also train MAPFAST\'s auxiliary outputs (finish prediction and pairwise comparison neurons)')
 	args = parser.parse_args()
 
 	source = os.path.normpath(args.source)
 	config = read_json(os.path.join(source, 'config.json'))
-	mapping = config['Analysis']['mapping']
+	mapping = config['mapping']
 	unknown = [s for s in args.drop if s not in mapping]
 	if unknown:
 		raise SystemExit('not solvers of {}: {}'.format(source, ', '.join(unknown)))
 	solvers = sorted((s for s in mapping if s not in args.drop), key=mapping.get)
 
 	yaml_details = {}
-	source_yaml = read_json(os.path.join(source, config['Analysis']['yaml_details']))
+	source_yaml = read_json(os.path.join(source, config['yaml_details']))
 	for instance, record in source_yaml.items():
 		times = {s: record[s] for s in solvers}
 		solved = {s: t for s, t in times.items() if t != -1}
@@ -53,20 +53,14 @@ if __name__ == '__main__':
 	with open(os.path.join(dataset_dir, 'yaml_details.json'), 'w') as f:
 		json.dump(yaml_details, f)
 
-	new_config = make_config(args.name, {s: i for i, s in enumerate(solvers)}, config['Analysis'].get('timeout', 300),
-							 config['Training'].get('augmentation', 1))
-	new_config['Training']['loss'] = args.loss
-	new_config['Training']['epochs'] = args.epochs or config['Training'].get('epochs', 10)
+	new_config = make_config(args.name, {s: i for i, s in enumerate(solvers)}, config['timeout'], config['augmentation'])
+	new_config['loss'] = args.loss
+	new_config['epochs'] = args.epochs or config['epochs']
 	if args.aux:
-		for section in new_config.values():
-			if 'output_units' in section:
-				section['output_units'] = {'cl': 1, 'fin': 1, 'pair': 1}
+		new_config['output_units'] = {'cl': 1, 'fin': 1, 'pair': 1}
 	# the source's agent and map details and images, relative to the new folder like every path of a config
-	for section in new_config.values():
-		for key in ('agent_details', 'map_details', 'input_location'):
-			if key in section:
-				path = os.path.relpath(os.path.join(source, config['Training'][key]), dataset_dir)
-				section[key] = path + '/' if key == 'input_location' else path
+	for key in ('agent_details', 'map_details', 'input_location'):
+		new_config[key] = os.path.relpath(os.path.join(source, config[key]), dataset_dir) + ('/' if key == 'input_location' else '')
 	with open(os.path.join(dataset_dir, 'config.json'), 'w') as f:
 		json.dump(new_config, f, indent='\t')
 

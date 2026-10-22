@@ -1,11 +1,11 @@
 '''
 Turn the MAPFAST dataset of an experiment of MAPF Benchmarking (its merged
 {yaml,agent,map}_details.json) into a dataset folder MAPFAST trains on, datasets/<name>/, where <name> is
-<benchmark>/<portfolio>, e.g. movingai_10-500-agents_300s/four-solvers (see tools/rename_datasets.py):
+<benchmark>/<portfolio>, e.g. movingai_10-500-agents_300s/four-solvers:
 
 	yaml_details.json, agent_details.json, map_details.json
 	images/<instance>.png		one shortest path embedding image per instance
-	config.json			Training, Testing and Analysis config for main.py and analysis.py, with paths relative to the folder
+	config.json			the config of main.py and plots.py, with paths relative to the folder
 
 	python tools/benchmark_dataset.py ~/MAPF-Benchmarking/experiments/movingai_10-500-agents_300s --benchmarks ~/MAPF-Benchmarking/benchmarks --name movingai_10-500-agents_300s/nine-solvers --jobs 16
 
@@ -169,26 +169,14 @@ def convert(yaml_details, agent_details, map_details, solvers=None, solved_by=No
 
 def make_config(name, mapping, timeout, augmentation=1):
 	'''
-	Returns: Json object with the Training, Testing and Analysis sections for this dataset, with paths relative to its folder
+	Returns: Json object of the config of this dataset (for main.py and plots.py), with paths relative to its folder
 	'''
-	files = {d: d + '.json' for d in DETAILS}
-	common = {
-		**files,
-		'test_details': '',
-		'augmentation': augmentation,
-		'batch_size': 16,
-		'input_location': 'images/',
-		'output_units': {'cl': 1, 'fin': 0, 'pair': 0},
-		'model_loc': 'model_weights/',
-		'mapping': mapping,
-	}
 	# file names inside the folder, from its path below datasets/ (e.g. movingai_10-200-agents_60s/four-solvers)
 	tag = name.replace('/', '_')
-	prediction_output = 'y_pred_true_{}.json'.format(tag)
 	return {
-		'Training': {**common, 'epochs': 10, 'log_interval': 1000, 'model_name': tag, 'loss': 'ce'},
-		'Testing': {**common, 'model_name': 'model_{}_best.pth'.format(tag), 'prediction_output': prediction_output},
-		'Analysis': {**files, 'prediction_output': prediction_output, 'mapping': mapping, 'timeout': timeout},
+		**{d: d + '.json' for d in DETAILS}, 'test_details': '', 'input_location': 'images/', 'model_loc': 'model_weights/',
+		'prediction_output': 'y_pred_true_{}.json'.format(tag), 'model_name': tag, 'mapping': mapping, 'timeout': timeout,
+		'augmentation': augmentation, 'batch_size': 16, 'epochs': 10, 'loss': 'ce', 'output_units': {'cl': 1, 'fin': 0, 'pair': 0},
 	}
 
 if __name__ == '__main__':
@@ -199,7 +187,7 @@ if __name__ == '__main__':
 	parser.add_argument('--solvers', nargs='+', default=None, help='Solver portfolio (default: every solver in the files)')
 	parser.add_argument('--solved-by', nargs='+', default=None,
 						help='Keep only the instances that one of these solvers solved, e.g. the --solvers of another dataset built from the same benchmark, so that both hold the same instances')
-	parser.add_argument('--timeout', type=float, default=300, help='Time limit of the benchmark runs in seconds, charged to unsolved runs by analysis.py (default 300, the full limit of scripts/generate_benchmark.sh)')
+	parser.add_argument('--timeout', type=float, default=300, help='Time limit of the benchmark runs in seconds, charged to unsolved runs (default 300)')
 	parser.add_argument('--augmentation', type=int, default=1, choices=range(1, 7),
 						help='Copies of each training instance, flipped and rotated (see get_transition in utils.py); 6 uses every transition (default 1: none)')
 	parser.add_argument('--jobs', type=int, default=os.cpu_count(), help='Scenario files to render in parallel (default: all CPUs)')

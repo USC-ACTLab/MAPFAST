@@ -29,7 +29,7 @@ Results and the history of each experiment are in [experiments/EXPERIMENTS.md](e
 | Folder | Contents |
 |---|---|
 | `models/` | `MAPFAST.py` and `utils.py` (model), `main.py` (train/test), `jev_baseline.py` (Jev baseline), `gnn.py` and `train_gnn.py` (GNN selector) |
-| `tools/` | `benchmark_dataset.py`, `derive_dataset.py` (build datasets), `rename_datasets.py` (old flat names to folders), `build_graphs.py` (GNN graphs), `analysis.py`, `plots.py`, `plot_sweep.py` (evaluate) |
+| `tools/` | `benchmark_dataset.py`, `derive_dataset.py` (build datasets), `build_graphs.py` (GNN graphs), `plots.py`, `plot_sweep.py` (evaluate), `analysis.py` (the paper's evaluation, with its custom score) |
 | `scripts/` | Slurm jobs: `generate_benchmark.sh`, `train.sh`, `compare.sh`, `sweep_gnn.sh` |
 | `datasets/` | `<benchmark>/<portfolio>/[<variant>/]`, e.g. `movingai_10-500-agents_300s/eight-solvers/gnn`: `config.json`, solver times, agents, maps and images |
 | `experiments/` | Logs, graphs and predictions of each round |
@@ -38,9 +38,9 @@ Run everything from this folder.
 
 ## Usage
 
-1. **Build the datasets** (needs the MAPF Benchmarking repository set up on the cluster, at `$BENCH`, default `~/MAPF-Benchmarking`). This benchmarks every solver on every map (up to 500 agents, 300 s limit) as MAPF Benchmarking experiments, then writes `datasets/movingai_10-500-agents_300s/four-solvers` and `nine-solvers`. `extend <experiment>` instead reruns an existing experiment's unsolved runs with the 300 s limit and adds the larger agent counts:
+1. **Build the datasets** (needs the MAPF Benchmarking repository set up on the cluster, at `$BENCH`, default `~/MAPF-Benchmarking`). This benchmarks every solver on every map (up to 500 agents, 300 s limit) as a MAPF Benchmarking experiment, then writes `datasets/<experiment>/four-solvers` and `nine-solvers`:
    ```bash
-   ./scripts/generate_benchmark.sh
+   ./scripts/generate_benchmark.sh movingai_10-500-agents_300s
    ```
 2. **Make variants** without re-rendering the images, e.g. dropping a solver or adding the auxiliary outputs:
    ```bash
@@ -49,13 +49,13 @@ Run everything from this folder.
 3. **Train, test and compare.** This submits one training job per model, the Jev baselines (needs `TYPESAFE_API_KEY`) and a comparison plot, all written to `experiments/round_N/`:
    ```bash
    ./scripts/sweep_gnn.sh datasets/movingai_10-500-agents_300s/eight-solvers     # MAPFAST-GNN, once
-   TRAIN_TIME=12:00:00 OUT=experiments/round_3 ./scripts/compare.sh MAPFAST=datasets/movingai_10-500-agents_300s/four-solvers \
+   TRAIN_TIME=24:00:00 OUT=experiments/round_3 ./scripts/compare.sh MAPFAST=datasets/movingai_10-500-agents_300s/four-solvers \
        MAPFASTv2=datasets/movingai_10-500-agents_300s/eight-solvers MAPFAST-GNN=@datasets/movingai_10-500-agents_300s/eight-solvers/gnn
    ```
    - `scripts/train.sh` creates the Python environment (`pytorch.venvsource/`) on its first run.
-   - To run one model by hand: `python models/main.py -C <dataset>` to train, add `-T 0` to test, then `python tools/analysis.py -C <dataset>`.
+   - To run one model by hand: `python models/main.py -C <dataset>` to train, add `-T 0` to test, then `python tools/plots.py -C <dataset>`.
 
 ## Notes
 
-- **Configs:** each dataset's `config.json` sets its solver portfolio, the loss (cross-entropy, or `score`, a relative speed loss), the outputs and the time limit. Paths in it are relative to the dataset folder.
-- **Auxiliary outputs:** the original authors report that MAPFAST's auxiliary outputs (finish prediction, pairwise comparison) do not help (MAPFASTER, IROS 2022; "No Panacea in Planning"). Round 2 tests this again as an ablation.
+- **Configs:** each dataset's `config.json` sets its solver portfolio, the loss (cross-entropy; `score`, the relative speed score; or `custom`, the paper's custom score), the outputs and the time limit. Paths in it are relative to the dataset folder.
+- **Auxiliary outputs:** the original authors report that MAPFAST's auxiliary outputs (finish prediction, pairwise comparison) do not help (MAPFASTER, IROS 2022; "No Panacea in Planning").

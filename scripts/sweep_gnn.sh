@@ -2,14 +2,15 @@
 # Hyperparameter sweep of MAPFAST-GNN (models/gnn.py, models/train_gnn.py) on one dataset: build its graphs from the
 # MovingAI files (tools/build_graphs.py) unless they exist, train every configuration of models/train_gnn.py's GRID (one
 # GPU task of a Slurm job array each), then rank them by validation speedup and keep the best one's test predictions in
-# the dataset's variant <dataset>/gnn/, which compare.sh can plot next to the other models (NAME=@<dataset>/gnn).
+# the dataset's variant <dataset>/$VARIANT/, which compare.sh can plot next to the other models (NAME=@<dataset>/$VARIANT).
 # usage, from the repository folder: ./scripts/sweep_gnn.sh DATASET
 #   e.g. ./scripts/sweep_gnn.sh datasets/movingai_10-500-agents_300s/eight-solvers
 #   OUT        folder for the logs, the trained configurations and summary.md (default experiments/gnn_sweep/<dataset
 #              path below datasets/>)
 #   BENCH      MAPF Benchmarking folder, for its benchmarks/ (default ~/MAPF-Benchmarking)
-#   SIDE       most blocks along each side of the coarsened map grids (default 64)
 #   EPOCHS     epochs per configuration (default 40)
+#   VARIANT    dataset variant for the best predictions (default gnn)
+#   TRAIN_TIME time limit of each configuration (default 12:00:00)
 #   PARALLEL   most configurations training at once (default 8)
 #
 # This script only submits jobs. Train a model with scripts/train.sh first, so that the virtual environment exists.
@@ -28,7 +29,7 @@ submit_graphs() {
 	local id
 	id=$(sbatch --parsable -J "build_graphs_$NAME" -o "$OUT/%x_%j.out" -e "$OUT/%x_%j.err" \
 		--nodes=1 --cpus-per-task=16 --time=4:00:00 --mem=32G \
-		--wrap "source pytorch.venvsource/bin/activate && python -u tools/build_graphs.py $DATASET --benchmarks $BENCH/benchmarks --side $SIDE --jobs 16")
+		--wrap "source pytorch.venvsource/bin/activate && python -u tools/build_graphs.py $DATASET --benchmarks $BENCH/benchmarks --jobs 16")
 	echo "graphs: job $id builds $GRAPHS" >&2
 	echo "$id"
 }
@@ -40,25 +41,24 @@ submit_sweep() {
 	configs=$(python -u models/train_gnn.py list)
 	id=$(sbatch --parsable -J "gnn_$NAME" "${after[@]}" --array="0-$((configs - 1))%$PARALLEL" \
 		-o "$OUT/%x_%A_%a.out" -e "$OUT/%x_%A_%a.err" \
-		-p gpu --gres=gpu:1 --nodes=1 --cpus-per-task=4 --time=3:00:00 --mem=24G \
-		--wrap "source pytorch.venvsource/bin/activate && python -u models/train_gnn.py train $DATASET --config-index \$SLURM_ARRAY_TASK_ID --out $OUT --side $SIDE --epochs $EPOCHS")
+		-p gpu --gres=gpu:1 --nodes=1 --cpus-per-task=4 --time=${TRAIN_TIME:-12:00:00} --mem=48G \
+		--wrap "source pytorch.venvsource/bin/activate && python -u models/train_gnn.py train $DATASET --config-index \$SLURM_ARRAY_TASK_ID --out $OUT --epochs $EPOCHS")
 	echo "sweep: job array $id, $configs configurations, at most $PARALLEL at once, logs $OUT/gnn_${NAME}_${id}_<index>.out" >&2
 	echo "$id"
 }
 
 # Submits the job that ranks the configurations once the array has ended (whether or not every task succeeded) and
-# writes the best one's predictions to <dataset>/gnn/
+# writes the best one's predictions to <dataset>/$VARIANT/
 submit_select() {
 	local id
 	id=$(sbatch --parsable -J "select_gnn_$NAME" --dependency="afterany:$1" -o "$OUT/%x_%j.out" -e "$OUT/%x_%j.err" \
 		--time=0:15:00 --mem=8G --cpus-per-task=1 \
 		--mail-type=END,FAIL --mail-user=milan_capoor@brown.edu \
 		--wrap "set -e; source pytorch.venvsource/bin/activate
-[ -f $DATASET/gnn/config.json ] || python -u tools/derive_dataset.py $DATASET --name ${REL}/gnn
-python -u models/train_gnn.py select $OUT --dataset-out $DATASET/gnn
-python -u tools/analysis.py -C $DATASET/gnn")
-	echo "select: job $id, ranking in $OUT/summary.md, best predictions in $DATASET/gnn/" >&2
-	echo "Then compare: ./scripts/compare.sh ... MAPFAST-GNN=@$DATASET/gnn" >&2
+[ -f $DATASET/$VARIANT/config.json ] || python -u tools/derive_dataset.py $DATASET --name ${REL}/$VARIANT
+python -u models/train_gnn.py select $OUT --dataset-out $DATASET/$VARIANT")
+	echo "select: job $id, ranking in $OUT/summary.md, best predictions in $DATASET/$VARIANT/" >&2
+	echo "Then compare: ./scripts/compare.sh ... MAPFAST-GNN=@$DATASET/$VARIANT" >&2
 }
 
 # run from the repository folder, whose paths (datasets/, models/, tools/, ...) every job uses
@@ -70,10 +70,10 @@ REL="${DATASET#datasets/}"
 NAME="${REL//\//_}"
 OUT="${OUT:-experiments/gnn_sweep/$REL}"
 BENCH=$(readlink -f "${BENCH:-$HOME/MAPF-Benchmarking}")
-SIDE="${SIDE:-64}"
 EPOCHS="${EPOCHS:-40}"
 PARALLEL="${PARALLEL:-8}"
-GRAPHS="$DATASET/graphs_s$SIDE.pkl"
+VARIANT="${VARIANT:-gnn}"
+GRAPHS="$DATASET/graphs.pkl"
 
 check_setup
 mkdir -p "$OUT"

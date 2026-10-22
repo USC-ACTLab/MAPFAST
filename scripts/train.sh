@@ -49,8 +49,6 @@ echo "Training model..."
 python -u models/main.py -C "$DATASET"
 echo "Testing model..."
 python -u models/main.py -T 0 -C "$DATASET"
-echo "Running Analysis..."
-python -u tools/analysis.py -C "$DATASET"
 echo "Plotting..."
 # LOG_DIR: where sbatch -o put this job's log (compare.sh sets it to the round's experiments folder)
 python -u tools/plots.py -C "$DATASET" --log "${LOG_DIR:-logs}/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out"

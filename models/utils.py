@@ -1,12 +1,11 @@
-from numpy import asarray
-import numpy as np
-import os
 import json
+import os
 import sys
+
+import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-from torch.nn.utils.rnn import pad_sequence
 
 def create_model_weights(loc='model_weights'):
 	if not os.path.isdir(loc):
@@ -25,18 +24,20 @@ CONFIG_PATHS = ('yaml_details', 'agent_details', 'map_details', 'test_details', 
 def read_config(path):
 	'''
 	Reads a config.json, given its path or the dataset folder that contains it (e.g. datasets/movingai_pilot/nine-solvers).
-	The file and folder paths in it are relative to the folder of the config.json.
+	The file and folder paths in it are relative to the folder of the config.json. A config of the old layout, with
+	Training, Testing and Analysis sections, is read as one.
 
 	Returns: Json object of the config, with those paths joined to the folder of the config.json
 	'''
 	if os.path.isdir(path):
 		path = os.path.join(path, 'config.json')
 	config = read_json(path)
+	if 'Training' in config:
+		config = {**config['Analysis'], **config['Testing'], **config['Training']}
 	root = os.path.dirname(path)
-	for section in config.values():
-		for key in CONFIG_PATHS:
-			if section.get(key):
-				section[key] = os.path.join(root, section[key])
+	for key in CONFIG_PATHS:
+		if config.get(key):
+			config[key] = os.path.join(root, config[key])
 	return config
 
 def get_inv_mapping(mapping):
@@ -129,99 +130,36 @@ class InceptionClassificationNet(nn.Module):
 			m = (self.solvers_count * (self.solvers_count - 1))//2
 			self.linear4 = nn.Linear(200, m)
 
-	def forward(self, x1):
+	def inception(self, x, first):
+		'''
+		The inception module: 1x1, 3x3 and 5x5 convolutions and a max pool, side by side (the first module of the
+		network, or the shared weights of the second and third)
+		'''
+		if first:
+			c1, m1, c3, m2, c5, pool, after = self.conv1, self.conv_mid_1, self.conv3, self.conv_mid_2, self.conv5, self.pool1, self.conv_after
+		else:
+			c1, m1, c3, m2, c5, pool, after = self.conv1_, self.conv_mid_1_, self.conv3_, self.conv_mid_2_, self.conv5_, self.pool1_, self.conv_after_
+		return torch.cat((c1(x), c3(m1(x)), c5(m2(x)), after(pool(x))), dim=1)
+
+	def forward(self, x):
 		'''
 		Forward function for our Inception module.
 
-		Returns: Json object whose content depends on the model.
-			If the model has classification units, the json will have a key 'cl' and a value corresponding to the output of forward propagation step.
-			If the model has finish prediction neurons, the json will have a key 'fin' and a value corresponding to the output of forward propagation step.
-			If the model has pairwise classification neurons, the json will have a key 'pair' and a value corresponding to the output of forward propagation step.
+		Returns: Json object with the outputs of the model's neurons: 'cl' (classification), 'fin' (finish prediction)
+			and 'pair' (pairwise comparison), each if the model has them
 		'''
-		cov1 = self.conv1(x1)
-		cov2 = self.conv3(self.conv_mid_1(x1))
-		cov3 = self.conv5(self.conv_mid_2(x1))
-		cov4 = self.conv_after(self.pool1(x1))
-
-		del x1
-
-		conv = torch.cat((cov1, cov2, cov3, cov4), dim=1)
-
-		del cov1
-		del cov2
-		del cov3
-		del cov4
-
-		conv = self.pool2(conv)
-		conv = self.batch1(conv)
-		conv = F.relu(conv)
-
-		cov1 = self.conv1_(conv)
-		cov2 = self.conv3_(self.conv_mid_1_(conv))
-		cov3 = self.conv5_(self.conv_mid_2_(conv))
-		cov4 = self.conv_after_(self.pool1_(conv))
-
-		del conv
-
-		conv = torch.cat((cov1, cov2, cov3, cov4), dim=1)
-
-		del cov1
-		del cov2
-		del cov3
-		del cov4
-
-		conv = self.pool2(conv)
-		conv = self.batch2(conv)
-		conv = F.relu(conv)
-
-		cov1 = self.conv1_(conv)
-		cov2 = self.conv3_(self.conv_mid_1_(conv))
-		cov3 = self.conv5_(self.conv_mid_2_(conv))
-		cov4 = self.conv_after_(self.pool1_(conv))
-
-		del conv
-
-		conv = torch.cat((cov1, cov2, cov3, cov4), dim=1)
-
-		del cov1
-		del cov2
-		del cov3
-		del cov4
-
-		conv = self.pool2(conv)
-		conv = self.batch3(conv)
-		conv = F.relu(conv)
-		conv = conv.view(-1, self.num_features(conv))
-
-		both = self.linear1(conv)
-
-		del conv
-
+		x = F.relu(self.batch1(self.pool2(self.inception(x, True))))
+		x = F.relu(self.batch2(self.pool2(self.inception(x, False))))
+		x = F.relu(self.batch3(self.pool2(self.inception(x, False))))
+		both = self.linear1(x.flatten(1))
 		outs = {}
-	
 		if self.cl_units:
-			out1 = self.linear2(both)
-			outs['cl'] = out1
-
+			outs['cl'] = self.linear2(both)
 		if self.fin_pred_units:
-			out2 = self.linear3(both)
-			outs['fin'] = out2
-
+			outs['fin'] = self.linear3(both)
 		if self.pair_units:
-			out3 = self.linear4(both)
-			outs['pair'] = out3
-
-		del both
-
+			outs['pair'] = self.linear4(both)
 		return outs
-
-
-	def num_features(self, x):
-		s = x.size()[1:]
-		n = 1
-		for i in s:
-			n *= i
-		return n
 
 def horizontal_flip(li, map_details):
 	'''

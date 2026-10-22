@@ -117,11 +117,6 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	config = read_config(args.config)
-	if 'Analysis' not in config:
-		print('Add Analysis parameters to config.json')
-		sys.exit(0)
-
-	config = config['Analysis']
 
 	yaml_details = read_json(config['yaml_details'])
 	agent_details = read_json(config['agent_details'])
