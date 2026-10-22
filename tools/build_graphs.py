@@ -39,11 +39,15 @@ import math
 import os
 import pickle
 import re
+import sys
 from multiprocessing import Pool
 
 import numpy as np
 
 from benchmark_dataset import load_map, map_name, scen_name, shortest_path
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models'))
+from utils import read_config
 
 NODE_FEATURES = ('agent', 'starts', 'goals', 'paths', 'length', 'detour', 'overlap')
 GLOBAL_FEATURES = ('log_agents', 'log_free', 'agents_per_free', 'mean_path', 'max_path', 'overlap_fraction', 'log_cells')
@@ -142,8 +146,7 @@ if __name__ == '__main__':
 	parser.add_argument('--jobs', type=int, default=os.cpu_count(), help='Scenario files to build in parallel (default: all CPUs)')
 	args = parser.parse_args()
 
-	config = read_json(os.path.join(args.dataset, 'config.json'))
-	yaml_details = read_json(os.path.join(args.dataset, config['yaml_details']))
+	yaml_details = read_json(read_config(args.dataset)['yaml_details'])
 	benchmarks = os.path.expanduser(args.benchmarks)
 	out = args.out or os.path.join(args.dataset, 'graphs.pkl')
 

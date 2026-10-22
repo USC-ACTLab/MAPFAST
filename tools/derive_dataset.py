@@ -15,8 +15,12 @@ the instances, so a dataset that keeps them all is split exactly as its source.
 import argparse
 import json
 import os
+import sys
 
 from benchmark_dataset import make_config
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models'))
+from utils import read_config
 
 def read_json(path):
 	with open(path) as f:
@@ -33,7 +37,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	source = os.path.normpath(args.source)
-	config = read_json(os.path.join(source, 'config.json'))
+	config = read_config(source)
 	mapping = config['mapping']
 	unknown = [s for s in args.drop if s not in mapping]
 	if unknown:
@@ -41,7 +45,7 @@ if __name__ == '__main__':
 	solvers = sorted((s for s in mapping if s not in args.drop), key=mapping.get)
 
 	yaml_details = {}
-	source_yaml = read_json(os.path.join(source, config['yaml_details']))
+	source_yaml = read_json(config['yaml_details'])
 	for instance, record in source_yaml.items():
 		times = {s: record[s] for s in solvers}
 		solved = {s: t for s, t in times.items() if t != -1}
@@ -60,7 +64,7 @@ if __name__ == '__main__':
 		new_config['output_units'] = {'cl': 1, 'fin': 1, 'pair': 1}
 	# the source's agent and map details and images, relative to the new folder like every path of a config
 	for key in ('agent_details', 'map_details', 'input_location'):
-		new_config[key] = os.path.relpath(os.path.join(source, config[key]), dataset_dir) + ('/' if key == 'input_location' else '')
+		new_config[key] = os.path.relpath(config[key], dataset_dir) + ('/' if key == 'input_location' else '')
 	with open(os.path.join(dataset_dir, 'config.json'), 'w') as f:
 		json.dump(new_config, f, indent='\t')
 
