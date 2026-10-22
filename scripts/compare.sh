@@ -1,13 +1,13 @@
 #!/bin/bash
 # Train and test several models with train.sh (one job each), run the Jev baseline (models/jev_baseline.py) on their
-# test instances, then plot them all together in $OUT/<name>_vs_<name>..._<jobid>/. Each model is one of
+# test instances, then plot them all together in $OUT/<name>_vs_<name>.../. Each model is one of
 #   NAME=DATASET     train DATASET with train.sh
 #   NAME=@DATASET    only plot DATASET, whose predictions exist (e.g. MAPFAST-GNN's, from sweep_gnn.sh)
 # For every solver portfolio among the trained models and every K of JEV_EXAMPLES (default 20; empty: no baseline),
 # one job asks Jev about the test instances of the first model with that portfolio, with K training instances of the
 # same map per request, into the variant <dataset>/jev<K>/, plotted as Jev<K>_<model>. It needs TYPESAFE_API_KEY.
-# Logs go to $OUT/<name>_<jobid>.out, and the comparison job copies every model's config and predictions to
-# $OUT/predictions/<name>/.
+# Logs go to $LOGS/<name>_<jobid>.out (LOGS defaults to $OUT), and the comparison job copies every model's config
+# and predictions to $OUT/predictions/<name>/.
 #
 # usage, from the repository folder: OUT=experiments/round_N ./scripts/compare.sh NAME=DATASET ...
 #   TRAIN_TIME   time limit of the training jobs (default: train.sh's)
@@ -19,8 +19,9 @@ cd "$(dirname "$0")/.."
 [ -n "$OUT" ] && [ $# -gt 0 ] || { echo "usage: OUT=experiments/round_N ./scripts/compare.sh NAME=DATASET ..." >&2; exit 1; }
 JEV_EXAMPLES="${JEV_EXAMPLES-20}"
 [ -z "$JEV_EXAMPLES" ] || [ -n "$TYPESAFE_API_KEY" ] || { echo "set TYPESAFE_API_KEY, or JEV_EXAMPLES= for no baseline" >&2; exit 1; }
-mkdir -p "$OUT"
-log=(-o "$OUT/%x_%j.out" -e "$OUT/%x_%j.err")
+LOGS="${LOGS:-$OUT}"
+mkdir -p "$OUT" "$LOGS"
+log=(-o "$LOGS/%x_%j.out" -e "$LOGS/%x_%j.err")
 time_limit=()
 [ -z "$TRAIN_TIME" ] || time_limit=(--time="$TRAIN_TIME")
 config() { python3 -c "import json, sys; print(json.load(open(sys.argv[1] + '/config.json'))[sys.argv[2]])" "$@"; }
@@ -48,12 +49,12 @@ for run in "$@"; do
 		plot "$name" "${dataset#@}" none
 		continue
 	fi
-	id=$(sbatch --parsable -J "$name" "${log[@]}" --export=ALL,LOG_DIR="$OUT" "${time_limit[@]}" "${after_first[@]}" \
+	id=$(sbatch --parsable -J "$name" "${log[@]}" --export=ALL,LOG_DIR="$LOGS" "${time_limit[@]}" "${after_first[@]}" \
 		scripts/train.sh "$dataset")
 	# only the first job creates the virtual environment
 	[ -f pytorch.venvsource/bin/activate ] || [ ${#jobs[@]} -gt 0 ] || after_first=(--dependency="afterany:$id")
 	jobs+=("$id")
-	plot "$name" "$dataset" "$OUT/${name}_${id}.out"
+	plot "$name" "$dataset" "$LOGS/${name}_${id}.out"
 	echo "$name ($dataset): job $id"
 
 	portfolio=$(config "$dataset" mapping)
@@ -77,5 +78,5 @@ after=()
 [ ${#jobs[@]} -eq 0 ] || after=(--dependency="afterok:$(IFS=:; echo "${jobs[*]}")")
 id=$(sbatch --parsable -J "$comparison" "${after[@]}" --time=0:15:00 --mem=4G --cpus-per-task=1 "${log[@]}" \
 	--mail-type=END,FAIL --mail-user=milan_capoor@brown.edu \
-	--wrap "source pytorch.venvsource/bin/activate && python -u tools/plots.py $plot_args -o $OUT/${comparison}_\$SLURM_JOB_ID $copy_args")
-echo "Comparison: job $id, graphs in $OUT/${comparison}_${id}/"
+	--wrap "source pytorch.venvsource/bin/activate && python -u tools/plots.py $plot_args -o $OUT/${comparison} $copy_args")
+echo "Comparison: job $id, graphs in $OUT/${comparison}/"

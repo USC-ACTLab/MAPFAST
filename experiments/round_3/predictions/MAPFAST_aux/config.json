@@ -1,0 +1,63 @@
+{
+	"Training": {
+		"yaml_details": "yaml_details.json",
+		"agent_details": "../agent_details.json",
+		"map_details": "../map_details.json",
+		"test_details": "",
+		"augmentation": 6,
+		"batch_size": 16,
+		"input_location": "../images/",
+		"output_units": {
+			"cl": 1,
+			"fin": 1,
+			"pair": 1
+		},
+		"model_loc": "model_weights/",
+		"mapping": {
+			"bcp2": 0,
+			"cbs": 1,
+			"cbsh2_rtc": 2,
+			"reloc": 3
+		},
+		"epochs": 15,
+		"log_interval": 1000,
+		"model_name": "movingai_10-500-agents_300s_four-solvers_aux",
+		"loss": "ce"
+	},
+	"Testing": {
+		"yaml_details": "yaml_details.json",
+		"agent_details": "../agent_details.json",
+		"map_details": "../map_details.json",
+		"test_details": "",
+		"augmentation": 6,
+		"batch_size": 16,
+		"input_location": "../images/",
+		"output_units": {
+			"cl": 1,
+			"fin": 1,
+			"pair": 1
+		},
+		"model_loc": "model_weights/",
+		"mapping": {
+			"bcp2": 0,
+			"cbs": 1,
+			"cbsh2_rtc": 2,
+			"reloc": 3
+		},
+		"model_name": "model_movingai_10-500-agents_300s_four-solvers_aux_best.pth",
+		"prediction_output": "y_pred_true_movingai_10-500-agents_300s_four-solvers_aux.json"
+	},
+	"Analysis": {
+		"yaml_details": "yaml_details.json",
+		"agent_details": "../agent_details.json",
+		"map_details": "../map_details.json",
+		"prediction_output": "y_pred_true_movingai_10-500-agents_300s_four-solvers_aux.json",
+		"mapping": {
+			"bcp2": 0,
+			"cbs": 1,
+			"cbsh2_rtc": 2,
+			"reloc": 3
+		},
+		"timeout": 300.0
+	}
+}

@@ -17,5 +17,7 @@ runs/
 graphs_s*.pkl
 
 
-experiments/
+experiments/*/logs/
 typesafe_key.txt
+
+CLAUDE.md

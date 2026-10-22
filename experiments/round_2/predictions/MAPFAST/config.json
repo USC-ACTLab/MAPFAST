@@ -1,0 +1,63 @@
+{
+	"Training": {
+		"yaml_details": "yaml_details.json",
+		"agent_details": "../full_four_solvers/agent_details.json",
+		"map_details": "../full_four_solvers/map_details.json",
+		"test_details": "",
+		"augmentation": 6,
+		"batch_size": 16,
+		"input_location": "../full_four_solvers/images/",
+		"output_units": {
+			"cl": 1,
+			"fin": 0,
+			"pair": 0
+		},
+		"model_loc": "model_weights/",
+		"mapping": {
+			"bcp2": 0,
+			"cbs": 1,
+			"cbsh2_rtc": 2,
+			"reloc": 3
+		},
+		"epochs": 10,
+		"log_interval": 1000,
+		"model_name": "full_four_solvers_score",
+		"loss": "score"
+	},
+	"Testing": {
+		"yaml_details": "yaml_details.json",
+		"agent_details": "../full_four_solvers/agent_details.json",
+		"map_details": "../full_four_solvers/map_details.json",
+		"test_details": "",
+		"augmentation": 6,
+		"batch_size": 16,
+		"input_location": "../full_four_solvers/images/",
+		"output_units": {
+			"cl": 1,
+			"fin": 0,
+			"pair": 0
+		},
+		"model_loc": "model_weights/",
+		"mapping": {
+			"bcp2": 0,
+			"cbs": 1,
+			"cbsh2_rtc": 2,
+			"reloc": 3
+		},
+		"model_name": "model_full_four_solvers_score_best.pth",
+		"prediction_output": "y_pred_true_full_four_solvers_score.json"
+	},
+	"Analysis": {
+		"yaml_details": "yaml_details.json",
+		"agent_details": "../full_four_solvers/agent_details.json",
+		"map_details": "../full_four_solvers/map_details.json",
+		"prediction_output": "y_pred_true_full_four_solvers_score.json",
+		"mapping": {
+			"bcp2": 0,
+			"cbs": 1,
+			"cbsh2_rtc": 2,
+			"reloc": 3
+		},
+		"timeout": 60
+	}
+}

@@ -5,8 +5,9 @@
 # the dataset's variant <dataset>/$VARIANT/, which compare.sh can plot next to the other models (NAME=@<dataset>/$VARIANT).
 # usage, from the repository folder: ./scripts/sweep_gnn.sh DATASET
 #   e.g. ./scripts/sweep_gnn.sh datasets/movingai_10-500-agents_300s/eight-solvers
-#   OUT        folder for the logs, the trained configurations and summary.md (default experiments/gnn_sweep/<dataset
+#   OUT        folder for the trained configurations and summary.md (default experiments/gnn_sweep/<dataset
 #              path below datasets/>)
+#   LOGS       folder for the jobs' .out and .err files (default OUT)
 #   BENCH      MAPF Benchmarking folder, for its benchmarks/ (default ~/MAPF-Benchmarking)
 #   EPOCHS     epochs per configuration (default 40)
 #   VARIANT    dataset variant for the best predictions (default gnn)
@@ -27,7 +28,7 @@ check_setup() {
 submit_graphs() {
 	[ -f "$GRAPHS" ] && { echo "graphs: $GRAPHS exists" >&2; return; }
 	local id
-	id=$(sbatch --parsable -J "build_graphs_$NAME" -o "$OUT/%x_%j.out" -e "$OUT/%x_%j.err" \
+	id=$(sbatch --parsable -J "build_graphs_$NAME" -o "$LOGS/%x_%j.out" -e "$LOGS/%x_%j.err" \
 		--nodes=1 --cpus-per-task=16 --time=4:00:00 --mem=32G \
 		--wrap "source pytorch.venvsource/bin/activate && python -u tools/build_graphs.py $DATASET --benchmarks $BENCH/benchmarks --jobs 16")
 	echo "graphs: job $id builds $GRAPHS" >&2
@@ -40,10 +41,10 @@ submit_sweep() {
 	[ -z "$1" ] || after=(--dependency="afterok:$1")
 	configs=$(python -u models/train_gnn.py list)
 	id=$(sbatch --parsable -J "gnn_$NAME" "${after[@]}" --array="0-$((configs - 1))%$PARALLEL" \
-		-o "$OUT/%x_%A_%a.out" -e "$OUT/%x_%A_%a.err" \
+		-o "$LOGS/%x_%A_%a.out" -e "$LOGS/%x_%A_%a.err" \
 		-p gpu --gres=gpu:1 --nodes=1 --cpus-per-task=4 --time=${TRAIN_TIME:-12:00:00} --mem=48G \
 		--wrap "source pytorch.venvsource/bin/activate && python -u models/train_gnn.py train $DATASET --config-index \$SLURM_ARRAY_TASK_ID --out $OUT --epochs $EPOCHS")
-	echo "sweep: job array $id, $configs configurations, at most $PARALLEL at once, logs $OUT/gnn_${NAME}_${id}_<index>.out" >&2
+	echo "sweep: job array $id, $configs configurations, at most $PARALLEL at once, logs $LOGS/gnn_${NAME}_${id}_<index>.out" >&2
 	echo "$id"
 }
 
@@ -51,7 +52,7 @@ submit_sweep() {
 # writes the best one's predictions to <dataset>/$VARIANT/
 submit_select() {
 	local id
-	id=$(sbatch --parsable -J "select_gnn_$NAME" --dependency="afterany:$1" -o "$OUT/%x_%j.out" -e "$OUT/%x_%j.err" \
+	id=$(sbatch --parsable -J "select_gnn_$NAME" --dependency="afterany:$1" -o "$LOGS/%x_%j.out" -e "$LOGS/%x_%j.err" \
 		--time=0:15:00 --mem=8G --cpus-per-task=1 \
 		--mail-type=END,FAIL --mail-user=milan_capoor@brown.edu \
 		--wrap "set -e; source pytorch.venvsource/bin/activate
@@ -69,6 +70,7 @@ DATASET="${DATASET%/}"
 REL="${DATASET#datasets/}"
 NAME="${REL//\//_}"
 OUT="${OUT:-experiments/gnn_sweep/$REL}"
+LOGS="${LOGS:-$OUT}"
 BENCH=$(readlink -f "${BENCH:-$HOME/MAPF-Benchmarking}")
 EPOCHS="${EPOCHS:-40}"
 PARALLEL="${PARALLEL:-8}"
@@ -76,7 +78,7 @@ VARIANT="${VARIANT:-gnn}"
 GRAPHS="$DATASET/graphs.pkl"
 
 check_setup
-mkdir -p "$OUT"
+mkdir -p "$OUT" "$LOGS"
 source pytorch.venvsource/bin/activate
 graphs_job=$(submit_graphs)
 sweep_job=$(submit_sweep "$graphs_job")

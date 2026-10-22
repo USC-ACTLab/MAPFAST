@@ -1,0 +1,89 @@
+\documentclass[border=4pt]{standalone}
+\usepackage{tikz,amsmath}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds}
+\definecolor{c0}{HTML}{2a78d6}\definecolor{c1}{HTML}{eb6834}\definecolor{c2}{HTML}{1baf7a}\definecolor{pathc}{HTML}{e34948}
+\definecolor{lin}{HTML}{bcd7f5}\definecolor{gl}{HTML}{f7ef7a}\definecolor{nrm}{HTML}{f7c6cf}\definecolor{act}{HTML}{f4f1e4}
+\definecolor{pool}{HTML}{f9d3a8}\definecolor{glob}{HTML}{c8ebd9}\definecolor{out}{HTML}{f08c8c}\definecolor{drop}{HTML}{e3e3e3}
+\tikzset{
+  b/.style={draw, rounded corners=3pt, minimum width=.72cm, minimum height=2.5cm, inner sep=1pt, font=\small},
+  s/.style={draw, rounded corners=3pt, minimum height=.55cm, inner sep=3pt, font=\small},
+  a/.style={-{Stealth[length=5pt]}, thick},
+  dim/.style={font=\footnotesize, yshift=-1.5cm}}
+\newcommand{\B}[4][]{\node[b, fill=#3, #1] (#2) {\rotatebox{90}{#4}};}
+\begin{document}
+\begin{tikzpicture}[node distance=.32cm]
+% ---------------- input ----------------
+\begin{scope}[scale=.25, shift={(0,-6)}]
+  \draw[thin, gray!40, step=1] (0,0) grid (12,12); \input{map.tex} \draw (0,0) rectangle (12,12);
+\end{scope}
+\node[font=\small, align=center] at (1.5,-1.95) {map $H{\times}W$, agents'\\starts, goals, A* paths};
+\draw[a] (3.15,0) -- node[above, font=\footnotesize, align=center]{$k{\times}k$\\blocks} (4.05,0);
+\begin{scope}[scale=.25, shift={(16.4,-6)}]
+  \draw[gray!30, dashed, step=2] (0,0) grid (12,12); \input{graph.tex}
+\end{scope}
+\node[font=\small, align=center] at (5.6,-1.95) {block graph, $N$ nodes, $N{\times}6$\\features (fill: path cells)};
+% ---------------- encoder + message passing ----------------
+\B[at={(8.1,0)}]{enc}{lin}{Linear}
+\B[right=of enc]{r0}{act}{ReLU}
+\B[right=.75cm of r0]{mp}{gl}{Graph layer}
+\B[right=of mp]{ln}{nrm}{LayerNorm}
+\B[right=of ln]{r1}{act}{ReLU}
+\B[right=of r1]{d1}{drop}{Dropout}
+\node[draw, circle, inner sep=0pt, minimum size=.42cm, right=.42cm of d1, font=\small] (add) {$+$};
+\draw[a] (7.25,0) -- (enc); \draw[a] (enc) -- (r0); \draw[a] (r0) -- coordinate[pos=.35](split) (mp);
+\foreach \u/\v in {mp/ln, ln/r1, r1/d1, d1/add} \draw[a] (\u) -- (\v);
+\draw[a] (split) -- ++(0,-1.6) -| (add);
+\node[font=\footnotesize, fill=white, inner sep=1pt] at ($(split)!.5!(add) + (0,-1.6)$) {residual};
+\begin{scope}[on background layer]
+  \coordinate (f1) at ($(split)+(0.12,-1.85)$); \coordinate (f2) at ($(mp.north)+(0,.15)$);
+  \node[draw, dashed, rounded corners=6pt, fit=(mp)(add)(f1)(f2), inner sep=4pt] (rep) {};
+\end{scope}
+\node[font=\small, anchor=south east] at (rep.north east) {$\times L$};
+\node[dim] at ($(enc.east)!.5!(r0.west)$) {$N{\times}d$};
+% ---------------- graph layer inset ----------------
+\begin{scope}[shift={($(mp)+(-1.8,4.3)$)}]
+  \node[s, fill=act] (hi) at (0,.55) {$h_i$};
+  \node[s, fill=act] (hj) at (0,-.55) {$h_j,\ j\in\mathcal N(i)$};
+  \node[s, fill=pool, right=.45cm of hj] (mean) {mean};
+  \node[s, fill=lin] (w1) at ($(mean)+(1.5,1.1)$) {Linear $W_1$};
+  \node[s, fill=lin, right=.45cm of mean] (w2) {Linear $W_2$};
+  \coordinate (mid) at ($(w1.east |- w2.east)!.5!(w1.east)$);
+  \node[draw, circle, inner sep=0pt, minimum size=.42cm, right=.5cm of mid, font=\small] (sum) {$+$};
+  \node[s, fill=act, right=.45cm of sum] (ho) {$h_i'$};
+  \draw[a] (hi) -- (w1); \draw[a] (hj) -- (mean); \draw[a] (mean) -- (w2); \draw[a] (w1) -| (sum); \draw[a] (w2) -| (sum); \draw[a] (sum) -- (ho);
+  \node[font=\footnotesize, anchor=north west, align=left] at ($(hj.south west)+(0,-.1)$)
+    {GraphSAGE; or GIN: $h_i' = \mathrm{MLP}\big((1{+}\epsilon)h_i + \textstyle\sum_{j\in\mathcal N(i)} h_j\big)$};
+\end{scope}
+\begin{scope}[on background layer]
+  \coordinate (f3) at ($(hj.south west)+(0,-.55)$); \coordinate (f4) at ($(ho.east)+(.15,0)$);
+  \node[draw, dashed, rounded corners=8pt, fill=gl!35, fit=(hi)(hj)(w1)(ho)(f3)(f4), inner sep=6pt] (inset) {};
+\end{scope}
+\node[font=\bfseries\small, anchor=south] at (inset.north) {Graph layer (on the 4-connected block graph)};
+\draw[dashed, gray] (inset.south west) -- (mp.north west); \draw[dashed, gray] (inset.south east) -- (mp.north east);
+% ---------------- readout + head ----------------
+\node[s, fill=pool, minimum width=1.5cm, right=1.0cm of add, yshift=.55cm] (pmean) {Mean pool};
+\node[s, fill=pool, minimum width=1.5cm, right=1.0cm of add, yshift=-.55cm] (pmax) {Max pool};
+\draw[a] (add) -- ++(.45,0) |- (pmean); \draw[a] (add) -- ++(.45,0) |- (pmax);
+\node[s, fill=glob, align=center, below=1.15cm of pmax] (glob) {global features $1{\times}7$};
+\B[right=.75cm of pmax, yshift=.55cm]{cat}{act}{Concat}
+\draw[a] (pmean) -- (pmean -| cat.west) node[pos=.45, above, font=\footnotesize] {$1{\times}d$};
+\draw[a] (pmax) -- (pmax -| cat.west) node[pos=.45, below, font=\footnotesize] {$1{\times}d$};
+\draw[a] (glob.east) -| ($(cat.south)+(0,0)$);
+\B[right=.75cm of cat]{fc1}{lin}{FC}
+\B[right=of fc1]{r2}{act}{ReLU}
+\B[right=of r2]{d2}{drop}{Dropout}
+\B[right=of d2]{fc2}{lin}{FC}
+\B[right=.75cm of fc2, minimum height=1.6cm]{sm}{out}{Softmax}
+\foreach \u/\v in {r2/d2, d2/fc2} \draw[a] (\u) -- (\v);
+\draw[a] (cat) -- (fc1); \draw[a] (fc1) -- (r2); \draw[a] (fc2) -- (sm);
+\node[dim] at ($(cat.east)!.5!(fc1.west)$) {$1{\times}(2d{+}7)$};
+\node[dim] at ($(fc1.east)!.5!(r2.west)$) {$1{\times}d$};
+\node[dim] at ($(fc2.east)!.5!(sm.west)$) {$1{\times}S$};
+\node[s, fill=out!45, align=center, right=.5cm of sm, yshift=.75cm] (lreg) {$\mathcal L_{\text{regret}} = p\cdot(t - t_{\min})/T$};
+\node[s, fill=out!45, align=center, right=.5cm of sm, yshift=-.75cm] (lce) {or $\mathcal L_{\text{CE}}$ (fastest solver)};
+\draw[a] (sm) -- ++(.3,0) |- (lreg); \draw[a] (sm) -- ++(.3,0) |- (lce);
+\node[s, fill=glob!60, align=center, below=1.1cm of lce.south west, anchor=north west, font=\footnotesize] (fb)
+  {inference: $\arg\max p$ if $\max p \ge \tau$,\\else the default solver (bcp2)};
+\draw[a, dashed] (sm.south) |- (fb.west);
+\end{tikzpicture}
+\end{document}
