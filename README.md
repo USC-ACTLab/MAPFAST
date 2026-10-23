@@ -29,7 +29,7 @@ Results and the history of each experiment are in [experiments/EXPERIMENTS.md](e
 | Folder | Contents |
 |---|---|
 | `models/` | `MAPFAST.py` and `utils.py` (model), `main.py` (train/test), `jev_baseline.py` (Jev baseline), `gnn.py` and `train_gnn.py` (GNN selector) |
-| `tools/` | `benchmark_dataset.py`, `derive_dataset.py` (build datasets), `build_graphs.py` (GNN graphs), `plots.py`, `plot_sweep.py` (evaluate), `analysis.py` (the paper's evaluation, with its custom score) |
+| `tools/` | `benchmark_dataset.py`, `derive_dataset.py` (build datasets), `build_graphs.py` (GNN graphs), `plots.py`, `plot_sweep.py` (evaluate), `headroom.py` (where the oracle saves time over the best single solver), `analysis.py` (the paper's evaluation, with its custom score) |
 | `scripts/` | Slurm jobs: `generate_benchmark.sh`, `train.sh`, `compare.sh`, `sweep_gnn.sh` |
 | `datasets/` | `<benchmark>/<portfolio>/[<variant>/]`, e.g. `movingai_10-500-agents_300s/eight-solvers/gnn`: `config.json`, solver times, agents, maps and images |
 | `experiments/` | Logs, graphs and predictions of each round |

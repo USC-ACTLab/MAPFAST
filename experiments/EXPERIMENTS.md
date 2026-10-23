@@ -10,6 +10,8 @@ What changed between rounds (datasets, models, losses) and the results. Logs and
 | [round_2/](round_2/) | Relative speed loss, best epoch, no SIPP, auxiliary outputs, Jev baseline |
 | [round_3/](round_3/) | 300 s, up to 500 agents; MAPFAST-GNN |
 | [round_4/](round_4/) | MAPFAST-GNN on full-resolution graphs with agent nodes, runtime loss |
+| [round_5/](round_5/) | Ten solvers (bcp1, lazycbs), MAPFASTv2 retrained, MAPFAST-GNN with 5-fold cross-validation |
+| [headroom/](headroom/) | Where the oracle saves time over always-bcp2 (`tools/headroom.py`) |
 | [gnn_sweep/](gnn_sweep/) | MAPFAST-GNN hyperparameter sweeps, one folder per dataset |
 | [gnn_architecture/](gnn_architecture/) | MAPFAST-GNN architecture figure (TikZ source) |
 
@@ -99,5 +101,28 @@ Changes from round 3's MAPFAST-GNN (same dataset `movingai_10-500-agents_300s/ei
 - **Path edges (ablation):** `ends` joins agents to their start and goal only; `paths` also to every cell of their path, so agents whose paths meet are 2 hops apart (with `ends`, information travels one cell per layer).
 - **Runtime loss:** predicts each solver's log(1 + seconds) (a timeout only as a lower bound) and picks the fastest; the fallback rule leaves bcp2 only for a predicted speedup above a threshold tuned on validation. Cross-entropy is kept for comparison; the regret loss is dropped.
 - **Sweep:** GraphSAGE/GIN, width 128, depth 4/8, `ends`/`paths`, runtime or cross-entropy loss (16 configurations); the best of each edge set is compared with always-bcp2, the oracles and round 3's models; no Jev.
+
+Results (same 1,647 test instances):
+
+| | Total runtime (min) | Test speedup over always-bcp2 |
+| --- | --- | --- |
+| Oracle (eight / four solvers) | 324.9 / 339.3 | 1.073 / 1.028 |
+| Always bcp2 | 348.7 | 1 |
+| MAPFAST-GNN `paths` (GraphSAGE, depth 4, runtime loss, threshold 0.25) | 351.5 | 0.992 |
+| MAPFAST-GNN round 3 | 355.3 | 0.981 |
+| MAPFAST-GNN `ends` (GraphSAGE, depth 4, runtime loss, threshold 0) | 356.4 | 0.978 |
+| MAPFAST (round 3) | 479.3 | 0.728 |
+
+- **Still nothing beats always-bcp2.** `paths` is the closest model so far (2.8 min behind), but the gaps between the GNNs are a few minutes, within what the choice of configuration changes.
+- **Selection by validation is noise:** all 16 configurations reach validation speedups of 1.010–1.042 but test speedups of 0.913–1.003 (mean 0.977); across configurations, validation and test speedup are uncorrelated (r = −0.04). Choosing the epoch and threshold among 200 combinations on 1,646 validation instances fits that set's noise. The validation set also has more headroom (oracle 1.116× bcp2, test 1.073×).
+- Averaged over configurations, the runtime loss beats cross-entropy (test 0.982 vs 0.971), `paths` beats `ends` (0.981 vs 0.973) and GraphSAGE beats GIN (0.980 vs 0.974); depth 8 is no better than 4.
+
+## Round 5: ten solvers, MAPFASTv2 retrained, k-fold cross-validation
+
+Changes from round 4 (same instances and test set):
+
+- **Ten solvers:** `movingai_10-500-agents_300s/ten-solvers` is `eight-solvers` plus bcp1 and lazycbs (benchmarked on the same instances at 300 s).
+- **MAPFAST-GNN with 5-fold cross-validation** over the training and validation instances: the epoch and threshold are chosen on all out-of-fold predictions (about 15,200 instances instead of 1,646), and the test picks average the five networks. Only GraphSAGE, depth 4 (`ends`/`paths`, runtime or cross-entropy loss: 4 configurations).
+- **CNN baselines:** MAPFASTv2 and MAPFASTv2_aux (15 epochs) retrained on ten solvers; MAPFAST and MAPFAST_aux are round 3's (their four-solver dataset is unchanged); round 4's `paths` model as the GNN reference. No Jev.
 
 Results: _to fill in_.

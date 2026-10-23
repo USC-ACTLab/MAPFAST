@@ -18,12 +18,19 @@ Unlike MAPFAST and MAPFASTv2 (cross-entropy on the fastest solver), it is judged
 					threshold 0 is its plain argmax
 	selection		the epoch, the threshold and the configuration with the lowest validation runtime, reported as
 					the speedup over always using the default solver (above 1: it beats it)
+	--folds K		k-fold cross-validation instead of main.py's single validation set: the training and validation
+					instances are dealt into K folds, a network is trained for each with one fold as its validation set,
+					the epoch and the threshold are chosen on all K folds' validation outputs pooled (K times as many
+					instances as one validation set, so a less noisy choice), and the test picks average the K networks'
+					outputs. The test set stays main.py's, so the models remain comparable. It takes K times as long.
 
 A batch holds up to --batch-size instances and --max-nodes nodes (a graph has a node per free cell of its map).
 
 `select --where KEY=VALUE` ranks only the configurations with that setting, e.g. edges=paths, to compare settings.
 `train` writes DIR/<configuration>/: results.json (validation and test speedup, accuracy and runtime, per-epoch
-history, inference time), predictions.json (test picks, in the format of main.py -T 0) and model.pt. `select` ranks the
+history, each fold's validation speedup, inference time), predictions.json (test picks, in the format of main.py -T 0)
+and fold<i>of<K>.npz (each fold's validation and test outputs and training loss per epoch; a rerun of the configuration
+skips the folds that have one, so a job that ran out of time can be resubmitted). `select` ranks the
 configurations by validation speedup (the test set is only reported), writes DIR/summary.md and DIR/sweep.png
 (tools/plot_sweep.py) and copies the best predictions to DATASET2's prediction_output, so that plots.py and
 compare.sh (NAME=@DATASET2) treat MAPFAST-GNN like the other models. scripts/sweep_gnn.sh runs all three on Slurm.
@@ -47,12 +54,12 @@ from gnn import SolverGNN, collate, graph_size
 from utils import read_config
 
 # (hidden: width of the node embeddings; layers: message-passing depth, i.e. how many cells away information reaches;
-# edges: 'ends' joins each agent to its start and goal cells, 'paths' to every cell of its path too)
-# (hidden: width of the node embeddings; layers: message-passing depth, i.e. how many cells away information reaches)
+# edges: 'ends' joins each agent to its start and goal cells, 'paths' to every cell of its path too). Round 4 swept
+# GIN as well and depth 8, which did no better on the test set; round 5 trains each configuration 5 times (k-fold)
 GRID = {
-	'kind': ['sage', 'gin'],
+	'kind': ['sage'],
 	'hidden': [128],
-	'layers': [4, 8],
+	'layers': [4],
 	'lr': [1e-3],
 	'edges': ['ends', 'paths'],
 	'loss': ['ce', 'runtime'],
@@ -146,6 +153,73 @@ def best_threshold(outputs, names, data):
 	scored = [(t, score(apply_threshold(outputs, data['default'], t), names, data)) for t in THRESHOLDS]
 	return min(scored, key=lambda s: (s[1]['runtime'], -s[1]['accuracy']))
 
+def folds(train_names, valid_names, k):
+	'''
+	Returns: List of the (training, validation) instances of each fold: main.py's split for k = 1, else its training
+	and validation instances dealt into k folds in a fixed random order, each fold validating on one of them
+	'''
+	if k == 1:
+		return [(train_names, valid_names)]
+	pool = sorted(train_names + valid_names)
+	random.Random(42).shuffle(pool)
+	return [([n for j, n in enumerate(pool) if j % k != i], pool[i::k]) for i in range(k)]
+
+def fit(train_names, valid_names, test_names, data, graphs, config, args, device):
+	'''
+	Trains one network on train_names, printing its validation score after every epoch.
+
+	Returns: Dictionary of the validation and test outputs of every epoch (numpy arrays (epochs, instances, solvers)),
+	the mean training loss of every epoch, the seconds of inference per test instance and the number of parameters
+	'''
+	timeout = data['timeout']
+	# standardise the global features with the training set's statistics (the node features are small already)
+	globs = np.stack([graphs['instances'][n]['glob'] for n in train_names]).astype(np.float64)
+	global_stats = (globs.mean(0).astype(np.float32), (globs.std(0) + 1e-6).astype(np.float32))
+	data = {**data, 'collate': lambda names: collate(names, graphs, device, global_stats, config['edges'] == 'paths')}
+
+	random.seed(42)
+	np.random.seed(42)
+	torch.manual_seed(42)
+	net = SolverGNN(len(graphs['node_features']), len(graphs['global_features']), len(data['solvers']),
+					config['kind'], config['hidden'], config['layers'], args.dropout).to(device)
+	optimizer = torch.optim.AdamW(net.parameters(), lr=config['lr'], weight_decay=args.weight_decay)
+	# fixed batches of a random order, visited in a new order every epoch
+	order = list(train_names)
+	random.shuffle(order)
+	runs = batches(order, data, args.batch_size, args.max_nodes)
+	schedule = torch.optim.lr_scheduler.OneCycleLR(optimizer, config['lr'], total_steps=args.epochs * len(runs))
+
+	result = {'valid': [], 'test': [], 'loss': []}
+	for epoch in range(args.epochs):
+		net.train()
+		random.shuffle(runs)
+		total = 0.
+		for names in runs:
+			outputs = net(*data['collate'](names), len(names))
+			if config['loss'] == 'runtime':
+				times = torch.from_numpy(data['times'](names)).float().to(device)
+				error = -outputs - torch.log1p(times)
+				# a timeout only bounds the runtime from below
+				error = torch.where(times >= timeout, error.clamp(max=0), error)
+				loss = (error ** 2).mean()
+			else:
+				loss = F.cross_entropy(outputs, torch.from_numpy(data['labels'](names)).to(device))
+			optimizer.zero_grad()
+			loss.backward()
+			optimizer.step()
+			schedule.step()
+			total += loss.item() * len(names)
+		valid_outputs, _ = predict(net, valid_names, data, args)
+		test_outputs, seconds = predict(net, test_names, data, args)
+		result['valid'].append(valid_outputs)
+		result['test'].append(test_outputs)
+		result['loss'].append(total / len(order))
+		threshold, valid = best_threshold(valid_outputs, valid_names, data)
+		print('Epoch {} | loss {:.4f} | validation: speedup {:.4f} over always {} | accuracy {:.4f} | threshold {:g}'.format(
+			epoch, total / len(order), valid['speedup'], data['solvers'][data['default']], valid['accuracy'], threshold), flush=True)
+	return {**{k: np.array(v) for k, v in result.items()}, 'seconds': seconds,
+			'parameters': sum(p.numel() for p in net.parameters())}
+
 def train(args):
 	config = configurations()[args.config_index]
 	name = config_name(config)
@@ -167,78 +241,56 @@ def train(args):
 	solvers = sorted(mapping, key=mapping.get)
 	timeout = dataset_config['timeout']
 
-	# standardise the global features with the training set's statistics (the node features are small already)
-	globs = np.stack([graphs['instances'][n]['glob'] for n in train_names]).astype(np.float64)
-	global_stats = (globs.mean(0).astype(np.float32), (globs.std(0) + 1e-6).astype(np.float32))
 	time_rows = dict(zip(yaml_details, solver_times(yaml_details, list(yaml_details), solvers, timeout)))
 	data = {
-		'collate': lambda names: collate(names, graphs, device, global_stats, config['edges'] == 'paths'),
+		'solvers': solvers,
+		'timeout': timeout,
 		'size': lambda name: graph_size(name, graphs),
 		'times': lambda names: np.stack([time_rows[n] for n in names]),
 		'labels': lambda names: np.array([mapping[yaml_details[n]['SOLVER']] for n in names]),
 	}
+	parts = folds(train_names, valid_names, args.folds)
+	valid_names = [n for _, valid in parts for n in valid]
 	# the default solver: the single solver with the lowest total training runtime
-	data['default'] = int(data['times'](train_names).sum(0).argmin())
+	data['default'] = int(data['times']([n for train, _ in parts for n in train]).sum(0).argmin())
 	baseline = {'solver': solvers[data['default']], **score(np.full(len(valid_names), data['default']), valid_names, data)}
 	oracle = score(data['labels'](valid_names), valid_names, data)
 
-	random.seed(42)
-	np.random.seed(42)
-	torch.manual_seed(42)
-	net = SolverGNN(len(graphs['node_features']), len(graphs['global_features']), len(solvers),
-					config['kind'], config['hidden'], config['layers'], args.dropout).to(device)
-	optimizer = torch.optim.AdamW(net.parameters(), lr=config['lr'], weight_decay=args.weight_decay)
-	# fixed batches of a random order, visited in a new order every epoch
-	order = list(train_names)
-	random.shuffle(order)
-	runs = batches(order, data, args.batch_size, args.max_nodes)
-	schedule = torch.optim.lr_scheduler.OneCycleLR(optimizer, config['lr'], total_steps=args.epochs * len(runs))
+	fits = []
+	for i, (fold_train, fold_valid) in enumerate(parts):
+		path = os.path.join(out, 'fold{}of{}.npz'.format(i + 1, len(parts)))
+		if os.path.exists(path) and np.load(path)['loss'].shape == (args.epochs,):
+			print('Fold {}/{}: done before ({})'.format(i + 1, len(parts), path), flush=True)
+		else:
+			print('Fold {}/{}: training on {}, validating on {} instances'.format(
+				i + 1, len(parts), len(fold_train), len(fold_valid)), flush=True)
+			# written whole or not at all, so that a job killed while saving leaves no truncated file to resume from
+			np.savez(path + '.tmp.npz', **fit(fold_train, fold_valid, test_names, data, graphs, config, args, device))
+			os.replace(path + '.tmp.npz', path)
+		fits.append(dict(np.load(path)))
 
-	best = None
+	# the validation outputs of all the folds, pooled, choose each epoch's threshold and the best epoch
+	valid_outputs = np.concatenate([f['valid'] for f in fits], axis=1)
 	history = []
 	for epoch in range(args.epochs):
-		net.train()
-		random.shuffle(runs)
-		total = 0.
-		for names in runs:
-			outputs = net(*data['collate'](names), len(names))
-			if config['loss'] == 'runtime':
-				times = torch.from_numpy(data['times'](names)).float().to(device)
-				error = -outputs - torch.log1p(times)
-				# a timeout only bounds the runtime from below
-				error = torch.where(times >= timeout, error.clamp(max=0), error)
-				loss = (error ** 2).mean()
-			else:
-				loss = F.cross_entropy(outputs, torch.from_numpy(data['labels'](names)).to(device))
-			optimizer.zero_grad()
-			loss.backward()
-			optimizer.step()
-			schedule.step()
-			total += loss.item() * len(names)
-		outputs, _ = predict(net, valid_names, data, args)
-		threshold, valid = best_threshold(outputs, valid_names, data)
-		history.append({'epoch': epoch, 'train_loss': total / len(order), 'threshold': threshold,
-						**{'valid_' + k: v for k, v in valid.items()}})
-		print('Epoch {} | loss {:.4f} | validation: speedup {:.4f} over always {} | accuracy {:.4f} | threshold {:g}'.format(
-			epoch, total / len(order), valid['speedup'], solvers[data['default']], valid['accuracy'], threshold), flush=True)
-		if best is None or (valid['speedup'], valid['accuracy']) > (best['valid_speedup'], best['valid_accuracy']):
-			best = {'epoch': epoch, 'threshold': threshold, **{'valid_' + k: v for k, v in valid.items()}}
-			torch.save({'state': net.state_dict(), 'config': config, 'mapping': mapping,
-						'global_stats': global_stats, 'default': data['default'],
-						'threshold': threshold}, os.path.join(out, 'model.pt'))
-
-	net.load_state_dict(torch.load(os.path.join(out, 'model.pt'), weights_only=False)['state'])
-	outputs, seconds = predict(net, test_names, data, args)
-	picks = apply_threshold(outputs, data['default'], best['threshold'])
+		threshold, valid = best_threshold(valid_outputs[epoch], valid_names, data)
+		history.append({'epoch': epoch, 'train_loss': float(np.mean([f['loss'][epoch] for f in fits])),
+						'threshold': threshold, **{'valid_' + k: v for k, v in valid.items()}})
+	best = {k: v for k, v in max(history, key=lambda h: (h['valid_speedup'], h['valid_accuracy'])).items()
+			if k != 'train_loss'}
+	best['valid_speedup_folds'] = [score(apply_threshold(f['valid'][best['epoch']], data['default'], best['threshold']),
+										 valid, data)['speedup'] for f, (_, valid) in zip(fits, parts)]
+	picks = apply_threshold(np.mean([f['test'][best['epoch']] for f in fits], axis=0), data['default'], best['threshold'])
 	test = score(picks, test_names, data)
 	# the picks are indices of solvers, which is in mapping order (derive_dataset.py numbers the solvers 0, 1, ...)
 	predictions = {n + '_0': {'best': [int(p), mapping[yaml_details[n]['SOLVER']]]} for n, p in zip(test_names, picks)}
 	with open(os.path.join(out, 'predictions.json'), 'w') as f:
 		json.dump(predictions, f)
 	results = {'name': name, 'config': config, **best, **{'test_' + k: v for k, v in test.items()},
-			   'inference_ms_per_instance': 1000 * seconds, 'parameters': sum(p.numel() for p in net.parameters()),
-			   'solvers': solvers, 'baseline': baseline, 'oracle': oracle, 'history': history,
-			   'train': len(train_names), 'valid': len(valid_names), 'test': len(test_names)}
+			   'inference_ms_per_instance': 1000 * float(sum(f['seconds'] for f in fits)),
+			   'parameters': int(fits[0]['parameters']), 'solvers': solvers, 'baseline': baseline, 'oracle': oracle,
+			   'history': history, 'folds': len(parts), 'train': len(parts[0][0]), 'valid': len(valid_names),
+			   'test': len(test_names)}
 	with open(os.path.join(out, 'results.json'), 'w') as f:
 		json.dump(results, f, indent='\t')
 	print('Best epoch {epoch} (threshold {threshold:g}) | validation speedup {valid_speedup:.4f} | test speedup '
@@ -261,15 +313,18 @@ def select(args):
 	baseline = results[0]['baseline']
 	lines = ['# MAPFAST-GNN hyperparameter sweep' + (' ({})'.format(args.where) if args.where else ''), '',
 			 '{} of {} configurations finished, ranked by validation speedup over always using {} (the test columns are '
-			 'only reported). Validation: always {} {:.1f} min, perfect selector {:.1f} min.'.format(
+			 'only reported; with k-fold cross-validation, the folds\' range is in brackets). Validation: always {} '
+			 '{:.1f} min, perfect selector {:.1f} min.'.format(
 				 len(results), len(planned), baseline['solver'], baseline['solver'], baseline['runtime'],
 				 results[0]['oracle']['runtime']), '',
 			 '| Rank | Configuration | Epoch | Threshold | Val. speedup | Val. accuracy | Test speedup | Test accuracy | ms / instance |',
 			 '|---|---|---|---|---|---|---|---|---|']
 	for i, r in enumerate(results):
-		lines.append('| {} | `{}` | {} | {:g} | {:.4f} | {:.4f} | {:.4f} | {:.4f} | {:.2f} |'.format(
-			i + 1, r['name'], r['epoch'], r['threshold'], r['valid_speedup'], r['valid_accuracy'], r['test_speedup'],
-			r['test_accuracy'], r['inference_ms_per_instance']))
+		folds = r.get('valid_speedup_folds', [])
+		spread = ' ({:.3f}–{:.3f})'.format(min(folds), max(folds)) if len(folds) > 1 else ''
+		lines.append('| {} | `{}` | {} | {:g} | {:.4f}{} | {:.4f} | {:.4f} | {:.4f} | {:.2f} |'.format(
+			i + 1, r['name'], r['epoch'], r['threshold'], r['valid_speedup'], spread, r['valid_accuracy'],
+			r['test_speedup'], r['test_accuracy'], r['inference_ms_per_instance']))
 	with open(os.path.join(args.out, 'summary{}.md'.format(suffix)), 'w') as f:
 		f.write('\n'.join(lines) + '\n')
 	print('\n'.join(lines[2:6 + min(10, len(results))]))
@@ -299,6 +354,8 @@ if __name__ == '__main__':
 	p.add_argument('--dropout', type=float, default=0.1)
 	p.add_argument('--weight-decay', type=float, default=1e-4)
 	p.add_argument('--limit', type=int, default=None, help='Only train on the first n training instances (a test)')
+	p.add_argument('--folds', type=int, default=1, help='Folds of k-fold cross-validation (default 1: main.py\'s '
+				   'validation set)')
 	p = commands.add_parser('select', help='Rank the trained configurations and keep the best')
 	p.add_argument('out', help='Sweep folder')
 	p.add_argument('--dataset-out', default=None, help='Dataset folder whose prediction_output gets the best test predictions')

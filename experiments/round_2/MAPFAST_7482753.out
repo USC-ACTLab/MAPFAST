@@ -1,0 +1,1064 @@
+torch 2.11.0+cu128 on NVIDIA RTX A5000
+Training model...
+Current device: cuda:0
+
+
+---------------- Training started ----------------
+
+
+Epoch 0 | Step 50/4681 | avg loss 0.0193 | batch loss 0.0195
+Epoch 0 | Step 100/4681 | avg loss 0.0178 | batch loss 0.0246
+Epoch 0 | Step 150/4681 | avg loss 0.0154 | batch loss 0.0631
+Epoch 0 | Step 200/4681 | avg loss 0.0150 | batch loss 0.0190
+Epoch 0 | Step 250/4681 | avg loss 0.0150 | batch loss 0.0010
+Epoch 0 | Step 300/4681 | avg loss 0.0145 | batch loss 0.0110
+Epoch 0 | Step 350/4681 | avg loss 0.0148 | batch loss 0.0201
+Epoch 0 | Step 400/4681 | avg loss 0.0149 | batch loss 0.0455
+Epoch 0 | Step 450/4681 | avg loss 0.0144 | batch loss 0.0039
+Epoch 0 | Step 500/4681 | avg loss 0.0145 | batch loss 0.0000
+Epoch 0 | Step 550/4681 | avg loss 0.0145 | batch loss 0.0377
+Epoch 0 | Step 600/4681 | avg loss 0.0148 | batch loss 0.0013
+Epoch 0 | Step 650/4681 | avg loss 0.0147 | batch loss 0.0179
+Epoch 0 | Step 700/4681 | avg loss 0.0151 | batch loss 0.0005
+Epoch 0 | Step 750/4681 | avg loss 0.0152 | batch loss 0.0000
+Epoch 0 | Step 800/4681 | avg loss 0.0151 | batch loss 0.0262
+Epoch 0 | Step 850/4681 | avg loss 0.0150 | batch loss 0.0000
+Epoch 0 | Step 900/4681 | avg loss 0.0149 | batch loss 0.0112
+Epoch 0 | Step 950/4681 | avg loss 0.0148 | batch loss 0.0000
+Epoch 0 | Step 1000/4681 | avg loss 0.0147 | batch loss 0.0235
+Num Batches 1000 / 4681 | Batch_Loss 0.0014673508703708649 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 0 | Step 1050/4681 | avg loss 0.0147 | batch loss 0.0015
+Epoch 0 | Step 1100/4681 | avg loss 0.0147 | batch loss 0.0530
+Epoch 0 | Step 1150/4681 | avg loss 0.0147 | batch loss 0.1177
+Epoch 0 | Step 1200/4681 | avg loss 0.0145 | batch loss 0.0000
+Epoch 0 | Step 1250/4681 | avg loss 0.0145 | batch loss 0.0357
+Epoch 0 | Step 1300/4681 | avg loss 0.0142 | batch loss 0.0000
+Epoch 0 | Step 1350/4681 | avg loss 0.0140 | batch loss 0.0139
+Epoch 0 | Step 1400/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 0 | Step 1450/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 0 | Step 1500/4681 | avg loss 0.0140 | batch loss 0.0450
+Epoch 0 | Step 1550/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 0 | Step 1600/4681 | avg loss 0.0138 | batch loss 0.0018
+Epoch 0 | Step 1650/4681 | avg loss 0.0138 | batch loss 0.0134
+Epoch 0 | Step 1700/4681 | avg loss 0.0137 | batch loss 0.0015
+Epoch 0 | Step 1750/4681 | avg loss 0.0137 | batch loss 0.0085
+Epoch 0 | Step 1800/4681 | avg loss 0.0137 | batch loss 0.0512
+Epoch 0 | Step 1850/4681 | avg loss 0.0136 | batch loss 0.0878
+Epoch 0 | Step 1900/4681 | avg loss 0.0136 | batch loss 0.0067
+Epoch 0 | Step 1950/4681 | avg loss 0.0136 | batch loss 0.0060
+Epoch 0 | Step 2000/4681 | avg loss 0.0135 | batch loss 0.0038
+Num Batches 2000 / 4681 | Batch_Loss 0.0002398565411567688 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 0 | Step 2050/4681 | avg loss 0.0135 | batch loss 0.0216
+Epoch 0 | Step 2100/4681 | avg loss 0.0135 | batch loss 0.0201
+Epoch 0 | Step 2150/4681 | avg loss 0.0136 | batch loss 0.0009
+Epoch 0 | Step 2200/4681 | avg loss 0.0136 | batch loss 0.0173
+Epoch 0 | Step 2250/4681 | avg loss 0.0136 | batch loss 0.0005
+Epoch 0 | Step 2300/4681 | avg loss 0.0135 | batch loss 0.0003
+Epoch 0 | Step 2350/4681 | avg loss 0.0136 | batch loss 0.0003
+Epoch 0 | Step 2400/4681 | avg loss 0.0135 | batch loss 0.0346
+Epoch 0 | Step 2450/4681 | avg loss 0.0136 | batch loss 0.0440
+Epoch 0 | Step 2500/4681 | avg loss 0.0137 | batch loss 0.0107
+Epoch 0 | Step 2550/4681 | avg loss 0.0137 | batch loss 0.0030
+Epoch 0 | Step 2600/4681 | avg loss 0.0138 | batch loss 0.0004
+Epoch 0 | Step 2650/4681 | avg loss 0.0138 | batch loss 0.0350
+Epoch 0 | Step 2700/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 0 | Step 2750/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 0 | Step 2800/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 0 | Step 2850/4681 | avg loss 0.0137 | batch loss 0.0240
+Epoch 0 | Step 2900/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 0 | Step 2950/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 0 | Step 3000/4681 | avg loss 0.0138 | batch loss 0.0010
+Num Batches 3000 / 4681 | Batch_Loss 6.411224603652954e-05 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 0 | Step 3050/4681 | avg loss 0.0138 | batch loss 0.0020
+Epoch 0 | Step 3100/4681 | avg loss 0.0137 | batch loss 0.0032
+Epoch 0 | Step 3150/4681 | avg loss 0.0138 | batch loss 0.0020
+Epoch 0 | Step 3200/4681 | avg loss 0.0138 | batch loss 0.0021
+Epoch 0 | Step 3250/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 0 | Step 3300/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 0 | Step 3350/4681 | avg loss 0.0139 | batch loss 0.0005
+Epoch 0 | Step 3400/4681 | avg loss 0.0139 | batch loss 0.0660
+Epoch 0 | Step 3450/4681 | avg loss 0.0139 | batch loss 0.0369
+Epoch 0 | Step 3500/4681 | avg loss 0.0140 | batch loss 0.0103
+Epoch 0 | Step 3550/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 0 | Step 3600/4681 | avg loss 0.0140 | batch loss 0.0003
+Epoch 0 | Step 3650/4681 | avg loss 0.0140 | batch loss 0.0293
+Epoch 0 | Step 3700/4681 | avg loss 0.0140 | batch loss 0.0011
+Epoch 0 | Step 3750/4681 | avg loss 0.0139 | batch loss 0.0211
+Epoch 0 | Step 3800/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 0 | Step 3850/4681 | avg loss 0.0139 | batch loss 0.0228
+Epoch 0 | Step 3900/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 0 | Step 3950/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 0 | Step 4000/4681 | avg loss 0.0139 | batch loss 0.0000
+Num Batches 4000 / 4681 | Batch_Loss 0.0 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 0 | Step 4050/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 0 | Step 4100/4681 | avg loss 0.0140 | batch loss 0.0303
+Epoch 0 | Step 4150/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 0 | Step 4200/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 0 | Step 4250/4681 | avg loss 0.0140 | batch loss 0.0008
+Epoch 0 | Step 4300/4681 | avg loss 0.0140 | batch loss 0.0008
+Epoch 0 | Step 4350/4681 | avg loss 0.0140 | batch loss 0.0039
+Epoch 0 | Step 4400/4681 | avg loss 0.0140 | batch loss 0.0140
+Epoch 0 | Step 4450/4681 | avg loss 0.0140 | batch loss 0.0076
+Epoch 0 | Step 4500/4681 | avg loss 0.0141 | batch loss 0.0178
+Epoch 0 | Step 4550/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 0 | Step 4600/4681 | avg loss 0.0140 | batch loss 0.0664
+Epoch 0 | Step 4650/4681 | avg loss 0.0141 | batch loss 0.0000
+Epoch 0 complete | mean loss 0.0141
+Epoch 0 validation | mean relative speed score 0.9872 | accuracy 0.8940
+Epoch 1 | Step 50/4681 | avg loss 0.0092 | batch loss 0.0178
+Epoch 1 | Step 100/4681 | avg loss 0.0127 | batch loss 0.0090
+Epoch 1 | Step 150/4681 | avg loss 0.0120 | batch loss 0.0104
+Epoch 1 | Step 200/4681 | avg loss 0.0124 | batch loss 0.0190
+Epoch 1 | Step 250/4681 | avg loss 0.0129 | batch loss 0.0000
+Epoch 1 | Step 300/4681 | avg loss 0.0128 | batch loss 0.0003
+Epoch 1 | Step 350/4681 | avg loss 0.0133 | batch loss 0.0005
+Epoch 1 | Step 400/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 1 | Step 450/4681 | avg loss 0.0133 | batch loss 0.0430
+Epoch 1 | Step 500/4681 | avg loss 0.0135 | batch loss 0.0004
+Epoch 1 | Step 550/4681 | avg loss 0.0135 | batch loss 0.0082
+Epoch 1 | Step 600/4681 | avg loss 0.0139 | batch loss 0.0306
+Epoch 1 | Step 650/4681 | avg loss 0.0139 | batch loss 0.0011
+Epoch 1 | Step 700/4681 | avg loss 0.0144 | batch loss 0.0011
+Epoch 1 | Step 750/4681 | avg loss 0.0145 | batch loss 0.0000
+Epoch 1 | Step 800/4681 | avg loss 0.0145 | batch loss 0.0084
+Epoch 1 | Step 850/4681 | avg loss 0.0144 | batch loss 0.0006
+Epoch 1 | Step 900/4681 | avg loss 0.0143 | batch loss 0.0356
+Epoch 1 | Step 950/4681 | avg loss 0.0143 | batch loss 0.0001
+Epoch 1 | Step 1000/4681 | avg loss 0.0142 | batch loss 0.0244
+Num Batches 1000 / 4681 | Batch_Loss 0.001524992287158966 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 1 | Step 1050/4681 | avg loss 0.0142 | batch loss 0.0000
+Epoch 1 | Step 1100/4681 | avg loss 0.0142 | batch loss 0.0394
+Epoch 1 | Step 1150/4681 | avg loss 0.0142 | batch loss 0.0049
+Epoch 1 | Step 1200/4681 | avg loss 0.0141 | batch loss 0.0098
+Epoch 1 | Step 1250/4681 | avg loss 0.0141 | batch loss 0.0001
+Epoch 1 | Step 1300/4681 | avg loss 0.0138 | batch loss 0.0129
+Epoch 1 | Step 1350/4681 | avg loss 0.0137 | batch loss 0.0215
+Epoch 1 | Step 1400/4681 | avg loss 0.0136 | batch loss 0.0096
+Epoch 1 | Step 1450/4681 | avg loss 0.0136 | batch loss 0.0040
+Epoch 1 | Step 1500/4681 | avg loss 0.0136 | batch loss 0.0002
+Epoch 1 | Step 1550/4681 | avg loss 0.0135 | batch loss 0.0003
+Epoch 1 | Step 1600/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 1 | Step 1650/4681 | avg loss 0.0135 | batch loss 0.0098
+Epoch 1 | Step 1700/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 1 | Step 1750/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 1 | Step 1800/4681 | avg loss 0.0134 | batch loss 0.0120
+Epoch 1 | Step 1850/4681 | avg loss 0.0133 | batch loss 0.0198
+Epoch 1 | Step 1900/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 1 | Step 1950/4681 | avg loss 0.0133 | batch loss 0.0005
+Epoch 1 | Step 2000/4681 | avg loss 0.0132 | batch loss 0.0204
+Num Batches 2000 / 4681 | Batch_Loss 0.0012775436043739319 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 1 | Step 2050/4681 | avg loss 0.0132 | batch loss 0.0000
+Epoch 1 | Step 2100/4681 | avg loss 0.0133 | batch loss 0.0396
+Epoch 1 | Step 2150/4681 | avg loss 0.0134 | batch loss 0.0418
+Epoch 1 | Step 2200/4681 | avg loss 0.0133 | batch loss 0.0197
+Epoch 1 | Step 2250/4681 | avg loss 0.0133 | batch loss 0.0023
+Epoch 1 | Step 2300/4681 | avg loss 0.0133 | batch loss 0.0006
+Epoch 1 | Step 2350/4681 | avg loss 0.0133 | batch loss 0.0201
+Epoch 1 | Step 2400/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 1 | Step 2450/4681 | avg loss 0.0134 | batch loss 0.0460
+Epoch 1 | Step 2500/4681 | avg loss 0.0135 | batch loss 0.0314
+Epoch 1 | Step 2550/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 1 | Step 2600/4681 | avg loss 0.0136 | batch loss 0.0406
+Epoch 1 | Step 2650/4681 | avg loss 0.0136 | batch loss 0.0037
+Epoch 1 | Step 2700/4681 | avg loss 0.0136 | batch loss 0.0191
+Epoch 1 | Step 2750/4681 | avg loss 0.0136 | batch loss 0.0012
+Epoch 1 | Step 2800/4681 | avg loss 0.0135 | batch loss 0.0012
+Epoch 1 | Step 2850/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 1 | Step 2900/4681 | avg loss 0.0135 | batch loss 0.0471
+Epoch 1 | Step 2950/4681 | avg loss 0.0136 | batch loss 0.0006
+Epoch 1 | Step 3000/4681 | avg loss 0.0137 | batch loss 0.0158
+Num Batches 3000 / 4681 | Batch_Loss 0.0009881854057312012 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 1 | Step 3050/4681 | avg loss 0.0136 | batch loss 0.0309
+Epoch 1 | Step 3100/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 1 | Step 3150/4681 | avg loss 0.0137 | batch loss 0.0056
+Epoch 1 | Step 3200/4681 | avg loss 0.0137 | batch loss 0.0016
+Epoch 1 | Step 3250/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 1 | Step 3300/4681 | avg loss 0.0137 | batch loss 0.0647
+Epoch 1 | Step 3350/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 1 | Step 3400/4681 | avg loss 0.0137 | batch loss 0.0006
+Epoch 1 | Step 3450/4681 | avg loss 0.0138 | batch loss 0.0698
+Epoch 1 | Step 3500/4681 | avg loss 0.0138 | batch loss 0.0006
+Epoch 1 | Step 3550/4681 | avg loss 0.0138 | batch loss 0.0049
+Epoch 1 | Step 3600/4681 | avg loss 0.0139 | batch loss 0.0008
+Epoch 1 | Step 3650/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 1 | Step 3700/4681 | avg loss 0.0138 | batch loss 0.0009
+Epoch 1 | Step 3750/4681 | avg loss 0.0138 | batch loss 0.0133
+Epoch 1 | Step 3800/4681 | avg loss 0.0137 | batch loss 0.0337
+Epoch 1 | Step 3850/4681 | avg loss 0.0138 | batch loss 0.0183
+Epoch 1 | Step 3900/4681 | avg loss 0.0138 | batch loss 0.0024
+Epoch 1 | Step 3950/4681 | avg loss 0.0138 | batch loss 0.0025
+Epoch 1 | Step 4000/4681 | avg loss 0.0138 | batch loss 0.0757
+Num Batches 4000 / 4681 | Batch_Loss 0.004730790853500366 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 1 | Step 4050/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 1 | Step 4100/4681 | avg loss 0.0138 | batch loss 0.0221
+Epoch 1 | Step 4150/4681 | avg loss 0.0138 | batch loss 0.0151
+Epoch 1 | Step 4200/4681 | avg loss 0.0138 | batch loss 0.0889
+Epoch 1 | Step 4250/4681 | avg loss 0.0139 | batch loss 0.0210
+Epoch 1 | Step 4300/4681 | avg loss 0.0139 | batch loss 0.0020
+Epoch 1 | Step 4350/4681 | avg loss 0.0139 | batch loss 0.0004
+Epoch 1 | Step 4400/4681 | avg loss 0.0139 | batch loss 0.0110
+Epoch 1 | Step 4450/4681 | avg loss 0.0139 | batch loss 0.0368
+Epoch 1 | Step 4500/4681 | avg loss 0.0140 | batch loss 0.0558
+Epoch 1 | Step 4550/4681 | avg loss 0.0139 | batch loss 0.0273
+Epoch 1 | Step 4600/4681 | avg loss 0.0139 | batch loss 0.0366
+Epoch 1 | Step 4650/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 1 complete | mean loss 0.0140
+Epoch 1 validation | mean relative speed score 0.9872 | accuracy 0.8940
+Epoch 2 | Step 50/4681 | avg loss 0.0092 | batch loss 0.0001
+Epoch 2 | Step 100/4681 | avg loss 0.0128 | batch loss 0.0109
+Epoch 2 | Step 150/4681 | avg loss 0.0120 | batch loss 0.0000
+Epoch 2 | Step 200/4681 | avg loss 0.0125 | batch loss 0.0183
+Epoch 2 | Step 250/4681 | avg loss 0.0129 | batch loss 0.0017
+Epoch 2 | Step 300/4681 | avg loss 0.0131 | batch loss 0.0910
+Epoch 2 | Step 350/4681 | avg loss 0.0134 | batch loss 0.0372
+Epoch 2 | Step 400/4681 | avg loss 0.0136 | batch loss 0.0010
+Epoch 2 | Step 450/4681 | avg loss 0.0134 | batch loss 0.0392
+Epoch 2 | Step 500/4681 | avg loss 0.0135 | batch loss 0.0373
+Epoch 2 | Step 550/4681 | avg loss 0.0135 | batch loss 0.0009
+Epoch 2 | Step 600/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 2 | Step 650/4681 | avg loss 0.0140 | batch loss 0.0478
+Epoch 2 | Step 700/4681 | avg loss 0.0144 | batch loss 0.0324
+Epoch 2 | Step 750/4681 | avg loss 0.0145 | batch loss 0.0000
+Epoch 2 | Step 800/4681 | avg loss 0.0145 | batch loss 0.0611
+Epoch 2 | Step 850/4681 | avg loss 0.0144 | batch loss 0.0179
+Epoch 2 | Step 900/4681 | avg loss 0.0143 | batch loss 0.0298
+Epoch 2 | Step 950/4681 | avg loss 0.0143 | batch loss 0.0000
+Epoch 2 | Step 1000/4681 | avg loss 0.0143 | batch loss 0.0215
+Num Batches 1000 / 4681 | Batch_Loss 0.0013410747051239014 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 2 | Step 1050/4681 | avg loss 0.0142 | batch loss 0.0068
+Epoch 2 | Step 1100/4681 | avg loss 0.0142 | batch loss 0.0121
+Epoch 2 | Step 1150/4681 | avg loss 0.0143 | batch loss 0.0571
+Epoch 2 | Step 1200/4681 | avg loss 0.0141 | batch loss 0.0089
+Epoch 2 | Step 1250/4681 | avg loss 0.0141 | batch loss 0.0039
+Epoch 2 | Step 1300/4681 | avg loss 0.0139 | batch loss 0.0460
+Epoch 2 | Step 1350/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 2 | Step 1400/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 2 | Step 1450/4681 | avg loss 0.0137 | batch loss 0.0358
+Epoch 2 | Step 1500/4681 | avg loss 0.0136 | batch loss 0.0010
+Epoch 2 | Step 1550/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 2 | Step 1600/4681 | avg loss 0.0135 | batch loss 0.0482
+Epoch 2 | Step 1650/4681 | avg loss 0.0135 | batch loss 0.0039
+Epoch 2 | Step 1700/4681 | avg loss 0.0134 | batch loss 0.0004
+Epoch 2 | Step 1750/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 2 | Step 1800/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 2 | Step 1850/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 2 | Step 1900/4681 | avg loss 0.0133 | batch loss 0.0340
+Epoch 2 | Step 1950/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 2 | Step 2000/4681 | avg loss 0.0132 | batch loss 0.0007
+Num Batches 2000 / 4681 | Batch_Loss 4.407763481140137e-05 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 2 | Step 2050/4681 | avg loss 0.0132 | batch loss 0.0180
+Epoch 2 | Step 2100/4681 | avg loss 0.0133 | batch loss 0.0454
+Epoch 2 | Step 2150/4681 | avg loss 0.0134 | batch loss 0.0050
+Epoch 2 | Step 2200/4681 | avg loss 0.0133 | batch loss 0.0002
+Epoch 2 | Step 2250/4681 | avg loss 0.0134 | batch loss 0.0565
+Epoch 2 | Step 2300/4681 | avg loss 0.0133 | batch loss 0.0082
+Epoch 2 | Step 2350/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 2 | Step 2400/4681 | avg loss 0.0133 | batch loss 0.0002
+Epoch 2 | Step 2450/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 2 | Step 2500/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 2 | Step 2550/4681 | avg loss 0.0135 | batch loss 0.0119
+Epoch 2 | Step 2600/4681 | avg loss 0.0136 | batch loss 0.0028
+Epoch 2 | Step 2650/4681 | avg loss 0.0136 | batch loss 0.0011
+Epoch 2 | Step 2700/4681 | avg loss 0.0136 | batch loss 0.0052
+Epoch 2 | Step 2750/4681 | avg loss 0.0136 | batch loss 0.0122
+Epoch 2 | Step 2800/4681 | avg loss 0.0135 | batch loss 0.0019
+Epoch 2 | Step 2850/4681 | avg loss 0.0135 | batch loss 0.0152
+Epoch 2 | Step 2900/4681 | avg loss 0.0135 | batch loss 0.0382
+Epoch 2 | Step 2950/4681 | avg loss 0.0136 | batch loss 0.0061
+Epoch 2 | Step 3000/4681 | avg loss 0.0137 | batch loss 0.0168
+Num Batches 3000 / 4681 | Batch_Loss 0.001048009842634201 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 2 | Step 3050/4681 | avg loss 0.0136 | batch loss 0.0351
+Epoch 2 | Step 3100/4681 | avg loss 0.0136 | batch loss 0.0002
+Epoch 2 | Step 3150/4681 | avg loss 0.0137 | batch loss 0.0022
+Epoch 2 | Step 3200/4681 | avg loss 0.0137 | batch loss 0.0109
+Epoch 2 | Step 3250/4681 | avg loss 0.0136 | batch loss 0.0208
+Epoch 2 | Step 3300/4681 | avg loss 0.0137 | batch loss 0.0415
+Epoch 2 | Step 3350/4681 | avg loss 0.0138 | batch loss 0.0006
+Epoch 2 | Step 3400/4681 | avg loss 0.0138 | batch loss 0.0483
+Epoch 2 | Step 3450/4681 | avg loss 0.0138 | batch loss 0.0598
+Epoch 2 | Step 3500/4681 | avg loss 0.0138 | batch loss 0.0055
+Epoch 2 | Step 3550/4681 | avg loss 0.0138 | batch loss 0.0006
+Epoch 2 | Step 3600/4681 | avg loss 0.0139 | batch loss 0.0048
+Epoch 2 | Step 3650/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 2 | Step 3700/4681 | avg loss 0.0138 | batch loss 0.0053
+Epoch 2 | Step 3750/4681 | avg loss 0.0138 | batch loss 0.0036
+Epoch 2 | Step 3800/4681 | avg loss 0.0137 | batch loss 0.0244
+Epoch 2 | Step 3850/4681 | avg loss 0.0138 | batch loss 0.0468
+Epoch 2 | Step 3900/4681 | avg loss 0.0138 | batch loss 0.0011
+Epoch 2 | Step 3950/4681 | avg loss 0.0138 | batch loss 0.0174
+Epoch 2 | Step 4000/4681 | avg loss 0.0138 | batch loss 0.0172
+Num Batches 4000 / 4681 | Batch_Loss 0.001072995364665985 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 2 | Step 4050/4681 | avg loss 0.0138 | batch loss 0.0002
+Epoch 2 | Step 4100/4681 | avg loss 0.0138 | batch loss 0.0182
+Epoch 2 | Step 4150/4681 | avg loss 0.0138 | batch loss 0.0666
+Epoch 2 | Step 4200/4681 | avg loss 0.0139 | batch loss 0.0258
+Epoch 2 | Step 4250/4681 | avg loss 0.0139 | batch loss 0.0300
+Epoch 2 | Step 4300/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 2 | Step 4350/4681 | avg loss 0.0139 | batch loss 0.0587
+Epoch 2 | Step 4400/4681 | avg loss 0.0139 | batch loss 0.0738
+Epoch 2 | Step 4450/4681 | avg loss 0.0139 | batch loss 0.0180
+Epoch 2 | Step 4500/4681 | avg loss 0.0140 | batch loss 0.0050
+Epoch 2 | Step 4550/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 2 | Step 4600/4681 | avg loss 0.0140 | batch loss 0.0696
+Epoch 2 | Step 4650/4681 | avg loss 0.0140 | batch loss 0.0343
+Epoch 2 complete | mean loss 0.0140
+Epoch 2 validation | mean relative speed score 0.9872 | accuracy 0.8940
+Epoch 3 | Step 50/4681 | avg loss 0.0089 | batch loss 0.0186
+Epoch 3 | Step 100/4681 | avg loss 0.0125 | batch loss 0.0000
+Epoch 3 | Step 150/4681 | avg loss 0.0119 | batch loss 0.0120
+Epoch 3 | Step 200/4681 | avg loss 0.0125 | batch loss 0.0179
+Epoch 3 | Step 250/4681 | avg loss 0.0128 | batch loss 0.0006
+Epoch 3 | Step 300/4681 | avg loss 0.0130 | batch loss 0.0082
+Epoch 3 | Step 350/4681 | avg loss 0.0133 | batch loss 0.0212
+Epoch 3 | Step 400/4681 | avg loss 0.0135 | batch loss 0.0017
+Epoch 3 | Step 450/4681 | avg loss 0.0133 | batch loss 0.0010
+Epoch 3 | Step 500/4681 | avg loss 0.0135 | batch loss 0.0004
+Epoch 3 | Step 550/4681 | avg loss 0.0135 | batch loss 0.0013
+Epoch 3 | Step 600/4681 | avg loss 0.0139 | batch loss 0.0053
+Epoch 3 | Step 650/4681 | avg loss 0.0139 | batch loss 0.0107
+Epoch 3 | Step 700/4681 | avg loss 0.0144 | batch loss 0.0502
+Epoch 3 | Step 750/4681 | avg loss 0.0145 | batch loss 0.0003
+Epoch 3 | Step 800/4681 | avg loss 0.0145 | batch loss 0.0120
+Epoch 3 | Step 850/4681 | avg loss 0.0144 | batch loss 0.0000
+Epoch 3 | Step 900/4681 | avg loss 0.0143 | batch loss 0.0144
+Epoch 3 | Step 950/4681 | avg loss 0.0143 | batch loss 0.0336
+Epoch 3 | Step 1000/4681 | avg loss 0.0142 | batch loss 0.0010
+Num Batches 1000 / 4681 | Batch_Loss 6.151199340820312e-05 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 3 | Step 1050/4681 | avg loss 0.0141 | batch loss 0.0001
+Epoch 3 | Step 1100/4681 | avg loss 0.0143 | batch loss 0.0592
+Epoch 3 | Step 1150/4681 | avg loss 0.0143 | batch loss 0.0127
+Epoch 3 | Step 1200/4681 | avg loss 0.0141 | batch loss 0.0382
+Epoch 3 | Step 1250/4681 | avg loss 0.0141 | batch loss 0.0086
+Epoch 3 | Step 1300/4681 | avg loss 0.0138 | batch loss 0.0079
+Epoch 3 | Step 1350/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 3 | Step 1400/4681 | avg loss 0.0136 | batch loss 0.0019
+Epoch 3 | Step 1450/4681 | avg loss 0.0136 | batch loss 0.0057
+Epoch 3 | Step 1500/4681 | avg loss 0.0136 | batch loss 0.0177
+Epoch 3 | Step 1550/4681 | avg loss 0.0135 | batch loss 0.0038
+Epoch 3 | Step 1600/4681 | avg loss 0.0135 | batch loss 0.0478
+Epoch 3 | Step 1650/4681 | avg loss 0.0134 | batch loss 0.0010
+Epoch 3 | Step 1700/4681 | avg loss 0.0133 | batch loss 0.0086
+Epoch 3 | Step 1750/4681 | avg loss 0.0133 | batch loss 0.0005
+Epoch 3 | Step 1800/4681 | avg loss 0.0134 | batch loss 0.0403
+Epoch 3 | Step 1850/4681 | avg loss 0.0133 | batch loss 0.0046
+Epoch 3 | Step 1900/4681 | avg loss 0.0133 | batch loss 0.0010
+Epoch 3 | Step 1950/4681 | avg loss 0.0133 | batch loss 0.0148
+Epoch 3 | Step 2000/4681 | avg loss 0.0132 | batch loss 0.0000
+Num Batches 2000 / 4681 | Batch_Loss 0.0 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 3 | Step 2050/4681 | avg loss 0.0132 | batch loss 0.0060
+Epoch 3 | Step 2100/4681 | avg loss 0.0133 | batch loss 0.0020
+Epoch 3 | Step 2150/4681 | avg loss 0.0134 | batch loss 0.0463
+Epoch 3 | Step 2200/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 3 | Step 2250/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 3 | Step 2300/4681 | avg loss 0.0133 | batch loss 0.0529
+Epoch 3 | Step 2350/4681 | avg loss 0.0133 | batch loss 0.0279
+Epoch 3 | Step 2400/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 3 | Step 2450/4681 | avg loss 0.0134 | batch loss 0.0154
+Epoch 3 | Step 2500/4681 | avg loss 0.0135 | batch loss 0.0081
+Epoch 3 | Step 2550/4681 | avg loss 0.0135 | batch loss 0.0127
+Epoch 3 | Step 2600/4681 | avg loss 0.0136 | batch loss 0.0054
+Epoch 3 | Step 2650/4681 | avg loss 0.0136 | batch loss 0.0154
+Epoch 3 | Step 2700/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 3 | Step 2750/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 3 | Step 2800/4681 | avg loss 0.0135 | batch loss 0.0967
+Epoch 3 | Step 2850/4681 | avg loss 0.0135 | batch loss 0.0257
+Epoch 3 | Step 2900/4681 | avg loss 0.0135 | batch loss 0.0169
+Epoch 3 | Step 2950/4681 | avg loss 0.0136 | batch loss 0.0628
+Epoch 3 | Step 3000/4681 | avg loss 0.0137 | batch loss 0.0000
+Num Batches 3000 / 4681 | Batch_Loss 0.0 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 3 | Step 3050/4681 | avg loss 0.0136 | batch loss 0.0012
+Epoch 3 | Step 3100/4681 | avg loss 0.0136 | batch loss 0.0518
+Epoch 3 | Step 3150/4681 | avg loss 0.0137 | batch loss 0.0419
+Epoch 3 | Step 3200/4681 | avg loss 0.0137 | batch loss 0.0402
+Epoch 3 | Step 3250/4681 | avg loss 0.0136 | batch loss 0.0084
+Epoch 3 | Step 3300/4681 | avg loss 0.0137 | batch loss 0.0003
+Epoch 3 | Step 3350/4681 | avg loss 0.0137 | batch loss 0.0020
+Epoch 3 | Step 3400/4681 | avg loss 0.0138 | batch loss 0.0106
+Epoch 3 | Step 3450/4681 | avg loss 0.0138 | batch loss 0.0383
+Epoch 3 | Step 3500/4681 | avg loss 0.0138 | batch loss 0.0036
+Epoch 3 | Step 3550/4681 | avg loss 0.0138 | batch loss 0.0009
+Epoch 3 | Step 3600/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 3 | Step 3650/4681 | avg loss 0.0138 | batch loss 0.0008
+Epoch 3 | Step 3700/4681 | avg loss 0.0138 | batch loss 0.0021
+Epoch 3 | Step 3750/4681 | avg loss 0.0138 | batch loss 0.0005
+Epoch 3 | Step 3800/4681 | avg loss 0.0137 | batch loss 0.0344
+Epoch 3 | Step 3850/4681 | avg loss 0.0138 | batch loss 0.0108
+Epoch 3 | Step 3900/4681 | avg loss 0.0137 | batch loss 0.0063
+Epoch 3 | Step 3950/4681 | avg loss 0.0138 | batch loss 0.0188
+Epoch 3 | Step 4000/4681 | avg loss 0.0138 | batch loss 0.0000
+Num Batches 4000 / 4681 | Batch_Loss 0.0 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 3 | Step 4050/4681 | avg loss 0.0138 | batch loss 0.0048
+Epoch 3 | Step 4100/4681 | avg loss 0.0138 | batch loss 0.0528
+Epoch 3 | Step 4150/4681 | avg loss 0.0138 | batch loss 0.0099
+Epoch 3 | Step 4200/4681 | avg loss 0.0138 | batch loss 0.0059
+Epoch 3 | Step 4250/4681 | avg loss 0.0139 | batch loss 0.0050
+Epoch 3 | Step 4300/4681 | avg loss 0.0139 | batch loss 0.0325
+Epoch 3 | Step 4350/4681 | avg loss 0.0139 | batch loss 0.0325
+Epoch 3 | Step 4400/4681 | avg loss 0.0139 | batch loss 0.0139
+Epoch 3 | Step 4450/4681 | avg loss 0.0139 | batch loss 0.0268
+Epoch 3 | Step 4500/4681 | avg loss 0.0140 | batch loss 0.0160
+Epoch 3 | Step 4550/4681 | avg loss 0.0139 | batch loss 0.0132
+Epoch 3 | Step 4600/4681 | avg loss 0.0140 | batch loss 0.0504
+Epoch 3 | Step 4650/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 3 complete | mean loss 0.0140
+Epoch 3 validation | mean relative speed score 0.9872 | accuracy 0.8940
+Epoch 4 | Step 50/4681 | avg loss 0.0088 | batch loss 0.0000
+Epoch 4 | Step 100/4681 | avg loss 0.0128 | batch loss 0.0396
+Epoch 4 | Step 150/4681 | avg loss 0.0121 | batch loss 0.0384
+Epoch 4 | Step 200/4681 | avg loss 0.0125 | batch loss 0.0069
+Epoch 4 | Step 250/4681 | avg loss 0.0128 | batch loss 0.0018
+Epoch 4 | Step 300/4681 | avg loss 0.0131 | batch loss 0.0259
+Epoch 4 | Step 350/4681 | avg loss 0.0134 | batch loss 0.0342
+Epoch 4 | Step 400/4681 | avg loss 0.0135 | batch loss 0.0025
+Epoch 4 | Step 450/4681 | avg loss 0.0133 | batch loss 0.0009
+Epoch 4 | Step 500/4681 | avg loss 0.0135 | batch loss 0.0204
+Epoch 4 | Step 550/4681 | avg loss 0.0135 | batch loss 0.0421
+Epoch 4 | Step 600/4681 | avg loss 0.0140 | batch loss 0.1032
+Epoch 4 | Step 650/4681 | avg loss 0.0139 | batch loss 0.0060
+Epoch 4 | Step 700/4681 | avg loss 0.0145 | batch loss 0.0453
+Epoch 4 | Step 750/4681 | avg loss 0.0145 | batch loss 0.0022
+Epoch 4 | Step 800/4681 | avg loss 0.0145 | batch loss 0.0000
+Epoch 4 | Step 850/4681 | avg loss 0.0144 | batch loss 0.0332
+Epoch 4 | Step 900/4681 | avg loss 0.0143 | batch loss 0.0000
+Epoch 4 | Step 950/4681 | avg loss 0.0143 | batch loss 0.0181
+Epoch 4 | Step 1000/4681 | avg loss 0.0142 | batch loss 0.0107
+Num Batches 1000 / 4681 | Batch_Loss 0.0006703510880470276 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 4 | Step 1050/4681 | avg loss 0.0142 | batch loss 0.0420
+Epoch 4 | Step 1100/4681 | avg loss 0.0143 | batch loss 0.0058
+Epoch 4 | Step 1150/4681 | avg loss 0.0143 | batch loss 0.0034
+Epoch 4 | Step 1200/4681 | avg loss 0.0141 | batch loss 0.0000
+Epoch 4 | Step 1250/4681 | avg loss 0.0141 | batch loss 0.0039
+Epoch 4 | Step 1300/4681 | avg loss 0.0138 | batch loss 0.0060
+Epoch 4 | Step 1350/4681 | avg loss 0.0137 | batch loss 0.0054
+Epoch 4 | Step 1400/4681 | avg loss 0.0136 | batch loss 0.0018
+Epoch 4 | Step 1450/4681 | avg loss 0.0136 | batch loss 0.0039
+Epoch 4 | Step 1500/4681 | avg loss 0.0136 | batch loss 0.0011
+Epoch 4 | Step 1550/4681 | avg loss 0.0135 | batch loss 0.0010
+Epoch 4 | Step 1600/4681 | avg loss 0.0135 | batch loss 0.0058
+Epoch 4 | Step 1650/4681 | avg loss 0.0134 | batch loss 0.0093
+Epoch 4 | Step 1700/4681 | avg loss 0.0133 | batch loss 0.0035
+Epoch 4 | Step 1750/4681 | avg loss 0.0133 | batch loss 0.0008
+Epoch 4 | Step 1800/4681 | avg loss 0.0134 | batch loss 0.0046
+Epoch 4 | Step 1850/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 4 | Step 1900/4681 | avg loss 0.0133 | batch loss 0.0247
+Epoch 4 | Step 1950/4681 | avg loss 0.0133 | batch loss 0.0001
+Epoch 4 | Step 2000/4681 | avg loss 0.0132 | batch loss 0.0008
+Num Batches 2000 / 4681 | Batch_Loss 4.964694380760193e-05 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 4 | Step 2050/4681 | avg loss 0.0132 | batch loss 0.0025
+Epoch 4 | Step 2100/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 4 | Step 2150/4681 | avg loss 0.0134 | batch loss 0.0011
+Epoch 4 | Step 2200/4681 | avg loss 0.0133 | batch loss 0.0075
+Epoch 4 | Step 2250/4681 | avg loss 0.0133 | batch loss 0.0021
+Epoch 4 | Step 2300/4681 | avg loss 0.0133 | batch loss 0.0158
+Epoch 4 | Step 2350/4681 | avg loss 0.0133 | batch loss 0.0051
+Epoch 4 | Step 2400/4681 | avg loss 0.0133 | batch loss 0.0002
+Epoch 4 | Step 2450/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 4 | Step 2500/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 4 | Step 2550/4681 | avg loss 0.0135 | batch loss 0.0028
+Epoch 4 | Step 2600/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 4 | Step 2650/4681 | avg loss 0.0136 | batch loss 0.0811
+Epoch 4 | Step 2700/4681 | avg loss 0.0136 | batch loss 0.0234
+Epoch 4 | Step 2750/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 4 | Step 2800/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 4 | Step 2850/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 4 | Step 2900/4681 | avg loss 0.0135 | batch loss 0.0029
+Epoch 4 | Step 2950/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 4 | Step 3000/4681 | avg loss 0.0137 | batch loss 0.0074
+Num Batches 3000 / 4681 | Batch_Loss 0.0004597604274749756 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 4 | Step 3050/4681 | avg loss 0.0136 | batch loss 0.0115
+Epoch 4 | Step 3100/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 4 | Step 3150/4681 | avg loss 0.0137 | batch loss 0.0044
+Epoch 4 | Step 3200/4681 | avg loss 0.0137 | batch loss 0.0003
+Epoch 4 | Step 3250/4681 | avg loss 0.0136 | batch loss 0.0600
+Epoch 4 | Step 3300/4681 | avg loss 0.0137 | batch loss 0.0017
+Epoch 4 | Step 3350/4681 | avg loss 0.0137 | batch loss 0.0054
+Epoch 4 | Step 3400/4681 | avg loss 0.0138 | batch loss 0.0006
+Epoch 4 | Step 3450/4681 | avg loss 0.0138 | batch loss 0.0005
+Epoch 4 | Step 3500/4681 | avg loss 0.0138 | batch loss 0.0813
+Epoch 4 | Step 3550/4681 | avg loss 0.0138 | batch loss 0.0066
+Epoch 4 | Step 3600/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 4 | Step 3650/4681 | avg loss 0.0138 | batch loss 0.0032
+Epoch 4 | Step 3700/4681 | avg loss 0.0138 | batch loss 0.0260
+Epoch 4 | Step 3750/4681 | avg loss 0.0138 | batch loss 0.0003
+Epoch 4 | Step 3800/4681 | avg loss 0.0137 | batch loss 0.0097
+Epoch 4 | Step 3850/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 4 | Step 3900/4681 | avg loss 0.0137 | batch loss 0.0145
+Epoch 4 | Step 3950/4681 | avg loss 0.0138 | batch loss 0.0001
+Epoch 4 | Step 4000/4681 | avg loss 0.0138 | batch loss 0.0026
+Num Batches 4000 / 4681 | Batch_Loss 0.00016279146075248718 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 4 | Step 4050/4681 | avg loss 0.0138 | batch loss 0.0030
+Epoch 4 | Step 4100/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 4 | Step 4150/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 4 | Step 4200/4681 | avg loss 0.0138 | batch loss 0.0145
+Epoch 4 | Step 4250/4681 | avg loss 0.0139 | batch loss 0.0041
+Epoch 4 | Step 4300/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 4 | Step 4350/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 4 | Step 4400/4681 | avg loss 0.0139 | batch loss 0.0016
+Epoch 4 | Step 4450/4681 | avg loss 0.0139 | batch loss 0.0145
+Epoch 4 | Step 4500/4681 | avg loss 0.0140 | batch loss 0.0080
+Epoch 4 | Step 4550/4681 | avg loss 0.0139 | batch loss 0.0107
+Epoch 4 | Step 4600/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 4 | Step 4650/4681 | avg loss 0.0140 | batch loss 0.0058
+Epoch 4 complete | mean loss 0.0140
+Epoch 4 validation | mean relative speed score 0.9872 | accuracy 0.8940
+Epoch 5 | Step 50/4681 | avg loss 0.0090 | batch loss 0.0100
+Epoch 5 | Step 100/4681 | avg loss 0.0130 | batch loss 0.0154
+Epoch 5 | Step 150/4681 | avg loss 0.0122 | batch loss 0.0155
+Epoch 5 | Step 200/4681 | avg loss 0.0125 | batch loss 0.0025
+Epoch 5 | Step 250/4681 | avg loss 0.0130 | batch loss 0.0543
+Epoch 5 | Step 300/4681 | avg loss 0.0131 | batch loss 0.0055
+Epoch 5 | Step 350/4681 | avg loss 0.0134 | batch loss 0.0011
+Epoch 5 | Step 400/4681 | avg loss 0.0135 | batch loss 0.0001
+Epoch 5 | Step 450/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 5 | Step 500/4681 | avg loss 0.0135 | batch loss 0.0012
+Epoch 5 | Step 550/4681 | avg loss 0.0135 | batch loss 0.0017
+Epoch 5 | Step 600/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 5 | Step 650/4681 | avg loss 0.0139 | batch loss 0.0016
+Epoch 5 | Step 700/4681 | avg loss 0.0145 | batch loss 0.0002
+Epoch 5 | Step 750/4681 | avg loss 0.0145 | batch loss 0.0060
+Epoch 5 | Step 800/4681 | avg loss 0.0145 | batch loss 0.0205
+Epoch 5 | Step 850/4681 | avg loss 0.0144 | batch loss 0.0089
+Epoch 5 | Step 900/4681 | avg loss 0.0144 | batch loss 0.0448
+Epoch 5 | Step 950/4681 | avg loss 0.0143 | batch loss 0.0338
+Epoch 5 | Step 1000/4681 | avg loss 0.0142 | batch loss 0.0068
+Num Batches 1000 / 4681 | Batch_Loss 0.00042557716369628906 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 5 | Step 1050/4681 | avg loss 0.0142 | batch loss 0.0259
+Epoch 5 | Step 1100/4681 | avg loss 0.0143 | batch loss 0.0577
+Epoch 5 | Step 1150/4681 | avg loss 0.0143 | batch loss 0.0199
+Epoch 5 | Step 1200/4681 | avg loss 0.0141 | batch loss 0.0264
+Epoch 5 | Step 1250/4681 | avg loss 0.0141 | batch loss 0.0048
+Epoch 5 | Step 1300/4681 | avg loss 0.0139 | batch loss 0.0282
+Epoch 5 | Step 1350/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 5 | Step 1400/4681 | avg loss 0.0136 | batch loss 0.0010
+Epoch 5 | Step 1450/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 5 | Step 1500/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 5 | Step 1550/4681 | avg loss 0.0135 | batch loss 0.0034
+Epoch 5 | Step 1600/4681 | avg loss 0.0135 | batch loss 0.0032
+Epoch 5 | Step 1650/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 5 | Step 1700/4681 | avg loss 0.0133 | batch loss 0.0001
+Epoch 5 | Step 1750/4681 | avg loss 0.0133 | batch loss 0.0001
+Epoch 5 | Step 1800/4681 | avg loss 0.0134 | batch loss 0.0010
+Epoch 5 | Step 1850/4681 | avg loss 0.0133 | batch loss 0.0174
+Epoch 5 | Step 1900/4681 | avg loss 0.0133 | batch loss 0.0026
+Epoch 5 | Step 1950/4681 | avg loss 0.0133 | batch loss 0.0138
+Epoch 5 | Step 2000/4681 | avg loss 0.0132 | batch loss 0.0002
+Num Batches 2000 / 4681 | Batch_Loss 1.1138617992401123e-05 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 5 | Step 2050/4681 | avg loss 0.0132 | batch loss 0.0040
+Epoch 5 | Step 2100/4681 | avg loss 0.0133 | batch loss 0.0625
+Epoch 5 | Step 2150/4681 | avg loss 0.0134 | batch loss 0.0022
+Epoch 5 | Step 2200/4681 | avg loss 0.0134 | batch loss 0.0645
+Epoch 5 | Step 2250/4681 | avg loss 0.0133 | batch loss 0.0008
+Epoch 5 | Step 2300/4681 | avg loss 0.0133 | batch loss 0.0423
+Epoch 5 | Step 2350/4681 | avg loss 0.0134 | batch loss 0.0654
+Epoch 5 | Step 2400/4681 | avg loss 0.0133 | batch loss 0.0023
+Epoch 5 | Step 2450/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 5 | Step 2500/4681 | avg loss 0.0135 | batch loss 0.0021
+Epoch 5 | Step 2550/4681 | avg loss 0.0135 | batch loss 0.0166
+Epoch 5 | Step 2600/4681 | avg loss 0.0136 | batch loss 0.0050
+Epoch 5 | Step 2650/4681 | avg loss 0.0136 | batch loss 0.0015
+Epoch 5 | Step 2700/4681 | avg loss 0.0136 | batch loss 0.0810
+Epoch 5 | Step 2750/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 5 | Step 2800/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 5 | Step 2850/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 5 | Step 2900/4681 | avg loss 0.0135 | batch loss 0.0423
+Epoch 5 | Step 2950/4681 | avg loss 0.0136 | batch loss 0.0001
+Epoch 5 | Step 3000/4681 | avg loss 0.0137 | batch loss 0.0115
+Num Batches 3000 / 4681 | Batch_Loss 0.0007187016308307648 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 5 | Step 3050/4681 | avg loss 0.0136 | batch loss 0.0626
+Epoch 5 | Step 3100/4681 | avg loss 0.0136 | batch loss 0.0366
+Epoch 5 | Step 3150/4681 | avg loss 0.0137 | batch loss 0.0084
+Epoch 5 | Step 3200/4681 | avg loss 0.0137 | batch loss 0.0432
+Epoch 5 | Step 3250/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 5 | Step 3300/4681 | avg loss 0.0137 | batch loss 0.0089
+Epoch 5 | Step 3350/4681 | avg loss 0.0137 | batch loss 0.0003
+Epoch 5 | Step 3400/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 5 | Step 3450/4681 | avg loss 0.0138 | batch loss 0.0023
+Epoch 5 | Step 3500/4681 | avg loss 0.0138 | batch loss 0.0075
+Epoch 5 | Step 3550/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 5 | Step 3600/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 5 | Step 3650/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 5 | Step 3700/4681 | avg loss 0.0138 | batch loss 0.0230
+Epoch 5 | Step 3750/4681 | avg loss 0.0138 | batch loss 0.0104
+Epoch 5 | Step 3800/4681 | avg loss 0.0137 | batch loss 0.0006
+Epoch 5 | Step 3850/4681 | avg loss 0.0138 | batch loss 0.0261
+Epoch 5 | Step 3900/4681 | avg loss 0.0138 | batch loss 0.0170
+Epoch 5 | Step 3950/4681 | avg loss 0.0138 | batch loss 0.0322
+Epoch 5 | Step 4000/4681 | avg loss 0.0138 | batch loss 0.0000
+Num Batches 4000 / 4681 | Batch_Loss 0.0 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 5 | Step 4050/4681 | avg loss 0.0138 | batch loss 0.0029
+Epoch 5 | Step 4100/4681 | avg loss 0.0138 | batch loss 0.0156
+Epoch 5 | Step 4150/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 5 | Step 4200/4681 | avg loss 0.0139 | batch loss 0.0381
+Epoch 5 | Step 4250/4681 | avg loss 0.0139 | batch loss 0.0048
+Epoch 5 | Step 4300/4681 | avg loss 0.0139 | batch loss 0.0105
+Epoch 5 | Step 4350/4681 | avg loss 0.0139 | batch loss 0.0237
+Epoch 5 | Step 4400/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 5 | Step 4450/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 5 | Step 4500/4681 | avg loss 0.0140 | batch loss 0.0049
+Epoch 5 | Step 4550/4681 | avg loss 0.0139 | batch loss 0.0055
+Epoch 5 | Step 4600/4681 | avg loss 0.0140 | batch loss 0.0351
+Epoch 5 | Step 4650/4681 | avg loss 0.0140 | batch loss 0.0168
+Epoch 5 complete | mean loss 0.0140
+Epoch 5 validation | mean relative speed score 0.9872 | accuracy 0.8940
+Epoch 6 | Step 50/4681 | avg loss 0.0091 | batch loss 0.0079
+Epoch 6 | Step 100/4681 | avg loss 0.0130 | batch loss 0.0002
+Epoch 6 | Step 150/4681 | avg loss 0.0123 | batch loss 0.0228
+Epoch 6 | Step 200/4681 | avg loss 0.0125 | batch loss 0.0156
+Epoch 6 | Step 250/4681 | avg loss 0.0130 | batch loss 0.0020
+Epoch 6 | Step 300/4681 | avg loss 0.0134 | batch loss 0.0853
+Epoch 6 | Step 350/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 6 | Step 400/4681 | avg loss 0.0136 | batch loss 0.0346
+Epoch 6 | Step 450/4681 | avg loss 0.0133 | batch loss 0.0031
+Epoch 6 | Step 500/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 6 | Step 550/4681 | avg loss 0.0135 | batch loss 0.0012
+Epoch 6 | Step 600/4681 | avg loss 0.0141 | batch loss 0.0462
+Epoch 6 | Step 650/4681 | avg loss 0.0140 | batch loss 0.0362
+Epoch 6 | Step 700/4681 | avg loss 0.0146 | batch loss 0.0494
+Epoch 6 | Step 750/4681 | avg loss 0.0145 | batch loss 0.0000
+Epoch 6 | Step 800/4681 | avg loss 0.0145 | batch loss 0.0041
+Epoch 6 | Step 850/4681 | avg loss 0.0145 | batch loss 0.0153
+Epoch 6 | Step 900/4681 | avg loss 0.0144 | batch loss 0.0169
+Epoch 6 | Step 950/4681 | avg loss 0.0143 | batch loss 0.0357
+Epoch 6 | Step 1000/4681 | avg loss 0.0142 | batch loss 0.0100
+Num Batches 1000 / 4681 | Batch_Loss 0.0006227642297744751 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 6 | Step 1050/4681 | avg loss 0.0142 | batch loss 0.0063
+Epoch 6 | Step 1100/4681 | avg loss 0.0143 | batch loss 0.0136
+Epoch 6 | Step 1150/4681 | avg loss 0.0143 | batch loss 0.0000
+Epoch 6 | Step 1200/4681 | avg loss 0.0141 | batch loss 0.0299
+Epoch 6 | Step 1250/4681 | avg loss 0.0141 | batch loss 0.0028
+Epoch 6 | Step 1300/4681 | avg loss 0.0139 | batch loss 0.0261
+Epoch 6 | Step 1350/4681 | avg loss 0.0137 | batch loss 0.0487
+Epoch 6 | Step 1400/4681 | avg loss 0.0136 | batch loss 0.0344
+Epoch 6 | Step 1450/4681 | avg loss 0.0137 | batch loss 0.0308
+Epoch 6 | Step 1500/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 6 | Step 1550/4681 | avg loss 0.0135 | batch loss 0.0006
+Epoch 6 | Step 1600/4681 | avg loss 0.0135 | batch loss 0.0036
+Epoch 6 | Step 1650/4681 | avg loss 0.0134 | batch loss 0.0011
+Epoch 6 | Step 1700/4681 | avg loss 0.0133 | batch loss 0.0016
+Epoch 6 | Step 1750/4681 | avg loss 0.0134 | batch loss 0.0662
+Epoch 6 | Step 1800/4681 | avg loss 0.0134 | batch loss 0.0364
+Epoch 6 | Step 1850/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 6 | Step 1900/4681 | avg loss 0.0133 | batch loss 0.0188
+Epoch 6 | Step 1950/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 6 | Step 2000/4681 | avg loss 0.0132 | batch loss 0.0000
+Num Batches 2000 / 4681 | Batch_Loss 0.0 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 6 | Step 2050/4681 | avg loss 0.0132 | batch loss 0.0070
+Epoch 6 | Step 2100/4681 | avg loss 0.0133 | batch loss 0.0027
+Epoch 6 | Step 2150/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 6 | Step 2200/4681 | avg loss 0.0134 | batch loss 0.0062
+Epoch 6 | Step 2250/4681 | avg loss 0.0134 | batch loss 0.0421
+Epoch 6 | Step 2300/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 6 | Step 2350/4681 | avg loss 0.0134 | batch loss 0.0013
+Epoch 6 | Step 2400/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 6 | Step 2450/4681 | avg loss 0.0134 | batch loss 0.0122
+Epoch 6 | Step 2500/4681 | avg loss 0.0135 | batch loss 0.0389
+Epoch 6 | Step 2550/4681 | avg loss 0.0135 | batch loss 0.0143
+Epoch 6 | Step 2600/4681 | avg loss 0.0136 | batch loss 0.0143
+Epoch 6 | Step 2650/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 6 | Step 2700/4681 | avg loss 0.0136 | batch loss 0.0065
+Epoch 6 | Step 2750/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 6 | Step 2800/4681 | avg loss 0.0135 | batch loss 0.0239
+Epoch 6 | Step 2850/4681 | avg loss 0.0135 | batch loss 0.0076
+Epoch 6 | Step 2900/4681 | avg loss 0.0135 | batch loss 0.0068
+Epoch 6 | Step 2950/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 6 | Step 3000/4681 | avg loss 0.0137 | batch loss 0.0021
+Num Batches 3000 / 4681 | Batch_Loss 0.00013275444507598877 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 6 | Step 3050/4681 | avg loss 0.0136 | batch loss 0.0006
+Epoch 6 | Step 3100/4681 | avg loss 0.0136 | batch loss 0.0331
+Epoch 6 | Step 3150/4681 | avg loss 0.0137 | batch loss 0.0437
+Epoch 6 | Step 3200/4681 | avg loss 0.0137 | batch loss 0.0297
+Epoch 6 | Step 3250/4681 | avg loss 0.0136 | batch loss 0.0439
+Epoch 6 | Step 3300/4681 | avg loss 0.0137 | batch loss 0.0332
+Epoch 6 | Step 3350/4681 | avg loss 0.0137 | batch loss 0.0049
+Epoch 6 | Step 3400/4681 | avg loss 0.0138 | batch loss 0.0278
+Epoch 6 | Step 3450/4681 | avg loss 0.0138 | batch loss 0.0135
+Epoch 6 | Step 3500/4681 | avg loss 0.0139 | batch loss 0.0387
+Epoch 6 | Step 3550/4681 | avg loss 0.0138 | batch loss 0.0153
+Epoch 6 | Step 3600/4681 | avg loss 0.0139 | batch loss 0.0210
+Epoch 6 | Step 3650/4681 | avg loss 0.0138 | batch loss 0.0097
+Epoch 6 | Step 3700/4681 | avg loss 0.0138 | batch loss 0.0038
+Epoch 6 | Step 3750/4681 | avg loss 0.0138 | batch loss 0.0035
+Epoch 6 | Step 3800/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 6 | Step 3850/4681 | avg loss 0.0138 | batch loss 0.0094
+Epoch 6 | Step 3900/4681 | avg loss 0.0138 | batch loss 0.0144
+Epoch 6 | Step 3950/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 6 | Step 4000/4681 | avg loss 0.0138 | batch loss 0.0257
+Num Batches 4000 / 4681 | Batch_Loss 0.001608964055776596 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 6 | Step 4050/4681 | avg loss 0.0138 | batch loss 0.0052
+Epoch 6 | Step 4100/4681 | avg loss 0.0138 | batch loss 0.0237
+Epoch 6 | Step 4150/4681 | avg loss 0.0138 | batch loss 0.0078
+Epoch 6 | Step 4200/4681 | avg loss 0.0139 | batch loss 0.0210
+Epoch 6 | Step 4250/4681 | avg loss 0.0139 | batch loss 0.0243
+Epoch 6 | Step 4300/4681 | avg loss 0.0139 | batch loss 0.0109
+Epoch 6 | Step 4350/4681 | avg loss 0.0139 | batch loss 0.0496
+Epoch 6 | Step 4400/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 6 | Step 4450/4681 | avg loss 0.0139 | batch loss 0.0002
+Epoch 6 | Step 4500/4681 | avg loss 0.0140 | batch loss 0.0515
+Epoch 6 | Step 4550/4681 | avg loss 0.0139 | batch loss 0.0344
+Epoch 6 | Step 4600/4681 | avg loss 0.0140 | batch loss 0.0041
+Epoch 6 | Step 4650/4681 | avg loss 0.0140 | batch loss 0.0239
+Epoch 6 complete | mean loss 0.0140
+Epoch 6 validation | mean relative speed score 0.9872 | accuracy 0.8940
+Epoch 7 | Step 50/4681 | avg loss 0.0096 | batch loss 0.0417
+Epoch 7 | Step 100/4681 | avg loss 0.0128 | batch loss 0.0000
+Epoch 7 | Step 150/4681 | avg loss 0.0122 | batch loss 0.0007
+Epoch 7 | Step 200/4681 | avg loss 0.0127 | batch loss 0.0427
+Epoch 7 | Step 250/4681 | avg loss 0.0129 | batch loss 0.0008
+Epoch 7 | Step 300/4681 | avg loss 0.0134 | batch loss 0.0149
+Epoch 7 | Step 350/4681 | avg loss 0.0135 | batch loss 0.0420
+Epoch 7 | Step 400/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 7 | Step 450/4681 | avg loss 0.0133 | batch loss 0.0181
+Epoch 7 | Step 500/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 7 | Step 550/4681 | avg loss 0.0135 | batch loss 0.0018
+Epoch 7 | Step 600/4681 | avg loss 0.0141 | batch loss 0.0102
+Epoch 7 | Step 650/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 7 | Step 700/4681 | avg loss 0.0145 | batch loss 0.0025
+Epoch 7 | Step 750/4681 | avg loss 0.0145 | batch loss 0.0256
+Epoch 7 | Step 800/4681 | avg loss 0.0145 | batch loss 0.0350
+Epoch 7 | Step 850/4681 | avg loss 0.0144 | batch loss 0.0001
+Epoch 7 | Step 900/4681 | avg loss 0.0144 | batch loss 0.0012
+Epoch 7 | Step 950/4681 | avg loss 0.0143 | batch loss 0.0146
+Epoch 7 | Step 1000/4681 | avg loss 0.0142 | batch loss 0.0144
+Num Batches 1000 / 4681 | Batch_Loss 0.0008991770446300507 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 7 | Step 1050/4681 | avg loss 0.0142 | batch loss 0.0055
+Epoch 7 | Step 1100/4681 | avg loss 0.0143 | batch loss 0.0203
+Epoch 7 | Step 1150/4681 | avg loss 0.0143 | batch loss 0.0000
+Epoch 7 | Step 1200/4681 | avg loss 0.0141 | batch loss 0.0086
+Epoch 7 | Step 1250/4681 | avg loss 0.0141 | batch loss 0.0000
+Epoch 7 | Step 1300/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 7 | Step 1350/4681 | avg loss 0.0137 | batch loss 0.0565
+Epoch 7 | Step 1400/4681 | avg loss 0.0136 | batch loss 0.0239
+Epoch 7 | Step 1450/4681 | avg loss 0.0137 | batch loss 0.0096
+Epoch 7 | Step 1500/4681 | avg loss 0.0136 | batch loss 0.0633
+Epoch 7 | Step 1550/4681 | avg loss 0.0135 | batch loss 0.0454
+Epoch 7 | Step 1600/4681 | avg loss 0.0135 | batch loss 0.0011
+Epoch 7 | Step 1650/4681 | avg loss 0.0134 | batch loss 0.0041
+Epoch 7 | Step 1700/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 7 | Step 1750/4681 | avg loss 0.0134 | batch loss 0.0296
+Epoch 7 | Step 1800/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 7 | Step 1850/4681 | avg loss 0.0133 | batch loss 0.0096
+Epoch 7 | Step 1900/4681 | avg loss 0.0133 | batch loss 0.0098
+Epoch 7 | Step 1950/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 7 | Step 2000/4681 | avg loss 0.0132 | batch loss 0.0011
+Num Batches 2000 / 4681 | Batch_Loss 7.019564509391785e-05 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 7 | Step 2050/4681 | avg loss 0.0132 | batch loss 0.0250
+Epoch 7 | Step 2100/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 7 | Step 2150/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 7 | Step 2200/4681 | avg loss 0.0133 | batch loss 0.0030
+Epoch 7 | Step 2250/4681 | avg loss 0.0134 | batch loss 0.0006
+Epoch 7 | Step 2300/4681 | avg loss 0.0133 | batch loss 0.0050
+Epoch 7 | Step 2350/4681 | avg loss 0.0134 | batch loss 0.0318
+Epoch 7 | Step 2400/4681 | avg loss 0.0133 | batch loss 0.0032
+Epoch 7 | Step 2450/4681 | avg loss 0.0134 | batch loss 0.0181
+Epoch 7 | Step 2500/4681 | avg loss 0.0135 | batch loss 0.0173
+Epoch 7 | Step 2550/4681 | avg loss 0.0136 | batch loss 0.0625
+Epoch 7 | Step 2600/4681 | avg loss 0.0136 | batch loss 0.0004
+Epoch 7 | Step 2650/4681 | avg loss 0.0136 | batch loss 0.0012
+Epoch 7 | Step 2700/4681 | avg loss 0.0136 | batch loss 0.0351
+Epoch 7 | Step 2750/4681 | avg loss 0.0136 | batch loss 0.0146
+Epoch 7 | Step 2800/4681 | avg loss 0.0135 | batch loss 0.0004
+Epoch 7 | Step 2850/4681 | avg loss 0.0135 | batch loss 0.0044
+Epoch 7 | Step 2900/4681 | avg loss 0.0135 | batch loss 0.0521
+Epoch 7 | Step 2950/4681 | avg loss 0.0136 | batch loss 0.0753
+Epoch 7 | Step 3000/4681 | avg loss 0.0136 | batch loss 0.0022
+Num Batches 3000 / 4681 | Batch_Loss 0.0001400485634803772 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 7 | Step 3050/4681 | avg loss 0.0136 | batch loss 0.0090
+Epoch 7 | Step 3100/4681 | avg loss 0.0136 | batch loss 0.0008
+Epoch 7 | Step 3150/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 7 | Step 3200/4681 | avg loss 0.0137 | batch loss 0.0136
+Epoch 7 | Step 3250/4681 | avg loss 0.0136 | batch loss 0.0052
+Epoch 7 | Step 3300/4681 | avg loss 0.0137 | batch loss 0.0413
+Epoch 7 | Step 3350/4681 | avg loss 0.0137 | batch loss 0.0093
+Epoch 7 | Step 3400/4681 | avg loss 0.0138 | batch loss 0.0012
+Epoch 7 | Step 3450/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 7 | Step 3500/4681 | avg loss 0.0139 | batch loss 0.0341
+Epoch 7 | Step 3550/4681 | avg loss 0.0138 | batch loss 0.0371
+Epoch 7 | Step 3600/4681 | avg loss 0.0139 | batch loss 0.0192
+Epoch 7 | Step 3650/4681 | avg loss 0.0138 | batch loss 0.0109
+Epoch 7 | Step 3700/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 7 | Step 3750/4681 | avg loss 0.0138 | batch loss 0.0021
+Epoch 7 | Step 3800/4681 | avg loss 0.0137 | batch loss 0.0012
+Epoch 7 | Step 3850/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 7 | Step 3900/4681 | avg loss 0.0138 | batch loss 0.0067
+Epoch 7 | Step 3950/4681 | avg loss 0.0138 | batch loss 0.0076
+Epoch 7 | Step 4000/4681 | avg loss 0.0138 | batch loss 0.0051
+Num Batches 4000 / 4681 | Batch_Loss 0.0003173723816871643 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 7 | Step 4050/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 7 | Step 4100/4681 | avg loss 0.0139 | batch loss 0.0276
+Epoch 7 | Step 4150/4681 | avg loss 0.0138 | batch loss 0.0335
+Epoch 7 | Step 4200/4681 | avg loss 0.0139 | batch loss 0.0831
+Epoch 7 | Step 4250/4681 | avg loss 0.0139 | batch loss 0.0090
+Epoch 7 | Step 4300/4681 | avg loss 0.0139 | batch loss 0.0142
+Epoch 7 | Step 4350/4681 | avg loss 0.0139 | batch loss 0.0024
+Epoch 7 | Step 4400/4681 | avg loss 0.0139 | batch loss 0.0016
+Epoch 7 | Step 4450/4681 | avg loss 0.0139 | batch loss 0.0018
+Epoch 7 | Step 4500/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 7 | Step 4550/4681 | avg loss 0.0139 | batch loss 0.0065
+Epoch 7 | Step 4600/4681 | avg loss 0.0140 | batch loss 0.0475
+Epoch 7 | Step 4650/4681 | avg loss 0.0140 | batch loss 0.0349
+Epoch 7 complete | mean loss 0.0140
+Epoch 7 validation | mean relative speed score 0.9872 | accuracy 0.8940
+Epoch 8 | Step 50/4681 | avg loss 0.0100 | batch loss 0.0184
+Epoch 8 | Step 100/4681 | avg loss 0.0129 | batch loss 0.0122
+Epoch 8 | Step 150/4681 | avg loss 0.0122 | batch loss 0.0001
+Epoch 8 | Step 200/4681 | avg loss 0.0128 | batch loss 0.0227
+Epoch 8 | Step 250/4681 | avg loss 0.0130 | batch loss 0.0027
+Epoch 8 | Step 300/4681 | avg loss 0.0134 | batch loss 0.0098
+Epoch 8 | Step 350/4681 | avg loss 0.0135 | batch loss 0.0027
+Epoch 8 | Step 400/4681 | avg loss 0.0136 | batch loss 0.0166
+Epoch 8 | Step 450/4681 | avg loss 0.0133 | batch loss 0.0032
+Epoch 8 | Step 500/4681 | avg loss 0.0135 | batch loss 0.0017
+Epoch 8 | Step 550/4681 | avg loss 0.0135 | batch loss 0.0021
+Epoch 8 | Step 600/4681 | avg loss 0.0141 | batch loss 0.0000
+Epoch 8 | Step 650/4681 | avg loss 0.0140 | batch loss 0.0136
+Epoch 8 | Step 700/4681 | avg loss 0.0145 | batch loss 0.0003
+Epoch 8 | Step 750/4681 | avg loss 0.0145 | batch loss 0.0000
+Epoch 8 | Step 800/4681 | avg loss 0.0146 | batch loss 0.0309
+Epoch 8 | Step 850/4681 | avg loss 0.0144 | batch loss 0.0049
+Epoch 8 | Step 900/4681 | avg loss 0.0144 | batch loss 0.0003
+Epoch 8 | Step 950/4681 | avg loss 0.0143 | batch loss 0.0038
+Epoch 8 | Step 1000/4681 | avg loss 0.0143 | batch loss 0.0671
+Num Batches 1000 / 4681 | Batch_Loss 0.004193451255559921 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 8 | Step 1050/4681 | avg loss 0.0142 | batch loss 0.0176
+Epoch 8 | Step 1100/4681 | avg loss 0.0143 | batch loss 0.0000
+Epoch 8 | Step 1150/4681 | avg loss 0.0143 | batch loss 0.0000
+Epoch 8 | Step 1200/4681 | avg loss 0.0141 | batch loss 0.0385
+Epoch 8 | Step 1250/4681 | avg loss 0.0141 | batch loss 0.0056
+Epoch 8 | Step 1300/4681 | avg loss 0.0139 | batch loss 0.0032
+Epoch 8 | Step 1350/4681 | avg loss 0.0137 | batch loss 0.0048
+Epoch 8 | Step 1400/4681 | avg loss 0.0136 | batch loss 0.0001
+Epoch 8 | Step 1450/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 8 | Step 1500/4681 | avg loss 0.0136 | batch loss 0.0002
+Epoch 8 | Step 1550/4681 | avg loss 0.0135 | batch loss 0.0007
+Epoch 8 | Step 1600/4681 | avg loss 0.0135 | batch loss 0.0044
+Epoch 8 | Step 1650/4681 | avg loss 0.0134 | batch loss 0.0094
+Epoch 8 | Step 1700/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 8 | Step 1750/4681 | avg loss 0.0134 | batch loss 0.0126
+Epoch 8 | Step 1800/4681 | avg loss 0.0134 | batch loss 0.0019
+Epoch 8 | Step 1850/4681 | avg loss 0.0133 | batch loss 0.0011
+Epoch 8 | Step 1900/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 8 | Step 1950/4681 | avg loss 0.0133 | batch loss 0.0078
+Epoch 8 | Step 2000/4681 | avg loss 0.0132 | batch loss 0.0259
+Num Batches 2000 / 4681 | Batch_Loss 0.001620851457118988 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 8 | Step 2050/4681 | avg loss 0.0132 | batch loss 0.0625
+Epoch 8 | Step 2100/4681 | avg loss 0.0133 | batch loss 0.0197
+Epoch 8 | Step 2150/4681 | avg loss 0.0134 | batch loss 0.0113
+Epoch 8 | Step 2200/4681 | avg loss 0.0134 | batch loss 0.0287
+Epoch 8 | Step 2250/4681 | avg loss 0.0134 | batch loss 0.0006
+Epoch 8 | Step 2300/4681 | avg loss 0.0133 | batch loss 0.0401
+Epoch 8 | Step 2350/4681 | avg loss 0.0134 | batch loss 0.0078
+Epoch 8 | Step 2400/4681 | avg loss 0.0133 | batch loss 0.0023
+Epoch 8 | Step 2450/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 8 | Step 2500/4681 | avg loss 0.0135 | batch loss 0.0096
+Epoch 8 | Step 2550/4681 | avg loss 0.0136 | batch loss 0.0006
+Epoch 8 | Step 2600/4681 | avg loss 0.0136 | batch loss 0.0191
+Epoch 8 | Step 2650/4681 | avg loss 0.0136 | batch loss 0.0006
+Epoch 8 | Step 2700/4681 | avg loss 0.0136 | batch loss 0.0257
+Epoch 8 | Step 2750/4681 | avg loss 0.0136 | batch loss 0.0002
+Epoch 8 | Step 2800/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 8 | Step 2850/4681 | avg loss 0.0135 | batch loss 0.0000
+Epoch 8 | Step 2900/4681 | avg loss 0.0135 | batch loss 0.0002
+Epoch 8 | Step 2950/4681 | avg loss 0.0136 | batch loss 0.0092
+Epoch 8 | Step 3000/4681 | avg loss 0.0137 | batch loss 0.0030
+Num Batches 3000 / 4681 | Batch_Loss 0.00018616020679473877 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 8 | Step 3050/4681 | avg loss 0.0137 | batch loss 0.0705
+Epoch 8 | Step 3100/4681 | avg loss 0.0136 | batch loss 0.0073
+Epoch 8 | Step 3150/4681 | avg loss 0.0137 | batch loss 0.0098
+Epoch 8 | Step 3200/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 8 | Step 3250/4681 | avg loss 0.0137 | batch loss 0.0407
+Epoch 8 | Step 3300/4681 | avg loss 0.0137 | batch loss 0.0027
+Epoch 8 | Step 3350/4681 | avg loss 0.0137 | batch loss 0.0032
+Epoch 8 | Step 3400/4681 | avg loss 0.0138 | batch loss 0.0409
+Epoch 8 | Step 3450/4681 | avg loss 0.0138 | batch loss 0.0008
+Epoch 8 | Step 3500/4681 | avg loss 0.0139 | batch loss 0.0001
+Epoch 8 | Step 3550/4681 | avg loss 0.0138 | batch loss 0.0370
+Epoch 8 | Step 3600/4681 | avg loss 0.0139 | batch loss 0.0022
+Epoch 8 | Step 3650/4681 | avg loss 0.0139 | batch loss 0.0219
+Epoch 8 | Step 3700/4681 | avg loss 0.0138 | batch loss 0.0136
+Epoch 8 | Step 3750/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 8 | Step 3800/4681 | avg loss 0.0137 | batch loss 0.0178
+Epoch 8 | Step 3850/4681 | avg loss 0.0138 | batch loss 0.0058
+Epoch 8 | Step 3900/4681 | avg loss 0.0138 | batch loss 0.0185
+Epoch 8 | Step 3950/4681 | avg loss 0.0138 | batch loss 0.0091
+Epoch 8 | Step 4000/4681 | avg loss 0.0138 | batch loss 0.0338
+Num Batches 4000 / 4681 | Batch_Loss 0.002111658453941345 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 8 | Step 4050/4681 | avg loss 0.0138 | batch loss 0.0151
+Epoch 8 | Step 4100/4681 | avg loss 0.0139 | batch loss 0.0253
+Epoch 8 | Step 4150/4681 | avg loss 0.0138 | batch loss 0.0119
+Epoch 8 | Step 4200/4681 | avg loss 0.0139 | batch loss 0.0174
+Epoch 8 | Step 4250/4681 | avg loss 0.0139 | batch loss 0.0073
+Epoch 8 | Step 4300/4681 | avg loss 0.0139 | batch loss 0.0181
+Epoch 8 | Step 4350/4681 | avg loss 0.0139 | batch loss 0.0131
+Epoch 8 | Step 4400/4681 | avg loss 0.0139 | batch loss 0.0588
+Epoch 8 | Step 4450/4681 | avg loss 0.0139 | batch loss 0.0142
+Epoch 8 | Step 4500/4681 | avg loss 0.0140 | batch loss 0.0168
+Epoch 8 | Step 4550/4681 | avg loss 0.0139 | batch loss 0.0428
+Epoch 8 | Step 4600/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 8 | Step 4650/4681 | avg loss 0.0140 | batch loss 0.0008
+Epoch 8 complete | mean loss 0.0140
+Epoch 8 validation | mean relative speed score 0.9872 | accuracy 0.8940
+Epoch 9 | Step 50/4681 | avg loss 0.0107 | batch loss 0.0383
+Epoch 9 | Step 100/4681 | avg loss 0.0129 | batch loss 0.0005
+Epoch 9 | Step 150/4681 | avg loss 0.0122 | batch loss 0.0001
+Epoch 9 | Step 200/4681 | avg loss 0.0128 | batch loss 0.0000
+Epoch 9 | Step 250/4681 | avg loss 0.0130 | batch loss 0.0037
+Epoch 9 | Step 300/4681 | avg loss 0.0135 | batch loss 0.0395
+Epoch 9 | Step 350/4681 | avg loss 0.0135 | batch loss 0.0002
+Epoch 9 | Step 400/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 9 | Step 450/4681 | avg loss 0.0133 | batch loss 0.0001
+Epoch 9 | Step 500/4681 | avg loss 0.0135 | batch loss 0.0002
+Epoch 9 | Step 550/4681 | avg loss 0.0135 | batch loss 0.0007
+Epoch 9 | Step 600/4681 | avg loss 0.0141 | batch loss 0.0000
+Epoch 9 | Step 650/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 9 | Step 700/4681 | avg loss 0.0145 | batch loss 0.0004
+Epoch 9 | Step 750/4681 | avg loss 0.0145 | batch loss 0.0000
+Epoch 9 | Step 800/4681 | avg loss 0.0146 | batch loss 0.0199
+Epoch 9 | Step 850/4681 | avg loss 0.0145 | batch loss 0.0269
+Epoch 9 | Step 900/4681 | avg loss 0.0144 | batch loss 0.0076
+Epoch 9 | Step 950/4681 | avg loss 0.0143 | batch loss 0.0000
+Epoch 9 | Step 1000/4681 | avg loss 0.0143 | batch loss 0.0190
+Num Batches 1000 / 4681 | Batch_Loss 0.0011873617768287659 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 9 | Step 1050/4681 | avg loss 0.0142 | batch loss 0.0014
+Epoch 9 | Step 1100/4681 | avg loss 0.0144 | batch loss 0.0263
+Epoch 9 | Step 1150/4681 | avg loss 0.0143 | batch loss 0.0000
+Epoch 9 | Step 1200/4681 | avg loss 0.0141 | batch loss 0.0009
+Epoch 9 | Step 1250/4681 | avg loss 0.0141 | batch loss 0.0007
+Epoch 9 | Step 1300/4681 | avg loss 0.0139 | batch loss 0.0060
+Epoch 9 | Step 1350/4681 | avg loss 0.0137 | batch loss 0.0391
+Epoch 9 | Step 1400/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 9 | Step 1450/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 9 | Step 1500/4681 | avg loss 0.0136 | batch loss 0.0005
+Epoch 9 | Step 1550/4681 | avg loss 0.0135 | batch loss 0.0102
+Epoch 9 | Step 1600/4681 | avg loss 0.0135 | batch loss 0.0317
+Epoch 9 | Step 1650/4681 | avg loss 0.0135 | batch loss 0.0228
+Epoch 9 | Step 1700/4681 | avg loss 0.0133 | batch loss 0.0070
+Epoch 9 | Step 1750/4681 | avg loss 0.0134 | batch loss 0.0010
+Epoch 9 | Step 1800/4681 | avg loss 0.0134 | batch loss 0.0017
+Epoch 9 | Step 1850/4681 | avg loss 0.0133 | batch loss 0.0029
+Epoch 9 | Step 1900/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 9 | Step 1950/4681 | avg loss 0.0133 | batch loss 0.0175
+Epoch 9 | Step 2000/4681 | avg loss 0.0132 | batch loss 0.0254
+Num Batches 2000 / 4681 | Batch_Loss 0.0015859082341194153 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 9 | Step 2050/4681 | avg loss 0.0133 | batch loss 0.0548
+Epoch 9 | Step 2100/4681 | avg loss 0.0134 | batch loss 0.0655
+Epoch 9 | Step 2150/4681 | avg loss 0.0134 | batch loss 0.0000
+Epoch 9 | Step 2200/4681 | avg loss 0.0134 | batch loss 0.0027
+Epoch 9 | Step 2250/4681 | avg loss 0.0134 | batch loss 0.0158
+Epoch 9 | Step 2300/4681 | avg loss 0.0133 | batch loss 0.0000
+Epoch 9 | Step 2350/4681 | avg loss 0.0134 | batch loss 0.0524
+Epoch 9 | Step 2400/4681 | avg loss 0.0133 | batch loss 0.0129
+Epoch 9 | Step 2450/4681 | avg loss 0.0134 | batch loss 0.1213
+Epoch 9 | Step 2500/4681 | avg loss 0.0135 | batch loss 0.0022
+Epoch 9 | Step 2550/4681 | avg loss 0.0136 | batch loss 0.0061
+Epoch 9 | Step 2600/4681 | avg loss 0.0136 | batch loss 0.0091
+Epoch 9 | Step 2650/4681 | avg loss 0.0136 | batch loss 0.0108
+Epoch 9 | Step 2700/4681 | avg loss 0.0136 | batch loss 0.0394
+Epoch 9 | Step 2750/4681 | avg loss 0.0136 | batch loss 0.0011
+Epoch 9 | Step 2800/4681 | avg loss 0.0135 | batch loss 0.0047
+Epoch 9 | Step 2850/4681 | avg loss 0.0135 | batch loss 0.0252
+Epoch 9 | Step 2900/4681 | avg loss 0.0135 | batch loss 0.0010
+Epoch 9 | Step 2950/4681 | avg loss 0.0136 | batch loss 0.0357
+Epoch 9 | Step 3000/4681 | avg loss 0.0137 | batch loss 0.0006
+Num Batches 3000 / 4681 | Batch_Loss 3.810971975326538e-05 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 9 | Step 3050/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 9 | Step 3100/4681 | avg loss 0.0136 | batch loss 0.0000
+Epoch 9 | Step 3150/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 9 | Step 3200/4681 | avg loss 0.0137 | batch loss 0.0002
+Epoch 9 | Step 3250/4681 | avg loss 0.0137 | batch loss 0.0007
+Epoch 9 | Step 3300/4681 | avg loss 0.0137 | batch loss 0.0000
+Epoch 9 | Step 3350/4681 | avg loss 0.0137 | batch loss 0.0025
+Epoch 9 | Step 3400/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 9 | Step 3450/4681 | avg loss 0.0138 | batch loss 0.0152
+Epoch 9 | Step 3500/4681 | avg loss 0.0139 | batch loss 0.0217
+Epoch 9 | Step 3550/4681 | avg loss 0.0138 | batch loss 0.0324
+Epoch 9 | Step 3600/4681 | avg loss 0.0139 | batch loss 0.0002
+Epoch 9 | Step 3650/4681 | avg loss 0.0139 | batch loss 0.0027
+Epoch 9 | Step 3700/4681 | avg loss 0.0138 | batch loss 0.0214
+Epoch 9 | Step 3750/4681 | avg loss 0.0138 | batch loss 0.0008
+Epoch 9 | Step 3800/4681 | avg loss 0.0137 | batch loss 0.0007
+Epoch 9 | Step 3850/4681 | avg loss 0.0138 | batch loss 0.0140
+Epoch 9 | Step 3900/4681 | avg loss 0.0138 | batch loss 0.0005
+Epoch 9 | Step 3950/4681 | avg loss 0.0138 | batch loss 0.0000
+Epoch 9 | Step 4000/4681 | avg loss 0.0138 | batch loss 0.0000
+Num Batches 4000 / 4681 | Batch_Loss 0.0 | Valid_Loss 1.6948467810795563e-06 | Valid_Losses [0.002638876438140869]
+Epoch 9 | Step 4050/4681 | avg loss 0.0138 | batch loss 0.0008
+Epoch 9 | Step 4100/4681 | avg loss 0.0139 | batch loss 0.0035
+Epoch 9 | Step 4150/4681 | avg loss 0.0138 | batch loss 0.0682
+Epoch 9 | Step 4200/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 9 | Step 4250/4681 | avg loss 0.0139 | batch loss 0.0349
+Epoch 9 | Step 4300/4681 | avg loss 0.0139 | batch loss 0.0040
+Epoch 9 | Step 4350/4681 | avg loss 0.0139 | batch loss 0.0059
+Epoch 9 | Step 4400/4681 | avg loss 0.0139 | batch loss 0.0101
+Epoch 9 | Step 4450/4681 | avg loss 0.0139 | batch loss 0.0088
+Epoch 9 | Step 4500/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 9 | Step 4550/4681 | avg loss 0.0139 | batch loss 0.0000
+Epoch 9 | Step 4600/4681 | avg loss 0.0140 | batch loss 0.0000
+Epoch 9 | Step 4650/4681 | avg loss 0.0140 | batch loss 0.0037
+Epoch 9 complete | mean loss 0.0140
+Epoch 9 validation | mean relative speed score 0.9872 | accuracy 0.8940
+Best epoch 0 | mean relative speed score 0.9872
+
+
+---------------- Training completed ----------------
+
+
+Testing model...
+Current device: cuda:0
+Model inference: 12.9 ms per instance; 0.33 min over the test set
+Running Analysis...
+bcp2:
+\Accuracy: 
+		count: 1378 
+		percentage: 0.8850353243416827
+	Coverage: 
+		count: 1557 
+		percentage: 1.0
+cbs:
+\Accuracy: 
+		count: 0 
+		percentage: 0.0
+	Coverage: 
+		count: 310 
+		percentage: 0.19910083493898523
+cbsh2_rtc:
+\Accuracy: 
+		count: 176 
+		percentage: 0.11303789338471419
+	Coverage: 
+		count: 1192 
+		percentage: 0.7655748233782916
+reloc:
+\Accuracy: 
+		count: 3 
+		percentage: 0.0019267822736030828
+	Coverage: 
+		count: 419 
+		percentage: 0.2691072575465639
+Our Model:
+\Accuracy: 
+		count: 1378 
+		percentage: 0.8850353243416827
+	Coverage: 
+		count: 1557 
+		percentage: 1.0
+
+Total Runtime (m):
+bcp2: 75.00588528333334
+cbs: 1293.6493966333333
+cbsh2_rtc: 424.7718495333335
+reloc: 1204.3785462833323
+Our Model: 75.00588528333334
+Optimal: 72.97139521666668
+
+Custom Score:
+bcp2: 603.19067946907
+cbs: 28.3508649519993
+cbsh2_rtc: 280.12448649919435
+reloc: 42.14328961066747
+Our Model: 603.19067946907
+Plotting...
+wrote experiments/round_2/MAPFAST_7482753_plots/loss.png
+wrote experiments/round_2/MAPFAST_7482753_plots/accuracy_coverage.png
+wrote experiments/round_2/MAPFAST_7482753_plots/runtime.png
+wrote experiments/round_2/MAPFAST_7482753_plots/confusion.png
+wrote experiments/round_2/MAPFAST_7482753_plots/accuracy_by_agents.png

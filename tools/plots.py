@@ -243,6 +243,8 @@ def plot_comparison(runs, output, limit=None):
 
 		compare_loss.png			mean training loss of each epoch
 		compare_total_runtime.png	total runtime of each model, of the oracle of each portfolio and of every solver (see plot_total_runtime)
+		compare_runtime.png		total runtime of each model relative to its oracle and to its fastest single solver
+		compare_accuracy.png		accuracy against coverage of each model and of every solver (see plot_accuracy)
 
 	`limit` is the common time limit the runs were evaluated under (see apply_time_limit).
 	'''
@@ -265,6 +267,8 @@ def plot_comparison(runs, output, limit=None):
 	tested = [(name, color, run) for name, color, run, _ in runs if run]
 	if tested:
 		plot_total_runtime(tested, limit, os.path.join(output, 'compare_total_runtime.png'))
+		plot_relative_runtime(tested, os.path.join(output, 'compare_runtime.png'))
+		plot_accuracy(tested, os.path.join(output, 'compare_accuracy.png'))
 
 def plot_total_runtime(tested, limit, out):
 	'''
@@ -307,6 +311,106 @@ def plot_total_runtime(tested, limit, out):
 	ax.set_xlabel('Total runtime on the test set (minutes; an unsolved instance counts {:g} s)'.format(limit))
 	ax.set_title('Total runtime: models against single solvers and the oracles')
 	save(fig, out)
+
+def plot_relative_runtime(tested, out):
+	'''
+	Total runtime of each model (in its color) on its own test set, divided by that of its portfolio's oracle (left;
+	never below 1) and of always using its portfolio's fastest single solver (right; below 1 beats it), for `tested` a
+	list of (name, color, run), the model closest to the oracle on top.
+	'''
+	rows = []
+	for name, color, run in tested:
+		result = run['result']
+		best = min(run['mapping'], key=lambda s: result[s][2])
+		rows.append((name, color, result['Model'][2] / result['Oracle'][2], result['Model'][2] / result[best][2], best))
+	rows.sort(key=lambda r: r[2], reverse=True)
+	bests = sorted(set(r[4] for r in rows))
+
+	values = [v for r in rows for v in r[2:4]]
+	low, high = min(1, min(values)), max(1, max(values))
+	span = max(high - low, 0.05)
+	fig, axes = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(12, 0.45 * len(rows) + 1.8))
+	titles = ('Relative to its oracle', 'Relative to always its fastest single solver ({})'.format(', '.join(bests)))
+	for ax, index, title in zip(axes, (2, 3), titles):
+		ax.axvline(1, color=TEXT_2, linestyle='--', linewidth=1)
+		for i, r in enumerate(rows):
+			ax.plot(r[index], i, 'o', color=r[1], markersize=10, markeredgecolor=SURFACE, markeredgewidth=2)
+			label = '{:.2f}×'.format(r[index]) + (' {}'.format(r[4]) if index == 3 and len(bests) > 1 else '')
+			ax.annotate(label, (r[index], i), xytext=(9, 0), textcoords='offset points', va='center', color=TEXT,
+						bbox=dict(boxstyle='square,pad=0.1', facecolor=SURFACE, edgecolor='none'))
+		ax.set_xlabel('Model\'s total runtime ÷ reference (lower is better)')
+		ax.set_title(title)
+	axes[0].set_yticks(range(len(rows)), [r[0] for r in rows], fontweight='bold', color=TEXT)
+	axes[0].set_ylim(-0.6, len(rows) - 0.4)
+	axes[0].set_xlim(low - 0.08 * span, high + 0.3 * span)
+	save(fig, out)
+
+def plot_accuracy(tested, out):
+	'''
+	Scatter of the accuracy (picks the fastest solver) against the coverage (picks a solver that solves the instance)
+	of each model (in its color) and of always using each solver (gray rings), for `tested` a list of (name, color, run):
+	every selector on the left, and on the right a zoom on the models and the solvers that cover about as much. A
+	model is scored on its own portfolio and a solver on the largest portfolio that has it, so a solver's accuracy
+	drops as its portfolio grows (the oracles, 100% on both, are left out).
+	'''
+	solvers = {}
+	for _, _, run in sorted(tested, key=lambda t: -len(t[2]['mapping'])):
+		for s in run['mapping']:
+			solvers.setdefault(s, run['result'][s][1::-1])
+	models = [(name, color, run['result']['Model'][1::-1]) for name, color, run in tested]
+	near = [p for _, _, p in models]
+	near += [p for p in solvers.values() if p[0] >= min(x for x, _ in near) - 0.01]
+	(x0, y0), (x1, y1) = np.min(near, axis=0), np.max(near, axis=0)
+	pad_x, pad_y = max(0.15 * (x1 - x0), 0.002), max(0.15 * (y1 - y0), 0.01)
+	box = (x0 - pad_x, x1 + pad_x, y0 - pad_y, y1 + pad_y)
+
+	fig, axes = plt.subplots(1, 2, figsize=(13, 5.5))
+	for ax in axes:
+		for name, color, (x, y) in models:
+			ax.plot(x, y, 'o', color=color, markersize=9, markeredgecolor=SURFACE, markeredgewidth=2, label=name)
+		# rings on top, so that a model that picks like a single solver shows inside its ring
+		for x, y in solvers.values():
+			ax.plot(x, y, 'o', markersize=13, markerfacecolor='none', markeredgecolor=NEUTRAL, markeredgewidth=2)
+		for axis in (ax.xaxis, ax.yaxis):
+			# no tick above 100%, which the zoom's margin can reach
+			axis.set_major_formatter(lambda v, _: '' if v > 1.0001 else '{:.4g}%'.format(100 * v))
+		ax.set_xlabel('Coverage (picks a solver that solves the instance)')
+	axes[0].set(xlim=(-0.03, 1.03), ylim=(-0.03, 1.03), ylabel='Accuracy (picks the fastest solver)')
+	axes[0].add_patch(matplotlib.patches.Rectangle((box[0], box[2]), box[1] - box[0], box[3] - box[2], fill=False,
+												   edgecolor=TEXT_2, linestyle='--', linewidth=1))
+	axes[1].set(xlim=box[:2], ylim=box[2:])
+	axes[0].set_title('Accuracy against coverage: models and single solvers')
+	axes[1].set_title('Zoom on the models (dashed box)')
+	fig.legend(loc='lower center', ncol=4, bbox_to_anchor=(0.5, -0.02), handles=axes[1].get_legend_handles_labels()[0])
+	fig.tight_layout(rect=(0, 0.08, 1, 1))
+	inside = lambda x, y: box[0] <= x <= box[1] and box[2] <= y <= box[3]
+	label_points(axes[0], [(x, y, s, TEXT_2) for s, (x, y) in solvers.items() if not inside(x, y)])
+	label_points(axes[1], [(x, y, s, TEXT_2) for s, (x, y) in solvers.items() if inside(x, y)]
+				 + [(x, y, name, TEXT) for name, _, (x, y) in models])
+	fig.savefig(out, dpi=150, bbox_inches='tight')
+	plt.close(fig)
+	print('wrote', out)
+
+def label_points(ax, points):
+	'''
+	Labels each (x, y, text, color) of `points` beside its point (to the left near the right edge), moved up or down
+	as little as keeps it inside the axes and off the labels placed before it, with a line to its point if moved
+	'''
+	renderer = ax.figure.canvas.get_renderer()
+	placed = []
+	for x, y, text, color in sorted(points, key=lambda p: -p[1]):
+		left = ax.transLimits.transform((x, y))[0] > 0.85
+		offset = -10 if left else 10
+		style = dict(textcoords='offset points', va='center', ha='right' if left else 'left', color=color, fontsize=9)
+		label = ax.annotate(text, (x, y), xytext=(offset, 0), **style)
+		extent = label.get_window_extent(renderer)
+		fits = lambda box: ax.bbox.y0 <= box.y0 and box.y1 <= ax.bbox.y1 and not any(box.overlaps(o) for o in placed)
+		shift = next((d for d in sorted(range(-400, 401, 2), key=abs) if fits(extent.translated(0, d))), 0)
+		if shift:
+			label.remove()
+			ax.annotate(text, (x, y), xytext=(offset, shift * 72 / ax.figure.dpi), **style,
+						arrowprops=dict(arrowstyle='-', color=NEUTRAL, linewidth=0.8, shrinkA=1, shrinkB=5))
+		placed.append(extent.translated(0, shift))
 
 def save(fig, out):
 	fig.tight_layout()

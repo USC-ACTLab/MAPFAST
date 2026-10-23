@@ -1,0 +1,106 @@
+datasets/full_eight_solvers_score_jev0: 15594 of 15594 instances, solvers cbs, ecbs, cbsh2_rtc, cbsh2_rtc_ch, cbsh2_rtc_bp, cbsh2_rtc_chbp, reloc, bcp2
+1557 test instances, about 0.6M input tokens, about $0.02 at $0.042/M
+100/1557 instances, $0.006 spent
+200/1557 instances, $0.013 spent
+300/1557 instances, $0.020 spent
+400/1557 instances, $0.026 spent
+500/1557 instances, $0.032 spent
+600/1557 instances, $0.039 spent
+700/1557 instances, $0.046 spent
+800/1557 instances, $0.053 spent
+900/1557 instances, $0.059 spent
+1000/1557 instances, $0.066 spent
+1100/1557 instances, $0.073 spent
+1200/1557 instances, $0.080 spent
+1300/1557 instances, $0.087 spent
+1400/1557 instances, $0.094 spent
+1500/1557 instances, $0.100 spent
+wrote datasets/full_eight_solvers_score_jev0/y_pred_true_full_eight_solvers_score_jev0.json (1557 instances, $0.104 spent)
+Jev latency: mean 0.239 s, median 0.140 s per instance; 6.2 min over the test set
+Running Analysis...
+cbs:
+\Accuracy: 
+		count: 0 
+		percentage: 0.0
+	Coverage: 
+		count: 310 
+		percentage: 0.19910083493898523
+ecbs:
+\Accuracy: 
+		count: 0 
+		percentage: 0.0
+	Coverage: 
+		count: 406 
+		percentage: 0.2607578676942839
+cbsh2_rtc:
+\Accuracy: 
+		count: 47 
+		percentage: 0.03018625561978163
+	Coverage: 
+		count: 1192 
+		percentage: 0.7655748233782916
+cbsh2_rtc_ch:
+\Accuracy: 
+		count: 56 
+		percentage: 0.03596660244059088
+	Coverage: 
+		count: 1229 
+		percentage: 0.7893384714193963
+cbsh2_rtc_bp:
+\Accuracy: 
+		count: 65 
+		percentage: 0.04174694926140013
+	Coverage: 
+		count: 1185 
+		percentage: 0.7610789980732178
+cbsh2_rtc_chbp:
+\Accuracy: 
+		count: 121 
+		percentage: 0.07771355170199101
+	Coverage: 
+		count: 1236 
+		percentage: 0.7938342967244701
+reloc:
+\Accuracy: 
+		count: 0 
+		percentage: 0.0
+	Coverage: 
+		count: 419 
+		percentage: 0.2691072575465639
+bcp2:
+\Accuracy: 
+		count: 1268 
+		percentage: 0.8143866409762364
+	Coverage: 
+		count: 1557 
+		percentage: 1.0
+Our Model:
+\Accuracy: 
+		count: 112 
+		percentage: 0.07193320488118175
+	Coverage: 
+		count: 1225 
+		percentage: 0.7867694283879255
+
+Total Runtime (m):
+cbs: 1293.6493966333333
+ecbs: 1208.0136684166675
+cbsh2_rtc: 424.7718495333335
+cbsh2_rtc_ch: 389.37682143333313
+cbsh2_rtc_bp: 423.2380265166663
+cbsh2_rtc_chbp: 372.7771861499995
+reloc: 1204.3785462833323
+bcp2: 75.00588528333334
+Our Model: 383.6914709999997
+Optimal: 69.48729046666675
+
+Custom Score:
+cbs: 15.184433299988106
+ecbs: 23.388893412768784
+cbsh2_rtc: 153.02300217332808
+cbsh2_rtc_ch: 175.2365474460744
+cbsh2_rtc_bp: 173.9150496748901
+cbsh2_rtc_chbp: 193.30833303622953
+reloc: 22.531767817021816
+bcp2: 609.696941692259
+Our Model: 190.71503144743926

@@ -1,0 +1,146 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 7673629
+##  Job Name : benchmark_dataset
+##  Nodelist : node1716
+##      CPUs : 
+##  Mem/Node : 32768 MB
+## Directory : /oscar/home/mcapoor/MAPFASTv2
+##   Job Started : Wed Oct 21 12:40:31 PM EDT 2026
+###############################################################################
+Building datasets/movingai_10-500-agents_300s/four-solvers (MAPFAST)...
+16813 of 30086 instances solved by bcp2, cbs, cbsh2_rtc, reloc
+25/1615 scenario files rendered, 409 images written
+50/1615 scenario files rendered, 827 images written
+75/1615 scenario files rendered, 1193 images written
+100/1615 scenario files rendered, 1586 images written
+125/1615 scenario files rendered, 2002 images written
+150/1615 scenario files rendered, 2440 images written
+175/1615 scenario files rendered, 2808 images written
+200/1615 scenario files rendered, 3105 images written
+225/1615 scenario files rendered, 3365 images written
+250/1615 scenario files rendered, 3640 images written
+275/1615 scenario files rendered, 4010 images written
+300/1615 scenario files rendered, 4337 images written
+325/1615 scenario files rendered, 4556 images written
+350/1615 scenario files rendered, 4744 images written
+375/1615 scenario files rendered, 5056 images written
+400/1615 scenario files rendered, 5371 images written
+425/1615 scenario files rendered, 5726 images written
+450/1615 scenario files rendered, 6002 images written
+475/1615 scenario files rendered, 6144 images written
+500/1615 scenario files rendered, 6243 images written
+525/1615 scenario files rendered, 6521 images written
+550/1615 scenario files rendered, 6829 images written
+575/1615 scenario files rendered, 7123 images written
+600/1615 scenario files rendered, 7444 images written
+625/1615 scenario files rendered, 7642 images written
+650/1615 scenario files rendered, 7856 images written
+675/1615 scenario files rendered, 8117 images written
+700/1615 scenario files rendered, 8341 images written
+725/1615 scenario files rendered, 8409 images written
+750/1615 scenario files rendered, 8493 images written
+775/1615 scenario files rendered, 8635 images written
+800/1615 scenario files rendered, 8750 images written
+825/1615 scenario files rendered, 8809 images written
+850/1615 scenario files rendered, 8871 images written
+875/1615 scenario files rendered, 8951 images written
+900/1615 scenario files rendered, 9032 images written
+925/1615 scenario files rendered, 9140 images written
+950/1615 scenario files rendered, 9225 images written
+975/1615 scenario files rendered, 9359 images written
+1000/1615 scenario files rendered, 9681 images written
+1025/1615 scenario files rendered, 9956 images written
+1050/1615 scenario files rendered, 10221 images written
+1075/1615 scenario files rendered, 10485 images written
+1100/1615 scenario files rendered, 10704 images written
+1125/1615 scenario files rendered, 10970 images written
+1150/1615 scenario files rendered, 11327 images written
+1175/1615 scenario files rendered, 11686 images written
+1200/1615 scenario files rendered, 12019 images written
+1225/1615 scenario files rendered, 12235 images written
+1250/1615 scenario files rendered, 12377 images written
+1275/1615 scenario files rendered, 12484 images written
+1300/1615 scenario files rendered, 12624 images written
+1325/1615 scenario files rendered, 12760 images written
+1350/1615 scenario files rendered, 12855 images written
+1375/1615 scenario files rendered, 13036 images written
+1400/1615 scenario files rendered, 13345 images written
+1425/1615 scenario files rendered, 13687 images written
+1450/1615 scenario files rendered, 14023 images written
+1475/1615 scenario files rendered, 14388 images written
+1500/1615 scenario files rendered, 14800 images written
+1525/1615 scenario files rendered, 15213 images written
+1550/1615 scenario files rendered, 15626 images written
+1575/1615 scenario files rendered, 16058 images written
+1600/1615 scenario files rendered, 16532 images written
+1615/1615 scenario files rendered, 16813 images written
+Train with: python models/main.py -C datasets/movingai_10-500-agents_300s/four-solvers
+Building datasets/movingai_10-500-agents_300s/nine-solvers (MAPFASTv2)...
+16813 of 30086 instances solved by bcp2, cbs, cbsh2_rtc, cbsh2_rtc_bp, cbsh2_rtc_ch, cbsh2_rtc_chbp, ecbs, mapf_prioritized_sipp, reloc
+25/1615 scenario files rendered, 409 images written
+50/1615 scenario files rendered, 827 images written
+75/1615 scenario files rendered, 1193 images written
+100/1615 scenario files rendered, 1586 images written
+125/1615 scenario files rendered, 2002 images written
+150/1615 scenario files rendered, 2440 images written
+175/1615 scenario files rendered, 2808 images written
+200/1615 scenario files rendered, 3105 images written
+225/1615 scenario files rendered, 3357 images written
+250/1615 scenario files rendered, 3640 images written
+275/1615 scenario files rendered, 4011 images written
+300/1615 scenario files rendered, 4320 images written
+325/1615 scenario files rendered, 4558 images written
+350/1615 scenario files rendered, 4744 images written
+375/1615 scenario files rendered, 5056 images written
+400/1615 scenario files rendered, 5371 images written
+425/1615 scenario files rendered, 5726 images written
+450/1615 scenario files rendered, 6002 images written
+475/1615 scenario files rendered, 6144 images written
+500/1615 scenario files rendered, 6243 images written
+525/1615 scenario files rendered, 6521 images written
+550/1615 scenario files rendered, 6832 images written
+575/1615 scenario files rendered, 7123 images written
+600/1615 scenario files rendered, 7452 images written
+625/1615 scenario files rendered, 7642 images written
+650/1615 scenario files rendered, 7855 images written
+675/1615 scenario files rendered, 8113 images written
+700/1615 scenario files rendered, 8340 images written
+725/1615 scenario files rendered, 8409 images written
+750/1615 scenario files rendered, 8493 images written
+775/1615 scenario files rendered, 8635 images written
+800/1615 scenario files rendered, 8744 images written
+825/1615 scenario files rendered, 8809 images written
+850/1615 scenario files rendered, 8871 images written
+875/1615 scenario files rendered, 8951 images written
+900/1615 scenario files rendered, 9032 images written
+925/1615 scenario files rendered, 9145 images written
+950/1615 scenario files rendered, 9225 images written
+975/1615 scenario files rendered, 9359 images written
+1000/1615 scenario files rendered, 9681 images written
+1025/1615 scenario files rendered, 9949 images written
+1050/1615 scenario files rendered, 10221 images written
+1075/1615 scenario files rendered, 10485 images written
+1100/1615 scenario files rendered, 10704 images written
+1125/1615 scenario files rendered, 10970 images written
+1150/1615 scenario files rendered, 11328 images written
+1175/1615 scenario files rendered, 11687 images written
+1200/1615 scenario files rendered, 12018 images written
+1225/1615 scenario files rendered, 12235 images written
+1250/1615 scenario files rendered, 12378 images written
+1275/1615 scenario files rendered, 12484 images written
+1300/1615 scenario files rendered, 12624 images written
+1325/1615 scenario files rendered, 12760 images written
+1350/1615 scenario files rendered, 12854 images written
+1375/1615 scenario files rendered, 13036 images written
+1400/1615 scenario files rendered, 13345 images written
+1425/1615 scenario files rendered, 13687 images written
+1450/1615 scenario files rendered, 14019 images written
+1475/1615 scenario files rendered, 14388 images written
+1500/1615 scenario files rendered, 14800 images written
+1525/1615 scenario files rendered, 15211 images written
+1550/1615 scenario files rendered, 15626 images written
+1575/1615 scenario files rendered, 16058 images written
+1600/1615 scenario files rendered, 16532 images written
+1615/1615 scenario files rendered, 16813 images written
+Train with: python models/main.py -C datasets/movingai_10-500-agents_300s/nine-solvers
+Train and compare both with: TRAIN_TIME=12:00:00 ./scripts/compare.sh MAPFAST=datasets/movingai_10-500-agents_300s/four-solvers MAPFASTv2=datasets/movingai_10-500-agents_300s/nine-solvers

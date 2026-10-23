@@ -1,0 +1,13 @@
+MAPFAST: 1557 test instances under a 60 s time limit (0 left out: no solver solves them within it)
+MAPFASTv2: 1557 test instances under a 60 s time limit (0 left out: no solver solves them within it)
+MAPFAST_aux: 1557 test instances under a 60 s time limit (0 left out: no solver solves them within it)
+MAPFASTv2_aux: 1557 test instances under a 60 s time limit (0 left out: no solver solves them within it)
+Jev0_MAPFAST: 1557 test instances under a 60 s time limit (0 left out: no solver solves them within it)
+Jev20_MAPFAST: 1557 test instances under a 60 s time limit (0 left out: no solver solves them within it)
+Jev0_MAPFASTv2: 1557 test instances under a 60 s time limit (0 left out: no solver solves them within it)
+Jev20_MAPFASTv2: 1557 test instances under a 60 s time limit (0 left out: no solver solves them within it)
+wrote experiments/round_2/MAPFAST_vs_MAPFASTv2_vs_MAPFAST_aux_vs_MAPFASTv2_aux_vs_Jev0_MAPFAST_vs_Jev20_MAPFAST_vs_Jev0_MAPFASTv2_vs_Jev20_MAPFASTv2_7482761/compare_loss.png
+wrote experiments/round_2/MAPFAST_vs_MAPFASTv2_vs_MAPFAST_aux_vs_MAPFASTv2_aux_vs_Jev0_MAPFAST_vs_Jev20_MAPFAST_vs_Jev0_MAPFASTv2_vs_Jev20_MAPFASTv2_7482761/compare_accuracy.png
+wrote experiments/round_2/MAPFAST_vs_MAPFASTv2_vs_MAPFAST_aux_vs_MAPFASTv2_aux_vs_Jev0_MAPFAST_vs_Jev20_MAPFAST_vs_Jev0_MAPFASTv2_vs_Jev20_MAPFASTv2_7482761/compare_runtime.png
+wrote experiments/round_2/MAPFAST_vs_MAPFASTv2_vs_MAPFAST_aux_vs_MAPFASTv2_aux_vs_Jev0_MAPFAST_vs_Jev20_MAPFAST_vs_Jev0_MAPFASTv2_vs_Jev20_MAPFASTv2_7482761/compare_total_runtime.png
+wrote experiments/round_2/MAPFAST_vs_MAPFASTv2_vs_MAPFAST_aux_vs_MAPFASTv2_aux_vs_Jev0_MAPFAST_vs_Jev20_MAPFAST_vs_Jev0_MAPFASTv2_vs_Jev20_MAPFASTv2_7482761/compare_accuracy_by_agents.png

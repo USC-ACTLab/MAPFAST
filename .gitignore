@@ -13,8 +13,17 @@ runs/
 # but keep the test predictions archived with each round of experiments
 !experiments/**/y_pred_true*
 
-# GNN graphs (tools/build_graphs.py) and the sweep's model weights: large, and rebuilt from the datasets
-graphs_s*.pkl
+# GNN graphs (tools/build_graphs.py): large, and rebuilt from the datasets
+graphs*.pkl
+
+# MAPFAST-GNN sweeps (models/train_gnn.py): keep select's rankings and figures (summary*.md, sweep*.png) and each
+# configuration's results.json; leave out the weights, the per-fold outputs, the configurations' test picks (the
+# selected ones are archived in each round's predictions/) and the Slurm logs
+experiments/**/gnn_sweep/**/model.pt
+experiments/**/gnn_sweep/**/fold*of*.npz
+experiments/**/gnn_sweep/**/predictions.json
+experiments/**/gnn_sweep/**/*.out
+experiments/**/gnn_sweep/**/*.err
 
 
 experiments/*/logs/

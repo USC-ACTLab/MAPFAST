@@ -10,6 +10,8 @@
 #   LOGS       folder for the jobs' .out and .err files (default OUT)
 #   BENCH      MAPF Benchmarking folder, for its benchmarks/ (default ~/MAPF-Benchmarking)
 #   EPOCHS     epochs per configuration (default 40)
+#   FOLDS      k-fold cross-validation with FOLDS folds (default 1: main.py's validation set); a configuration takes
+#              FOLDS times as long, so raise TRAIN_TIME, or resubmit: a configuration skips its finished folds
 #   VARIANT    dataset variant for the best predictions (default gnn)
 #   TRAIN_TIME time limit of each configuration (default 12:00:00)
 #   PARALLEL   most configurations training at once (default 8)
@@ -43,7 +45,7 @@ submit_sweep() {
 	id=$(sbatch --parsable -J "gnn_$NAME" "${after[@]}" --array="0-$((configs - 1))%$PARALLEL" \
 		-o "$LOGS/%x_%A_%a.out" -e "$LOGS/%x_%A_%a.err" \
 		-p gpu --gres=gpu:1 --nodes=1 --cpus-per-task=4 --time=${TRAIN_TIME:-12:00:00} --mem=48G \
-		--wrap "source pytorch.venvsource/bin/activate && python -u models/train_gnn.py train $DATASET --config-index \$SLURM_ARRAY_TASK_ID --out $OUT --epochs $EPOCHS")
+		--wrap "source pytorch.venvsource/bin/activate && python -u models/train_gnn.py train $DATASET --config-index \$SLURM_ARRAY_TASK_ID --out $OUT --epochs $EPOCHS --folds $FOLDS")
 	echo "sweep: job array $id, $configs configurations, at most $PARALLEL at once, logs $LOGS/gnn_${NAME}_${id}_<index>.out" >&2
 	echo "$id"
 }
@@ -73,6 +75,7 @@ OUT="${OUT:-experiments/gnn_sweep/$REL}"
 LOGS="${LOGS:-$OUT}"
 BENCH=$(readlink -f "${BENCH:-$HOME/MAPF-Benchmarking}")
 EPOCHS="${EPOCHS:-40}"
+FOLDS="${FOLDS:-1}"
 PARALLEL="${PARALLEL:-8}"
 VARIANT="${VARIANT:-gnn}"
 GRAPHS="$DATASET/graphs.pkl"

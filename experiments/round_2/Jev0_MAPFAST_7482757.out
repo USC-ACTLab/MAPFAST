@@ -1,0 +1,70 @@
+datasets/full_four_solvers_score_jev0: 15594 of 15594 instances, solvers bcp2, cbs, cbsh2_rtc, reloc
+1557 test instances, about 0.6M input tokens, about $0.02 at $0.042/M
+100/1557 instances, $0.006 spent
+200/1557 instances, $0.012 spent
+300/1557 instances, $0.018 spent
+400/1557 instances, $0.024 spent
+500/1557 instances, $0.030 spent
+600/1557 instances, $0.036 spent
+700/1557 instances, $0.043 spent
+800/1557 instances, $0.049 spent
+900/1557 instances, $0.055 spent
+1000/1557 instances, $0.061 spent
+1100/1557 instances, $0.068 spent
+1200/1557 instances, $0.074 spent
+1300/1557 instances, $0.081 spent
+1400/1557 instances, $0.087 spent
+1500/1557 instances, $0.093 spent
+wrote datasets/full_four_solvers_score_jev0/y_pred_true_full_four_solvers_score_jev0.json (1557 instances, $0.097 spent)
+Jev latency: mean 0.127 s, median 0.120 s per instance; 3.3 min over the test set
+Running Analysis...
+bcp2:
+\Accuracy: 
+		count: 1378 
+		percentage: 0.8850353243416827
+	Coverage: 
+		count: 1557 
+		percentage: 1.0
+cbs:
+\Accuracy: 
+		count: 0 
+		percentage: 0.0
+	Coverage: 
+		count: 310 
+		percentage: 0.19910083493898523
+cbsh2_rtc:
+\Accuracy: 
+		count: 176 
+		percentage: 0.11303789338471419
+	Coverage: 
+		count: 1192 
+		percentage: 0.7655748233782916
+reloc:
+\Accuracy: 
+		count: 3 
+		percentage: 0.0019267822736030828
+	Coverage: 
+		count: 419 
+		percentage: 0.2691072575465639
+Our Model:
+\Accuracy: 
+		count: 176 
+		percentage: 0.11303789338471419
+	Coverage: 
+		count: 1192 
+		percentage: 0.7655748233782916
+
+Total Runtime (m):
+bcp2: 75.00588528333334
+cbs: 1293.6493966333333
+cbsh2_rtc: 424.7718495333335
+reloc: 1204.3785462833323
+Our Model: 424.7718495333335
+Optimal: 72.97139521666668
+
+Custom Score:
+bcp2: 871.4664326858014
+cbs: 29.0097909954915
+cbsh2_rtc: 306.435931415006
+reloc: 43.65191348869501
+Our Model: 306.435931415006
