@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 
 import matplotlib
 matplotlib.use('Agg')
+import matplotlib.patches
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -130,6 +131,10 @@ def plot_runtime(result, timeout, out):
 	plot_bars({n: r[2] for n, r in result.items()}, {'Model': SERIES_1, 'Oracle': TEXT_2}, timeout,
 			  'Total runtime: model against single solvers and the oracle', out)
 
+# shades of correct (blue) and wrong (orange) picks, by share of the row
+CORRECT = matplotlib.colors.LinearSegmentedColormap.from_list('correct', SEQUENTIAL)
+WRONG = matplotlib.colors.LinearSegmentedColormap.from_list('wrong', [SURFACE, '#f9d3c2', SERIES_2, '#a8441a'])
+
 def plot_confusion(keys, picks, mapping, out, title='Predicted against actual fastest solver'):
 	solvers = list(mapping)
 	index = {s: i for i, s in enumerate(solvers)}
@@ -137,28 +142,37 @@ def plot_confusion(keys, picks, mapping, out, title='Predicted against actual fa
 	for actual, predicted in zip(picks['Oracle'], picks['Model']):
 		counts[index[actual], index[predicted]] += 1
 	shares = counts / np.maximum(counts.sum(axis=1, keepdims=True), 1)
+	correct = np.eye(len(solvers), dtype=bool)
 
-	cmap = matplotlib.colors.LinearSegmentedColormap.from_list('sequential', SEQUENTIAL)
 	size = 0.6 * len(solvers) + 2.5
-	fig, ax = plt.subplots(figsize=(size + 1, size))
-	image = ax.imshow(shares, cmap=cmap, vmin=0, vmax=1)
+	fig, ax = plt.subplots(figsize=(size + 1, size + 0.4))
+	# any nonzero share stays visibly tinted
+	shade = 0.15 + 0.85 * shares
+	colors = np.where(correct[..., None], CORRECT(shade), WRONG(shade))
+	colors[counts == 0] = matplotlib.colors.to_rgba(SURFACE)
+	ax.imshow(colors)
 	for i in range(len(solvers)):
 		for j in range(len(solvers)):
 			if counts[i, j]:
 				ax.text(j, i, counts[i, j], ha='center', va='center', fontsize=9,
-						color=SURFACE if shares[i, j] > 0.55 else TEXT)
+						color=SURFACE if shares[i, j] > 0.55 else TEXT, fontweight='bold' if i == j else 'normal')
+		# outline the correct cell, so correctness does not rest on color alone
+		if counts[i].any():
+			ax.add_patch(matplotlib.patches.Rectangle((i - 0.5, i - 0.5), 1, 1, fill=False, edgecolor=TEXT, linewidth=1.5))
 	ax.set_xticks(range(len(solvers)))
 	ax.set_xticklabels(solvers, rotation=45, ha='right')
 	ax.set_yticks(range(len(solvers)))
-	ax.set_yticklabels(['{} ({})'.format(s, n) for s, n in zip(solvers, counts.sum(axis=1))])
+	ax.set_yticklabels(['{} ({}, {:.0%} right)'.format(s, n, c / n) if n else '{} (0)'.format(s)
+						for s, n, c in zip(solvers, counts.sum(axis=1), counts.diagonal())])
 	ax.set_xlabel('Model\'s pick')
 	ax.set_ylabel('Actual fastest solver (test instances)')
 	ax.grid(False)
 	ax.spines[:].set_visible(False)
-	bar = fig.colorbar(image, ax=ax, fraction=0.04, format=matplotlib.ticker.PercentFormatter(1))
-	bar.set_label('Share of the row', color=TEXT_2)
-	bar.outline.set_visible(False)
-	ax.set_title(title)
+	ax.legend(handles=[matplotlib.patches.Patch(facecolor=CORRECT(0.75), edgecolor=TEXT, linewidth=1.5, label='Correct pick'),
+					   matplotlib.patches.Patch(facecolor=WRONG(0.75), label='Wrong pick')],
+			  title='Darker: larger\nshare of the row', title_fontsize=9, loc='upper left', bbox_to_anchor=(1.02, 1),
+			  alignment='left')
+	ax.set_title('{} ({:.1%} right overall)'.format(title, counts.trace() / max(counts.sum(), 1)))
 	save(fig, out)
 
 def load_run(config_path):
