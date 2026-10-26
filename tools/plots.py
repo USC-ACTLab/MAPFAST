@@ -1,21 +1,6 @@
 '''
-Graphs of a MAPFAST training run and of its test predictions, and a table of the accuracy, coverage and total runtime
-of the model, of every solver and of the oracle:
-
-	loss.png				training loss per step and per epoch
-	runtime.png			total runtime of the model, of every solver and of the oracle
-	confusion.png			predicted against actual fastest solver
-
-	python tools/plots.py -C datasets/movingai_pilot/nine-solvers --log logs/MAPFASTv2_1234.out
-
-With --run, several trained models are compared on the same graphs instead (see plot_comparison), all
-evaluated under the same time limit (see apply_time_limit):
-
-	python tools/plots.py --run MAPFAST datasets/mapfast_paper/four-solvers logs/MAPFAST_1234.out --run MAPFASTv2 datasets/movingai_pilot/nine-solvers logs/MAPFASTv2_1235.out -o logs/MAPFAST_vs_MAPFASTv2_1236
-
-The graphs are written next to the log, to logs/<name>_<jobid>_plots/ for --log logs/<name>_<jobid>.out
-(logs/<dataset>_plots/ without --log). Without --log, loss.png is skipped; without the
-prediction_output of the config (written by main.py -T 0), only loss.png is drawn.
+Score table and loss/runtime/confusion graphs of one model (-C DATASET --log LOG), or a comparison of several
+(--run NAME DATASET LOG ...) under a common time limit.
 '''
 import argparse
 import json
@@ -23,7 +8,6 @@ import os
 import re
 import sys
 
-# the model code (utils.py, MAPFAST.py) is in ../models
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models'))
 
 import matplotlib
@@ -31,7 +15,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Reference palette of the dataviz method: eight categorical slots, neutral ink and surfaces
+# dataviz palette
 SERIES_1 = '#2a78d6'
 SERIES_2 = '#eb6834'
 SERIES_3 = '#1baf7a'
@@ -62,12 +46,12 @@ EPOCH_LINE = re.compile(r'Epoch (\d+) complete \| mean loss ([\d.]+)')
 
 def read_training_log(log_file):
 	'''
-	Reads the progress lines that main.py prints while training.
-
-	Returns: Json object with
-		'steps' -> list of (global step, running mean loss of the epoch, batch loss)
-		'epochs' -> list of (global step at the end of the epoch, mean loss of the epoch)
+	main.py's progress lines, or a MAPFAST-GNN configuration's results.json:
+	{'steps': [(step, running mean, batch loss)], 'epochs': [(step, mean loss)]}.
 	'''
+	if log_file.endswith('.json'):
+		with open(log_file) as f:
+			return {'steps': [], 'epochs': [(h['epoch'], h['train_loss']) for h in json.load(f)['history']]}
 	log = {'steps': [], 'epochs': []}
 	steps_per_epoch = None
 	with open(log_file) as f:
@@ -83,9 +67,6 @@ def read_training_log(log_file):
 	return log
 
 def plot_loss(log, out):
-	'''
-	Line chart of the training loss: the running mean of each epoch and the mean of each finished epoch.
-	'''
 	fig, ax = plt.subplots(figsize=(8, 4.5))
 	steps = np.array(log['steps'])
 	ax.plot(steps[:, 0], steps[:, 1], color=SERIES_1, label='Training (running mean of the epoch)')
@@ -103,14 +84,7 @@ def plot_loss(log, out):
 	save(fig, out)
 
 def selections(yaml_details, predictions, mapping):
-	'''
-	The solver each selector picks for each test instance: one entry per solver of mapping (always that
-	solver), 'Model' (the prediction) and 'Oracle' (the fastest solver).
-
-	Returns: Tuple of
-		1. List of the yaml_details keys of the test instances, one per prediction
-		2. Json object of selector name -> list of the solver it picks for each instance
-	'''
+	'''Returns (test keys, {selector: picks}) for every single solver, 'Model' and 'Oracle'.'''
 	inv_mapping = {v: k for k, v in mapping.items()}
 	keys = [k[:k.rindex('_')] for k in predictions]
 	picks = {s: [s] * len(keys) for s in mapping}
@@ -119,10 +93,7 @@ def selections(yaml_details, predictions, mapping):
 	return keys, picks
 
 def scores(yaml_details, keys, picks, timeout):
-	'''
-	Returns: Json object of selector name -> (accuracy, coverage, total runtime in minutes), where an
-	unsolved instance costs `timeout` seconds
-	'''
+	'''{selector: (accuracy, coverage, total minutes)}; unsolved costs `timeout`.'''
 	result = {}
 	for name, chosen in picks.items():
 		fastest = [yaml_details[k]['SOLVER'] == s for k, s in zip(keys, chosen)]
@@ -132,42 +103,34 @@ def scores(yaml_details, keys, picks, timeout):
 	return result
 
 def print_scores(result, timeout):
-	'''
-	Prints the accuracy (picks the fastest solver), coverage (picks a solver that solves the instance) and total runtime
-	of every selector of `result` (see scores), fastest first
-	'''
 	print('{:<24} {:>9} {:>9} {:>14}'.format('', 'accuracy', 'coverage', 'runtime (min)'))
 	for name in sorted(result, key=lambda n: result[n][2]):
 		print('{:<24} {:>9.1%} {:>9.1%} {:>14.1f}'.format(name, *result[name]))
 	print('(an unsolved instance counts {:g} s)'.format(timeout))
 
-def plot_runtime(result, timeout, out):
-	'''
-	Horizontal bars of the total runtime of always using each solver, of the model's picks and of the
-	oracle (always the fastest solver), sorted from fastest to slowest.
-	'''
-	names = sorted(result, key=lambda n: result[n][2], reverse=True)
-	colors = [SERIES_1 if n == 'Model' else TEXT_2 if n == 'Oracle' else NEUTRAL for n in names]
+def plot_bars(bars, emphasis, timeout, title, out):
+	'''Total runtime bars, slowest on top; `emphasis` maps the highlighted bars to their colors.'''
+	names = sorted(bars, key=bars.get, reverse=True)
 	fig, ax = plt.subplots(figsize=(8, 0.4 * len(names) + 1.5))
-	ax.barh(names, [result[n][2] for n in names], 0.7, color=colors)
+	ax.barh(names, [bars[n] for n in names], 0.7, color=[emphasis.get(n, NEUTRAL) for n in names])
 	for i, n in enumerate(names):
-		ax.annotate('{:.1f}'.format(result[n][2]), (result[n][2], i), xytext=(4, 0), textcoords='offset points',
-					va='center', color=TEXT if n in ('Model', 'Oracle') else TEXT_2)
+		ax.annotate('{:.1f}'.format(bars[n]), (bars[n], i), xytext=(4, 0), textcoords='offset points',
+					va='center', color=TEXT if n in emphasis else TEXT_2)
 	for label in ax.get_yticklabels():
-		if label.get_text() in ('Model', 'Oracle'):
+		if label.get_text() in emphasis:
 			label.set_fontweight('bold')
 			label.set_color(TEXT)
 	ax.grid(axis='y', visible=False)
-	ax.set_xlim(right=max(r[2] for r in result.values()) * 1.12)
+	ax.set_xlim(right=max(bars.values()) * 1.12)
 	ax.set_xlabel('Total runtime on the test set (minutes; an unsolved instance counts {:g} s)'.format(timeout))
-	ax.set_title('Total runtime: model against single solvers and the oracle')
+	ax.set_title(title)
 	save(fig, out)
 
-def plot_confusion(keys, picks, mapping, out):
-	'''
-	Heatmap of the actual fastest solver (rows) against the model's pick (columns), shaded by the share of
-	each row and labelled with the counts.
-	'''
+def plot_runtime(result, timeout, out):
+	plot_bars({n: r[2] for n, r in result.items()}, {'Model': SERIES_1, 'Oracle': TEXT_2}, timeout,
+			  'Total runtime: model against single solvers and the oracle', out)
+
+def plot_confusion(keys, picks, mapping, out, title='Predicted against actual fastest solver'):
 	solvers = list(mapping)
 	index = {s: i for i, s in enumerate(solvers)}
 	counts = np.zeros((len(solvers), len(solvers)), dtype=int)
@@ -195,16 +158,11 @@ def plot_confusion(keys, picks, mapping, out):
 	bar = fig.colorbar(image, ax=ax, fraction=0.04, format=matplotlib.ticker.PercentFormatter(1))
 	bar.set_label('Share of the row', color=TEXT_2)
 	bar.outline.set_visible(False)
-	ax.set_title('Predicted against actual fastest solver')
+	ax.set_title(title)
 	save(fig, out)
 
 def load_run(config_path):
-	'''
-	Loads the dataset and test predictions of a dataset folder (or its config.json).
-
-	Returns: Json object with yaml_details, mapping, timeout, keys, picks and result
-	(see selections and scores), or None if main.py -T 0 has not written the predictions yet
-	'''
+	'''A dataset's predictions and scores, or None before main.py -T 0.'''
 	from utils import read_config
 	config = read_config(config_path)
 	if not os.path.exists(config['prediction_output']):
@@ -219,14 +177,7 @@ def load_run(config_path):
 	return run
 
 def apply_time_limit(run, limit):
-	'''
-	Evaluates a run as if its benchmark had used a time limit of `limit` seconds: runs slower than that
-	count as unsolved (costing `limit` seconds), and test instances that no solver solves within it are
-	left out, as MAPF Benchmarking leaves out instances that no solver solved.
-
-	Returns: Copy of run (see load_run) with yaml_details, keys, picks, result and timeout updated,
-	and 'dropped' the number of test instances left out
-	'''
+	'''Rescores a run under a shorter time limit, dropping instances no solver solves within it.'''
 	yaml_details = {}
 	for key, record in run['yaml_details'].items():
 		yaml_details[key] = {s: (-1 if s != 'SOLVER' and t > limit else t) for s, t in record.items()}
@@ -237,17 +188,7 @@ def apply_time_limit(run, limit):
 			'result': scores(yaml_details, keys, picks, limit), 'dropped': len(run['keys']) - len(keys)}
 
 def plot_comparison(runs, output, limit=None):
-	'''
-	Graphs that put several trained models on the same axes, for `runs` a list of (name, color, run, log),
-	with run as returned by load_run (or None) and log as returned by read_training_log (or None):
-
-		compare_loss.png			mean training loss of each epoch
-		compare_total_runtime.png	total runtime of each model, of the oracle of each portfolio and of every solver (see plot_total_runtime)
-		compare_runtime.png		total runtime of each model relative to its oracle and to its fastest single solver
-		compare_accuracy.png		accuracy against coverage of each model and of every solver (see plot_accuracy)
-
-	`limit` is the common time limit the runs were evaluated under (see apply_time_limit).
-	'''
+	'''compare_loss.png, compare_total_runtime.png and confusion_<name>.png for `runs`: (name, color, run or None, log or None).'''
 	logged = [(name, color, log) for name, color, _, log in runs if log and log['epochs']]
 	if logged:
 		fig, ax = plt.subplots(figsize=(8, 4.5))
@@ -267,17 +208,12 @@ def plot_comparison(runs, output, limit=None):
 	tested = [(name, color, run) for name, color, run, _ in runs if run]
 	if tested:
 		plot_total_runtime(tested, limit, os.path.join(output, 'compare_total_runtime.png'))
-		plot_relative_runtime(tested, os.path.join(output, 'compare_runtime.png'))
-		plot_accuracy(tested, os.path.join(output, 'compare_accuracy.png'))
+	for name, _, run in tested:
+		plot_confusion(run['keys'], run['picks'], run['mapping'], os.path.join(output, 'confusion_{}.png'.format(name)),
+					   name + ': predicted against actual fastest solver')
 
 def plot_total_runtime(tested, limit, out):
-	'''
-	Horizontal bars, as in runtime.png, of the total runtime of each model (in its color), of the oracle of
-	each solver portfolio (named after the first model with that portfolio) and of always using each solver,
-	sorted from fastest to slowest, for `tested` a list of (name, color, run). The single solvers' runtimes
-	come from the first run whose portfolio has the solver, so they only match the models' when the runs
-	share a test set.
-	'''
+	'''Total runtime of each model, each portfolio's oracle and each single solver (from the first run that has it).'''
 	if len(set(tuple(run['keys']) for _, _, run in tested)) > 1:
 		print('warning: the runs have different test sets, so', out, 'compares runtimes over different instances')
 	bars = {}
@@ -290,127 +226,14 @@ def plot_total_runtime(tested, limit, out):
 		portfolio = sorted(run['mapping'])
 		if portfolio not in portfolios:
 			portfolios.append(portfolio)
-			bars[name + ' oracle'], emphasis[name + ' oracle'] = result['Oracle'][2], TEXT_2
+			oracle = 'Oracle ({} solvers)'.format(len(portfolio))
+			bars[oracle], emphasis[oracle] = result['Oracle'][2], TEXT_2
 		for s in run['mapping']:
 			solvers.setdefault(s, result[s][2])
 	for s, minutes in solvers.items():
 		bars.setdefault(s, minutes)
 
-	names = sorted(bars, key=bars.get, reverse=True)
-	fig, ax = plt.subplots(figsize=(8, 0.4 * len(names) + 1.5))
-	ax.barh(names, [bars[n] for n in names], 0.7, color=[emphasis.get(n, NEUTRAL) for n in names])
-	for i, n in enumerate(names):
-		ax.annotate('{:.1f}'.format(bars[n]), (bars[n], i), xytext=(4, 0), textcoords='offset points',
-					va='center', color=TEXT if n in emphasis else TEXT_2)
-	for label in ax.get_yticklabels():
-		if label.get_text() in emphasis:
-			label.set_fontweight('bold')
-			label.set_color(TEXT)
-	ax.grid(axis='y', visible=False)
-	ax.set_xlim(right=max(bars.values()) * 1.12)
-	ax.set_xlabel('Total runtime on the test set (minutes; an unsolved instance counts {:g} s)'.format(limit))
-	ax.set_title('Total runtime: models against single solvers and the oracles')
-	save(fig, out)
-
-def plot_relative_runtime(tested, out):
-	'''
-	Total runtime of each model (in its color) on its own test set, divided by that of its portfolio's oracle (left;
-	never below 1) and of always using its portfolio's fastest single solver (right; below 1 beats it), for `tested` a
-	list of (name, color, run), the model closest to the oracle on top.
-	'''
-	rows = []
-	for name, color, run in tested:
-		result = run['result']
-		best = min(run['mapping'], key=lambda s: result[s][2])
-		rows.append((name, color, result['Model'][2] / result['Oracle'][2], result['Model'][2] / result[best][2], best))
-	rows.sort(key=lambda r: r[2], reverse=True)
-	bests = sorted(set(r[4] for r in rows))
-
-	values = [v for r in rows for v in r[2:4]]
-	low, high = min(1, min(values)), max(1, max(values))
-	span = max(high - low, 0.05)
-	fig, axes = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(12, 0.45 * len(rows) + 1.8))
-	titles = ('Relative to its oracle', 'Relative to always its fastest single solver ({})'.format(', '.join(bests)))
-	for ax, index, title in zip(axes, (2, 3), titles):
-		ax.axvline(1, color=TEXT_2, linestyle='--', linewidth=1)
-		for i, r in enumerate(rows):
-			ax.plot(r[index], i, 'o', color=r[1], markersize=10, markeredgecolor=SURFACE, markeredgewidth=2)
-			label = '{:.2f}×'.format(r[index]) + (' {}'.format(r[4]) if index == 3 and len(bests) > 1 else '')
-			ax.annotate(label, (r[index], i), xytext=(9, 0), textcoords='offset points', va='center', color=TEXT,
-						bbox=dict(boxstyle='square,pad=0.1', facecolor=SURFACE, edgecolor='none'))
-		ax.set_xlabel('Model\'s total runtime ÷ reference (lower is better)')
-		ax.set_title(title)
-	axes[0].set_yticks(range(len(rows)), [r[0] for r in rows], fontweight='bold', color=TEXT)
-	axes[0].set_ylim(-0.6, len(rows) - 0.4)
-	axes[0].set_xlim(low - 0.08 * span, high + 0.3 * span)
-	save(fig, out)
-
-def plot_accuracy(tested, out):
-	'''
-	Scatter of the accuracy (picks the fastest solver) against the coverage (picks a solver that solves the instance)
-	of each model (in its color) and of always using each solver (gray rings), for `tested` a list of (name, color, run):
-	every selector on the left, and on the right a zoom on the models and the solvers that cover about as much. A
-	model is scored on its own portfolio and a solver on the largest portfolio that has it, so a solver's accuracy
-	drops as its portfolio grows (the oracles, 100% on both, are left out).
-	'''
-	solvers = {}
-	for _, _, run in sorted(tested, key=lambda t: -len(t[2]['mapping'])):
-		for s in run['mapping']:
-			solvers.setdefault(s, run['result'][s][1::-1])
-	models = [(name, color, run['result']['Model'][1::-1]) for name, color, run in tested]
-	near = [p for _, _, p in models]
-	near += [p for p in solvers.values() if p[0] >= min(x for x, _ in near) - 0.01]
-	(x0, y0), (x1, y1) = np.min(near, axis=0), np.max(near, axis=0)
-	pad_x, pad_y = max(0.15 * (x1 - x0), 0.002), max(0.15 * (y1 - y0), 0.01)
-	box = (x0 - pad_x, x1 + pad_x, y0 - pad_y, y1 + pad_y)
-
-	fig, axes = plt.subplots(1, 2, figsize=(13, 5.5))
-	for ax in axes:
-		for name, color, (x, y) in models:
-			ax.plot(x, y, 'o', color=color, markersize=9, markeredgecolor=SURFACE, markeredgewidth=2, label=name)
-		# rings on top, so that a model that picks like a single solver shows inside its ring
-		for x, y in solvers.values():
-			ax.plot(x, y, 'o', markersize=13, markerfacecolor='none', markeredgecolor=NEUTRAL, markeredgewidth=2)
-		for axis in (ax.xaxis, ax.yaxis):
-			# no tick above 100%, which the zoom's margin can reach
-			axis.set_major_formatter(lambda v, _: '' if v > 1.0001 else '{:.4g}%'.format(100 * v))
-		ax.set_xlabel('Coverage (picks a solver that solves the instance)')
-	axes[0].set(xlim=(-0.03, 1.03), ylim=(-0.03, 1.03), ylabel='Accuracy (picks the fastest solver)')
-	axes[0].add_patch(matplotlib.patches.Rectangle((box[0], box[2]), box[1] - box[0], box[3] - box[2], fill=False,
-												   edgecolor=TEXT_2, linestyle='--', linewidth=1))
-	axes[1].set(xlim=box[:2], ylim=box[2:])
-	axes[0].set_title('Accuracy against coverage: models and single solvers')
-	axes[1].set_title('Zoom on the models (dashed box)')
-	fig.legend(loc='lower center', ncol=4, bbox_to_anchor=(0.5, -0.02), handles=axes[1].get_legend_handles_labels()[0])
-	fig.tight_layout(rect=(0, 0.08, 1, 1))
-	inside = lambda x, y: box[0] <= x <= box[1] and box[2] <= y <= box[3]
-	label_points(axes[0], [(x, y, s, TEXT_2) for s, (x, y) in solvers.items() if not inside(x, y)])
-	label_points(axes[1], [(x, y, s, TEXT_2) for s, (x, y) in solvers.items() if inside(x, y)]
-				 + [(x, y, name, TEXT) for name, _, (x, y) in models])
-	fig.savefig(out, dpi=150, bbox_inches='tight')
-	plt.close(fig)
-	print('wrote', out)
-
-def label_points(ax, points):
-	'''
-	Labels each (x, y, text, color) of `points` beside its point (to the left near the right edge), moved up or down
-	as little as keeps it inside the axes and off the labels placed before it, with a line to its point if moved
-	'''
-	renderer = ax.figure.canvas.get_renderer()
-	placed = []
-	for x, y, text, color in sorted(points, key=lambda p: -p[1]):
-		left = ax.transLimits.transform((x, y))[0] > 0.85
-		offset = -10 if left else 10
-		style = dict(textcoords='offset points', va='center', ha='right' if left else 'left', color=color, fontsize=9)
-		label = ax.annotate(text, (x, y), xytext=(offset, 0), **style)
-		extent = label.get_window_extent(renderer)
-		fits = lambda box: ax.bbox.y0 <= box.y0 and box.y1 <= ax.bbox.y1 and not any(box.overlaps(o) for o in placed)
-		shift = next((d for d in sorted(range(-400, 401, 2), key=abs) if fits(extent.translated(0, d))), 0)
-		if shift:
-			label.remove()
-			ax.annotate(text, (x, y), xytext=(offset, shift * 72 / ax.figure.dpi), **style,
-						arrowprops=dict(arrowstyle='-', color=NEUTRAL, linewidth=0.8, shrinkA=1, shrinkB=5))
-		placed.append(extent.translated(0, shift))
+	plot_bars(bars, emphasis, limit, 'Total runtime: models against single solvers and the oracles', out)
 
 def save(fig, out):
 	fig.tight_layout()
@@ -423,7 +246,7 @@ if __name__ == '__main__':
 	parser.add_argument('-C', '--config', default='datasets/mapfast_paper/four-solvers', help='Give the dataset folder, or the location of its config.json file')
 	parser.add_argument('--log', default=None, help='Slurm log of the training run (logs/<name>_<jobid>.out), for the loss graph')
 	parser.add_argument('--run', nargs=3, action='append', metavar=('NAME', 'DATASET', 'LOG'),
-						help='Compare several models on the same graphs instead: a name, its dataset folder and its training log. Repeat for each model.')
+						help='Compare several models on the same graphs instead: a name, its dataset folder and its training log (from main.py, or a GNN configuration\'s results.json; none to skip). Repeat for each model.')
 	parser.add_argument('--timeout', type=float, default=None,
 						help='With --run: time limit in seconds to evaluate every model under (default: the smallest timeout of the runs\' configs)')
 	parser.add_argument('-o', '--output', default=None, help='Folder to write the graphs to (default: logs/<name>_<jobid>_plots for --log logs/<name>_<jobid>.out, else logs/<dataset>_plots; logs/<name>_vs_<name>_plots with --run)')
@@ -439,7 +262,7 @@ if __name__ == '__main__':
 		for (name, dataset, log_file), color in zip(args.run, colors):
 			log = read_training_log(log_file) if os.path.exists(log_file) else None
 			runs.append((name, color, load_run(dataset), log))
-		# evaluate every model under the same time limit: the strictest of their benchmarks
+		# the strictest time limit of the runs
 		tested = [r[2] for r in runs if r[2]]
 		limit = args.timeout or (min(r['timeout'] for r in tested) if tested else None)
 		for i, (name, color, run, log) in enumerate(runs):

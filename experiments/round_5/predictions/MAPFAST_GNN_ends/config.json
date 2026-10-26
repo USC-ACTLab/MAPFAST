@@ -1,0 +1,32 @@
+{
+	"yaml_details": "yaml_details.json",
+	"agent_details": "../agent_details.json",
+	"map_details": "../map_details.json",
+	"test_details": "",
+	"input_location": "../images/",
+	"model_loc": "model_weights/",
+	"prediction_output": "y_pred_true_movingai_10-500-agents_300s_ten-solvers_gnn-ends.json",
+	"model_name": "movingai_10-500-agents_300s_ten-solvers_gnn-ends",
+	"mapping": {
+		"bcp1": 0,
+		"bcp2": 1,
+		"cbs": 2,
+		"cbsh2_rtc": 3,
+		"cbsh2_rtc_bp": 4,
+		"cbsh2_rtc_ch": 5,
+		"cbsh2_rtc_chbp": 6,
+		"ecbs": 7,
+		"lazycbs": 8,
+		"reloc": 9
+	},
+	"timeout": 300.0,
+	"augmentation": 6,
+	"batch_size": 16,
+	"epochs": 10,
+	"loss": "ce",
+	"output_units": {
+		"cl": 1,
+		"fin": 0,
+		"pair": 0
+	}
+}

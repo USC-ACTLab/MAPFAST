@@ -10,12 +10,8 @@ from MAPFAST import MAPFAST
 from utils import read_config, read_json
 
 def load(device, config):
-	'''
-	Returns: Tuple of the MAPFAST object of a dataset's config and its (train, test, valid) lists
-	'''
-	mapfast = MAPFAST(device, read_json(config['yaml_details']), read_json(config['agent_details']),
-					  read_json(config['map_details']), config['input_location'], config['mapping'],
-					  read_json(config['test_details']) if config['test_details'] else None, config['augmentation'])
+	'''Returns (MAPFAST, (train, test, valid)) for a dataset config.'''
+	mapfast = MAPFAST(device, read_json(config['yaml_details']), config['input_location'], config['mapping'], config['augmentation'])
 	return mapfast, mapfast.get_train_valid_test_list()
 
 if __name__ == '__main__':
@@ -31,7 +27,7 @@ if __name__ == '__main__':
 	units = config['output_units']
 	units = (units['cl'], units['fin'], units['pair'])
 
-	# the same seed for every dataset: the split, the weight initialisation and the batch order are reproducible
+	# fixed seed: reproducible split, initialisation and batch order
 	random.seed(42)
 	np.random.seed(42)
 	torch.manual_seed(42)
@@ -43,14 +39,14 @@ if __name__ == '__main__':
 	if int(args.type):
 		print('\n\n---------------- Training started ----------------\n\n')
 		mapfast.train_model(train_list, valid_list, config['model_loc'], config['model_name'], config['batch_size'],
-							config['epochs'], *units, config.get('loss', 'ce'))
+							config['epochs'], *units)
 		print('\n\n---------------- Training completed ----------------\n\n')
 	else:
 		start = time.perf_counter()
 		predictions = mapfast.test_model(test_list, config['model_loc'], 'model_' + config['model_name'] + '_best.pth',
 										 config['batch_size'], *units)
 		seconds = time.perf_counter() - start
-		# loading the images and the model included, in batches of batch_size
+		# includes loading images and the model
 		print('Model inference: {:.1f} ms per instance; {:.2f} min over the test set'.format(1000 * seconds / len(test_list), seconds / 60))
 		with open(config['prediction_output'], 'w') as f:
 			json.dump(predictions, f)

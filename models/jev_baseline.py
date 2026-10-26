@@ -1,28 +1,10 @@
 '''
-General-purpose classifier baseline: asks TypeSafe AI's Jev (https://docs.typesafe.ai/), a hosted model that answers
-typed questions about a text state, which solver of a dataset's portfolio is fastest on each test instance, and writes
-its picks in the format of main.py -T 0, so that plots.py treats it like a trained model.
-
-Jev only reads text, so each instance is described by its map, the number of agents, start-goal distances and the
-agents' start and goal cells (--no-coords leaves those out). With --examples K, the state also holds the K training
-instances of the same map and scenario type with the closest number of agents, with every solver's time, so that
-Jev gets some of the training data a trained model has.
-
-It is only used as a baseline: scripts/compare.sh runs it on the test instances of the models it trains. By hand, e.g. to
-check the response format on a few instances before a round (--limit):
-
-	export TYPESAFE_API_KEY=...
-	python tools/derive_dataset.py datasets/movingai_10-500-agents_300s/four-solvers --name movingai_10-500-agents_300s/four-solvers/jev20
-	python models/jev_baseline.py datasets/movingai_10-500-agents_300s/four-solvers/jev20 --test-from datasets/movingai_10-500-agents_300s/four-solvers/y_pred_true_movingai_10-500-agents_300s_four-solvers.json --examples 20 --limit 5 --yes
-
-The test instances are those of --test-from, the predictions of a model trained on the same instances, so that both
-are evaluated on exactly the same problems; every other instance of the dataset counts as training data for --examples.
-Without --yes, it only prints the estimated cost. It stops before a request that would take the spending past --budget.
+Baseline: asks TypeSafe AI's Jev (https://docs.typesafe.ai/) for the fastest solver of each test instance of --test-from,
+optionally with the K closest training instances of the same map (--examples). Run by scripts/compare.sh.
 '''
 import argparse
 import json
 import os
-import re
 import sys
 import time
 import urllib.error
@@ -31,11 +13,15 @@ from concurrent.futures import ThreadPoolExecutor
 
 from utils import read_config, read_json
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
+from movingai import map_name, scen_type
+
 ENDPOINT = 'https://api.typesafe.ai/v1/systemone'
-# USD per million input tokens (output tokens are free), as listed at launch
+# USD per million input tokens; output is free
 PRICE = 0.042
 
 SOLVERS = {
+	'bcp1': 'BCP-MAPF, the first branch-and-cut-and-price optimal MAPF solver (SCIP)',
 	'bcp2': 'Branch-and-cut-and-price (BCP), an optimal MAPF solver built on integer programming and column generation',
 	'cbs': 'Conflict-Based Search, the basic optimal two-level search: a tree of constraints over single-agent A* paths',
 	'ecbs': 'Enhanced CBS, a bounded-suboptimal variant of CBS with focal search',
@@ -44,28 +30,19 @@ SOLVERS = {
 	'cbsh2_rtc_ch': 'CBSH2-RTC with conflict-based heuristics',
 	'cbsh2_rtc_bp': 'CBSH2-RTC with bypassing of conflicts',
 	'cbsh2_rtc_chbp': 'CBSH2-RTC with conflict-based heuristics and bypassing',
+	'lazycbs': 'Lazy CBS, optimal CBS with a lazy clause generation (constraint programming) backend',
 	'reloc': 'Optimal MAPF by reduction to a constraint or satisfiability problem',
 }
 
-def map_and_type(instance):
-	'''
-	Returns: Tuple of the MovingAI map and the scenario type of an instance, e.g. ('Berlin_1_256', 'random') for Berlin_1_256-random-1_agents10.yaml
-	'''
-	m = re.match(r'(.*)-(random|even)-\d+_agents\d+\.yaml$', instance)
-	return (m.group(1), m.group(2)) if m else (instance, None)
-
 def features(instance, map_details, agent_details, coords=True):
-	'''
-	Returns: Json object describing an instance for Jev
-	'''
 	md = map_details[instance]
 	height, width = md['mp_dim']
 	starts, goals = agent_details[instance]['starts'], agent_details[instance]['goals']
 	distances = [abs(s[0] - g[0]) + abs(s[1] - g[1]) for s, g in zip(starts, goals)]
 	free = height * width - md['no_obs']
 	f = {
-		'map': map_and_type(instance)[0],
-		'scenario_type': map_and_type(instance)[1],
+		'map': map_name(instance),
+		'scenario_type': scen_type(instance),
 		'height': height, 'width': width, 'obstacle_cells': md['no_obs'], 'free_cells': free,
 		'agents': md['no_agents'], 'agents_per_free_cell': round(md['no_agents'] / max(free, 1), 4),
 		'mean_start_goal_manhattan_distance': round(sum(distances) / len(distances), 1),
@@ -77,11 +54,8 @@ def features(instance, map_details, agent_details, coords=True):
 	return f
 
 def examples_for(instance, train, map_details, agent_details, yaml_details, solvers, k):
-	'''
-	Returns: List of the k training instances of the same map and scenario type with the closest number of agents,
-	each with its features (without coordinates) and every solver's time
-	'''
-	same = [t for t in train if map_and_type(t) == map_and_type(instance)]
+	'''The k training instances of the same map and type with the closest agent counts, with their times.'''
+	same = [t for t in train if map_name(t) == map_name(instance) and scen_type(t) == scen_type(instance)]
 	agents = map_details[instance]['no_agents']
 	same.sort(key=lambda t: abs(map_details[t]['no_agents'] - agents))
 	return [{**features(t, map_details, agent_details, coords=False),
@@ -118,9 +92,7 @@ def request(state, solvers, timeout, model, key):
 		time.sleep(2 ** attempt)
 
 def input_tokens(response, state):
-	'''
-	Returns: Input tokens of a response, from its usage if reported, else estimated at 4 characters per token
-	'''
+	'''Reported input tokens, else 4 characters per token.'''
 	usage = response.get('usage') or {}
 	counted = [v for k, v in usage.items() if 'input' in k and isinstance(v, (int, float))]
 	return counted[0] if counted else len(state) / 4
@@ -199,6 +171,6 @@ if __name__ == '__main__':
 	with open(config['prediction_output'], 'w') as f:
 		json.dump(predictions, f)
 	print('wrote {} ({} instances, ${:.3f} spent)'.format(config['prediction_output'], len(predictions), spent))
-	# the selector's own time is spent before any solver runs, so it adds to the total runtime
+	# the selector's latency adds to the total runtime
 	print('Jev latency: mean {:.3f} s, median {:.3f} s per instance; {:.1f} min over the test set'.format(
 		sum(latencies) / len(latencies), sorted(latencies)[len(latencies) // 2], sum(latencies) / 60))

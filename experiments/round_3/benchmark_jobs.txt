@@ -1,9 +1,0 @@
-204525 runs of 9 solvers; 107594 unsolved to rerun and 66627 new runs, in 14625 (scenario file, solver) groups
-at most 14518 CPU-hours without the skipping, and at most 1219 CPU-hours of timeouts with it (plus the solved runs)
-movingai_10-500-agents_300s: 14625 groups finished, 12660 to retry (12660 unknown): at most 1055 CPU-hours of timeouts, 158459 runs to redo before the skipping
-sbatch: slurm_job_submit: No partition specified, moved to batch.
-sbatch: slurm_job_submit: No partition specified, moved to batch.
-Pass 2:         job array 7673627 (20 shards), merged by job 7673628 into /oscar/home/mcapoor/MAPF-Benchmarking/experiments/movingai_10-500-agents_300s/
-                if a shard runs out of time, submit the same command again: it resumes where the shards stopped
-sbatch: slurm_job_submit: No partition specified, moved to batch.
-Datasets:       job 7673629 (experiments/dataset_build/benchmark_dataset_7673629.out) builds datasets/movingai_10-500-agents_300s/four-solvers and datasets/movingai_10-500-agents_300s/nine-solvers

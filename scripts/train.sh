@@ -1,12 +1,6 @@
 #!/bin/bash
-# Train, test, analyse and plot MAPFAST on one dataset (log logs/<job name>_<jobid>.out, graphs in logs/<job name>_<jobid>_plots/)
-# The job name (-J) defaults to MAPFAST_training, e.g. sbatch -J MAPFASTv2 scripts/train.sh datasets/movingai_pilot/nine-solvers
-# usage: sbatch scripts/train.sh [dataset], e.g. sbatch scripts/train.sh datasets/movingai_pilot/nine-solvers
-#
-# The first job creates the virtual environment pytorch.venvsource/ (or repairs it, if its torch
-# is not the CUDA 12.8 build that the cluster's GPU driver supports). Set PYTHON_MODULE to the
-# name `module avail python` shows if python/3.11 is not one, e.g.
-#   sbatch --export=ALL,PYTHON_MODULE=<name from module avail python> scripts/train.sh datasets/movingai_pilot/nine-solvers
+# Train, test and plot MAPFAST on one dataset. Creates pytorch.venvsource/ (CUDA 12.8 torch) if needed.
+# usage: sbatch -J NAME scripts/train.sh DATASET   (PYTHON_MODULE overrides python/3.11)
 
 #SBATCH -p gpu --gres=gpu:1
 #SBATCH --nodes=1
@@ -23,7 +17,7 @@ set -e
 DATASET="${1:-datasets/mapfast_paper/four-solvers}"
 VENV=pytorch.venvsource
 PYTHON_MODULE="${PYTHON_MODULE:-python/3.11}"
-# PyTorch wheels built for CUDA 12.8; newer builds need a newer driver than the GPU nodes have
+# newer CUDA builds need a newer driver than Oscar's GPU nodes have
 TORCH_INDEX=https://download.pytorch.org/whl/cu128
 
 module load cuda
@@ -37,12 +31,11 @@ if ! [ -f "$VENV/bin/activate" ] || ! "$VENV/bin/python" -c "import torch, torch
 	"$VENV/bin/pip" install --no-cache-dir torch torchvision --index-url "$TORCH_INDEX"
 	"$VENV/bin/pip" install --no-cache-dir numpy pillow
 fi
-# for plots.py; installed on its own so that an older venv without it is not rebuilt
 "$VENV/bin/python" -c "import matplotlib" 2>/dev/null || "$VENV/bin/pip" install --no-cache-dir matplotlib
 
 source "$VENV/bin/activate"
 
-# stop instead of silently training on the CPU
+# fail rather than train on the CPU
 python -c "import torch; assert torch.cuda.is_available(), 'no usable GPU: torch ' + torch.__version__; print('torch', torch.__version__, 'on', torch.cuda.get_device_name(0))"
 
 echo "Training model..."
@@ -50,5 +43,4 @@ python -u models/main.py -C "$DATASET"
 echo "Testing model..."
 python -u models/main.py -T 0 -C "$DATASET"
 echo "Plotting..."
-# LOG_DIR: where sbatch -o put this job's log (compare.sh sets it to the round's experiments folder)
 python -u tools/plots.py -C "$DATASET" --log "${LOG_DIR:-logs}/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out"

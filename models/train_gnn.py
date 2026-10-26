@@ -1,39 +1,7 @@
 '''
-Train and select MAPFAST-GNN, the graph neural network solver selector (gnn.py), on a dataset's graphs
-(tools/build_graphs.py), over a grid of hyperparameters. The instances are split into training, validation and test
-sets exactly as main.py splits them for the CNN, so every model is tested on the same instances.
-
-	python models/train_gnn.py list                                   number of hyperparameter configurations
-	python models/train_gnn.py train DATASET --config-index I --out DIR   train configuration I (one Slurm array task)
-	python models/train_gnn.py select DIR --dataset-out DATASET2          rank the trained configurations and write
-	                                                                      the best one's test predictions for DATASET2
-
-Unlike MAPFAST and MAPFASTv2 (cross-entropy on the fastest solver), it is judged on the runtime it costs:
-	losses			'ce': cross-entropy on the fastest solver, the outputs being logits
-					'runtime': the outputs are minus each solver's predicted log(1 + seconds), fitted by squared error;
-					a run that timed out only counts the dataset's limit T as a lower bound (no loss above log(1 + T))
-	fallback rule	it leaves the default solver (the single solver with the lowest total training runtime, e.g. bcp2)
-					only when its top pick's output beats the default's by at least a threshold (log-odds for 'ce',
-					log of the predicted speedup for 'runtime'), chosen on the validation set among THRESHOLDS;
-					threshold 0 is its plain argmax
-	selection		the epoch, the threshold and the configuration with the lowest validation runtime, reported as
-					the speedup over always using the default solver (above 1: it beats it)
-	--folds K		k-fold cross-validation instead of main.py's single validation set: the training and validation
-					instances are dealt into K folds, a network is trained for each with one fold as its validation set,
-					the epoch and the threshold are chosen on all K folds' validation outputs pooled (K times as many
-					instances as one validation set, so a less noisy choice), and the test picks average the K networks'
-					outputs. The test set stays main.py's, so the models remain comparable. It takes K times as long.
-
-A batch holds up to --batch-size instances and --max-nodes nodes (a graph has a node per free cell of its map).
-
-`select --where KEY=VALUE` ranks only the configurations with that setting, e.g. edges=paths, to compare settings.
-`train` writes DIR/<configuration>/: results.json (validation and test speedup, accuracy and runtime, per-epoch
-history, each fold's validation speedup, inference time), predictions.json (test picks, in the format of main.py -T 0)
-and fold<i>of<K>.npz (each fold's validation and test outputs and training loss per epoch; a rerun of the configuration
-skips the folds that have one, so a job that ran out of time can be resubmitted). `select` ranks the
-configurations by validation speedup (the test set is only reported), writes DIR/summary.md and DIR/sweep.png
-(tools/plot_sweep.py) and copies the best predictions to DATASET2's prediction_output, so that plots.py and
-compare.sh (NAME=@DATASET2) treat MAPFAST-GNN like the other models. scripts/sweep_gnn.sh runs all three on Slurm.
+Train (`train DATASET --config-index I --out DIR`) and select (`select DIR --dataset-out DATASET2`) MAPFAST-GNN over GRID.
+Fallback: keep the default solver unless the top output beats it by a threshold; epoch, threshold and configuration
+are chosen by validation speedup. --folds K: choose on pooled out-of-fold outputs, test picks average the K networks.
 '''
 import argparse
 import glob
@@ -43,7 +11,6 @@ import os
 import pickle
 import random
 import shutil
-import sys
 import time
 
 import numpy as np
@@ -53,9 +20,7 @@ import torch.nn.functional as F
 from gnn import SolverGNN, collate, graph_size
 from utils import read_config
 
-# (hidden: width of the node embeddings; layers: message-passing depth, i.e. how many cells away information reaches;
-# edges: 'ends' joins each agent to its start and goal cells, 'paths' to every cell of its path too). Round 4 swept
-# GIN as well and depth 8, which did no better on the test set; round 5 trains each configuration 5 times (k-fold)
+# edges: 'ends' links agents to their start and goal, 'paths' also to their path cells
 GRID = {
 	'kind': ['sage'],
 	'hidden': [128],
@@ -64,56 +29,33 @@ GRID = {
 	'edges': ['ends', 'paths'],
 	'loss': ['ce', 'runtime'],
 }
-# margins by which the top pick's output must beat the default solver's to replace it (see the fallback rule above)
 THRESHOLDS = (0., 0.25, 0.5, 1., 2.)
 
 def configurations():
-	'''
-	Returns: List of every hyperparameter configuration of GRID, as dictionaries
-	'''
 	return [dict(zip(GRID, values)) for values in itertools.product(*GRID.values())]
 
 def config_name(config):
 	return '{kind}_h{hidden}_l{layers}_lr{lr:g}_{edges}_{loss}'.format(**config)
 
 def split(dataset):
-	'''
-	The instances of the training, validation and test sets of main.py for this dataset (the same seed and split).
-
-	Returns: Tuple of three lists of yaml_details keys, the dataset's config and its yaml_details
-	'''
+	'''main.py's split. Returns (train, valid, test, config, yaml_details).'''
 	from MAPFAST import MAPFAST
 	config = read_config(dataset)
 	with open(config['yaml_details']) as f:
 		yaml_details = json.load(f)
-	test_details = None
-	if config['test_details']:
-		with open(config['test_details']) as f:
-			test_details = json.load(f)
 	random.seed(42)
-	mapfast = MAPFAST('cpu', yaml_details, None, None, None, config['mapping'], test_details, 1)
-	train, test, valid = mapfast.get_train_valid_test_list()
+	train, test, valid = MAPFAST('cpu', yaml_details, None, config['mapping']).get_train_valid_test_list()
 	strip = lambda names: [n[:n.rindex('_')] for n in names]
 	return strip(train), strip(valid), strip(test), config, yaml_details
 
 def solver_times(yaml_details, names, solvers, timeout):
-	'''
-	Returns: Numpy array (names, solvers) of each solver's time in seconds, `timeout` if it did not solve the instance
-	'''
 	times = np.array([[yaml_details[n][s] for s in solvers] for n in names], dtype=np.float64)
 	return np.where(times == -1, timeout, times)
 
 def apply_threshold(outputs, default, threshold):
-	'''
-	Returns: The picks of the fallback rule: the top solver if its output beats `default`'s by at least `threshold`,
-	else `default`
-	'''
 	return np.where(outputs.max(1) - outputs[:, default] >= threshold, outputs.argmax(1), default)
 
 def batches(names, data, batch_size, max_nodes):
-	'''
-	Returns: List of consecutive runs of `names` of at most batch_size instances and max_nodes nodes (but at least one)
-	'''
 	runs, nodes = [[]], 0
 	for name in names:
 		size = data['size'](name)
@@ -125,9 +67,7 @@ def batches(names, data, batch_size, max_nodes):
 	return runs
 
 def predict(net, names, data, args):
-	'''
-	Returns: Tuple of the outputs (numpy array (names, solvers)) and the seconds per instance
-	'''
+	'''Returns (outputs, seconds per instance).'''
 	net.eval()
 	outputs = []
 	start = time.perf_counter()
@@ -137,27 +77,17 @@ def predict(net, names, data, args):
 	return np.concatenate(outputs), (time.perf_counter() - start) / max(len(names), 1)
 
 def score(picks, names, data):
-	'''
-	Returns: Dictionary of the picks' total runtime (minutes), speedup over always using the default solver, and
-	accuracy (the pick is the dataset's fastest solver, as plots.py counts it)
-	'''
 	times = data['times'](names)
 	runtime = times[np.arange(len(names)), picks].sum() / 60
 	return {'runtime': float(runtime), 'speedup': float(times[:, data['default']].sum() / 60 / runtime),
 			'accuracy': float((picks == data['labels'](names)).mean())}
 
 def best_threshold(outputs, names, data):
-	'''
-	Returns: Tuple of the threshold with the lowest runtime on `names` and its score (see score)
-	'''
 	scored = [(t, score(apply_threshold(outputs, data['default'], t), names, data)) for t in THRESHOLDS]
 	return min(scored, key=lambda s: (s[1]['runtime'], -s[1]['accuracy']))
 
 def folds(train_names, valid_names, k):
-	'''
-	Returns: List of the (training, validation) instances of each fold: main.py's split for k = 1, else its training
-	and validation instances dealt into k folds in a fixed random order, each fold validating on one of them
-	'''
+	'''(train, valid) per fold; k = 1 is main.py's split.'''
 	if k == 1:
 		return [(train_names, valid_names)]
 	pool = sorted(train_names + valid_names)
@@ -165,14 +95,8 @@ def folds(train_names, valid_names, k):
 	return [([n for j, n in enumerate(pool) if j % k != i], pool[i::k]) for i in range(k)]
 
 def fit(train_names, valid_names, test_names, data, graphs, config, args, device):
-	'''
-	Trains one network on train_names, printing its validation score after every epoch.
-
-	Returns: Dictionary of the validation and test outputs of every epoch (numpy arrays (epochs, instances, solvers)),
-	the mean training loss of every epoch, the seconds of inference per test instance and the number of parameters
-	'''
+	'''Returns per-epoch valid/test outputs and loss, inference seconds and parameter count.'''
 	timeout = data['timeout']
-	# standardise the global features with the training set's statistics (the node features are small already)
 	globs = np.stack([graphs['instances'][n]['glob'] for n in train_names]).astype(np.float64)
 	global_stats = (globs.mean(0).astype(np.float32), (globs.std(0) + 1e-6).astype(np.float32))
 	data = {**data, 'collate': lambda names: collate(names, graphs, device, global_stats, config['edges'] == 'paths')}
@@ -183,7 +107,6 @@ def fit(train_names, valid_names, test_names, data, graphs, config, args, device
 	net = SolverGNN(len(graphs['node_features']), len(graphs['global_features']), len(data['solvers']),
 					config['kind'], config['hidden'], config['layers'], args.dropout).to(device)
 	optimizer = torch.optim.AdamW(net.parameters(), lr=config['lr'], weight_decay=args.weight_decay)
-	# fixed batches of a random order, visited in a new order every epoch
 	order = list(train_names)
 	random.shuffle(order)
 	runs = batches(order, data, args.batch_size, args.max_nodes)
@@ -198,8 +121,9 @@ def fit(train_names, valid_names, test_names, data, graphs, config, args, device
 			outputs = net(*data['collate'](names), len(names))
 			if config['loss'] == 'runtime':
 				times = torch.from_numpy(data['times'](names)).float().to(device)
+				# outputs are -log(1 + predicted seconds), so argmax is the fastest
 				error = -outputs - torch.log1p(times)
-				# a timeout only bounds the runtime from below
+				# a timeout is only a lower bound
 				error = torch.where(times >= timeout, error.clamp(max=0), error)
 				loss = (error ** 2).mean()
 			else:
@@ -251,7 +175,7 @@ def train(args):
 	}
 	parts = folds(train_names, valid_names, args.folds)
 	valid_names = [n for _, valid in parts for n in valid]
-	# the default solver: the single solver with the lowest total training runtime
+	# default: the single solver with the lowest training runtime
 	data['default'] = int(data['times']([n for train, _ in parts for n in train]).sum(0).argmin())
 	baseline = {'solver': solvers[data['default']], **score(np.full(len(valid_names), data['default']), valid_names, data)}
 	oracle = score(data['labels'](valid_names), valid_names, data)
@@ -264,12 +188,11 @@ def train(args):
 		else:
 			print('Fold {}/{}: training on {}, validating on {} instances'.format(
 				i + 1, len(parts), len(fold_train), len(fold_valid)), flush=True)
-			# written whole or not at all, so that a job killed while saving leaves no truncated file to resume from
+			# atomic, so a killed job leaves no truncated fold to resume from
 			np.savez(path + '.tmp.npz', **fit(fold_train, fold_valid, test_names, data, graphs, config, args, device))
 			os.replace(path + '.tmp.npz', path)
 		fits.append(dict(np.load(path)))
 
-	# the validation outputs of all the folds, pooled, choose each epoch's threshold and the best epoch
 	valid_outputs = np.concatenate([f['valid'] for f in fits], axis=1)
 	history = []
 	for epoch in range(args.epochs):
@@ -282,7 +205,6 @@ def train(args):
 										 valid, data)['speedup'] for f, (_, valid) in zip(fits, parts)]
 	picks = apply_threshold(np.mean([f['test'][best['epoch']] for f in fits], axis=0), data['default'], best['threshold'])
 	test = score(picks, test_names, data)
-	# the picks are indices of solvers, which is in mapping order (derive_dataset.py numbers the solvers 0, 1, ...)
 	predictions = {n + '_0': {'best': [int(p), mapping[yaml_details[n]['SOLVER']]]} for n, p in zip(test_names, picks)}
 	with open(os.path.join(out, 'predictions.json'), 'w') as f:
 		json.dump(predictions, f)
@@ -334,10 +256,6 @@ def select(args):
 		target = read_config(args.dataset_out)['prediction_output']
 		shutil.copy(os.path.join(args.out, best['name'], 'predictions.json'), target)
 		print('wrote', target)
-	if not args.no_plot:
-		sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools'))
-		from plot_sweep import plot_sweep
-		plot_sweep(results, os.path.join(args.out, 'sweep{}.png'.format(suffix)))
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Train and select MAPFAST-GNN')
@@ -360,8 +278,7 @@ if __name__ == '__main__':
 	p.add_argument('out', help='Sweep folder')
 	p.add_argument('--dataset-out', default=None, help='Dataset folder whose prediction_output gets the best test predictions')
 	p.add_argument('--where', default=None, help='Only rank the configurations with KEY=VALUE, e.g. edges=paths; writes '
-				   'summary_<VALUE>.md and sweep_<VALUE>.png')
-	p.add_argument('--no-plot', action='store_true', help='Do not draw <out>/sweep.png (see tools/plot_sweep.py)')
+				   'summary_<VALUE>.md')
 	args = parser.parse_args()
 
 	if args.command == 'list':

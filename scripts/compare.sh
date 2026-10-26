@@ -1,18 +1,6 @@
 #!/bin/bash
-# Train and test several models with train.sh (one job each), run the Jev baseline (models/jev_baseline.py) on their
-# test instances, then plot them all together in $OUT/<name>_vs_<name>.../. Each model is one of
-#   NAME=DATASET     train DATASET with train.sh
-#   NAME=@DATASET    only plot DATASET, whose predictions exist (e.g. MAPFAST-GNN's, from sweep_gnn.sh)
-# For every solver portfolio among the trained models and every K of JEV_EXAMPLES (default 20; empty: no baseline),
-# one job asks Jev about the test instances of the first model with that portfolio, with K training instances of the
-# same map per request, into the variant <dataset>/jev<K>/, plotted as Jev<K>_<model>. It needs TYPESAFE_API_KEY.
-# Logs go to $LOGS/<name>_<jobid>.out (LOGS defaults to $OUT), and the comparison job copies every model's config
-# and predictions to $OUT/predictions/<name>/.
-#
-# usage, from the repository folder: OUT=experiments/round_N ./scripts/compare.sh NAME=DATASET ...
-#   TRAIN_TIME   time limit of the training jobs (default: train.sh's)
-#   JEV_BUDGET   most USD per Jev job (default 3)
-# At most eight models and baselines can be plotted together. This script only submits jobs.
+# Train (NAME=DATASET) or reuse (NAME=@DATASET) up to eight models, run Jev on each new portfolio, plot them together.
+# usage: OUT=experiments/round_N ./scripts/compare.sh NAME=DATASET ...   (env: TRAIN_TIME, JEV_EXAMPLES, JEV_BUDGET)
 
 set -e
 cd "$(dirname "$0")/.."
@@ -36,7 +24,7 @@ done
 portfolios=()
 
 jobs=() names=() plot_args="" copy_args="" after_first=()
-# a run to plot: NAME DATASET LOG
+# plot NAME DATASET LOG
 plot() {
 	names+=("$1")
 	plot_args+=" --run $1 $2 $3"
@@ -51,7 +39,7 @@ for run in "$@"; do
 	fi
 	id=$(sbatch --parsable -J "$name" "${log[@]}" --export=ALL,LOG_DIR="$LOGS" "${time_limit[@]}" "${after_first[@]}" \
 		scripts/train.sh "$dataset")
-	# only the first job creates the virtual environment
+	# only the first job creates the venv
 	[ -f pytorch.venvsource/bin/activate ] || [ ${#jobs[@]} -gt 0 ] || after_first=(--dependency="afterany:$id")
 	jobs+=("$id")
 	plot "$name" "$dataset" "$LOGS/${name}_${id}.out"

@@ -1,7 +1,0 @@
-sbatch: slurm_job_submit: No partition specified, moved to batch.
-graphs: job 7720835 builds datasets/movingai_10-500-agents_300s/eight-solvers/graphs_s64.pkl
-sweep: job array 7720841, 144 configurations, at most 8 at once, logs experiments/gnn_sweep/movingai_10-500-agents_300s/eight-solvers/gnn_movingai_10-500-agents_300s_eight-solvers_7720841_<index>.out
-sbatch: No max_nodes specified, defaulting to -N 1
-sbatch: slurm_job_submit: No partition specified, moved to batch.
-select: job 7720842, ranking in experiments/gnn_sweep/movingai_10-500-agents_300s/eight-solvers/summary.md, best predictions in datasets/movingai_10-500-agents_300s/eight-solvers/gnn/
-Then compare: ./scripts/compare.sh ... MAPFAST-GNN=@datasets/movingai_10-500-agents_300s/eight-solvers/gnn

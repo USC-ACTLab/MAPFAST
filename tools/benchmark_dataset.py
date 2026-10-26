@@ -1,34 +1,18 @@
 '''
-Turn the MAPFAST dataset of an experiment of MAPF Benchmarking (its merged
-{yaml,agent,map}_details.json) into a dataset folder MAPFAST trains on, datasets/<name>/, where <name> is
-<benchmark>/<portfolio>, e.g. movingai_10-500-agents_300s/four-solvers:
+MAPF Benchmarking experiment ({yaml,agent,map}_details.json) -> datasets/<name>/ with MAPFAST's shortest-path images
+(white free, red obstacle, black path, green start, blue goal; one pixel per cell). Converts (x, y) to [row, column].
 
-	yaml_details.json, agent_details.json, map_details.json
-	images/<instance>.png		one shortest path embedding image per instance
-	config.json			the config of main.py and plots.py, with paths relative to the folder
-
-	python tools/benchmark_dataset.py ~/MAPF-Benchmarking/experiments/movingai_10-500-agents_300s --benchmarks ~/MAPF-Benchmarking/benchmarks --name movingai_10-500-agents_300s/nine-solvers --jobs 16
-
-The first argument is the experiment's folder (or, for results of the old layout, the prefix of its
-<prefix>_{yaml,agent,map}_details.json files).
-
-MAPF Benchmarking writes coordinates as (x, y) = (column, row) and mp_dim as [width, height];
-MAPFAST uses [row, column] and [height, width], so both are converted here.
-
-The images use the encoding of MAPFAST's original images (datasets/mapfast_paper/four-solvers/images): white free cells, red obstacles,
-black cells on the shortest path of some agent, green starts and blue goals, at one pixel per cell
-(main.py resizes them to 320 x 320).
+	python tools/benchmark_dataset.py ~/MAPF-Benchmarking/experiments/<experiment> --benchmarks ~/MAPF-Benchmarking/benchmarks --name <benchmark>/<portfolio>
 '''
 import argparse
-import functools
-import heapq
 import json
 import os
-import re
 from multiprocessing import Pool
 
 import numpy as np
 from PIL import Image
+
+from movingai import load_map, map_name, scen_name, shortest_path
 
 DETAILS = ('yaml_details', 'agent_details', 'map_details')
 
@@ -38,73 +22,7 @@ PATH = (0, 0, 0)
 START = (0, 255, 0)
 GOAL = (0, 0, 255)
 
-def map_name(instance):
-	'''
-	Name of the MovingAI map of an instance, e.g. Berlin_1_256 for Berlin_1_256-random-1_agents10.yaml
-	'''
-	return re.sub(r'-(random|even)-\d+_agents\d+\.yaml$', '', instance)
-
-def scen_name(instance):
-	'''
-	Name of the scenario file of an instance, e.g. Berlin_1_256-random-1 for Berlin_1_256-random-1_agents10.yaml
-	'''
-	return re.sub(r'_agents\d+\.yaml$', '', instance)
-
-@functools.lru_cache(maxsize=4)
-def load_map(map_file):
-	'''
-	Returns: Boolean numpy array of shape (height, width), True for obstacles
-	'''
-	with open(map_file) as f:
-		lines = f.read().splitlines()
-	height = int(lines[1].split()[1])
-	width = int(lines[2].split()[1])
-	rows = lines[4:4 + height]
-	return np.array([[c in '@TO' for c in row[:width]] for row in rows])
-
-def shortest_path(obstacles, start, goal):
-	'''
-	A* (4-connected, Manhattan heuristic) from start to goal, both [row, column].
-
-	Returns: List of the [row, column] cells of a shortest path, start and goal included, or [] if there is none
-	'''
-	height, width = obstacles.shape
-	blocked = obstacles.ravel()
-	s = start[0] * width + start[1]
-	g = goal[0] * width + goal[1]
-	gr, gc = goal
-
-	parent = {s: s}
-	cost = {s: 0}
-	heap = [(abs(start[0] - gr) + abs(start[1] - gc), 0, s)]
-	while heap:
-		_, d, cell = heapq.heappop(heap)
-		d = -d
-		if cell == g:
-			break
-		if d > cost[cell]:
-			continue
-		r, c = divmod(cell, width)
-		for nr, nc in ((r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)):
-			if 0 <= nr < height and 0 <= nc < width:
-				n = nr * width + nc
-				if not blocked[n] and (n not in cost or d + 1 < cost[n]):
-					cost[n] = d + 1
-					parent[n] = cell
-					# ties broken towards the larger g, i.e. the deeper node
-					heapq.heappush(heap, (d + 1 + abs(nr - gr) + abs(nc - gc), -(d + 1), n))
-	else:
-		return []
-
-	path = [g]
-	while path[-1] != s:
-		path.append(parent[path[-1]])
-	return [list(divmod(cell, width)) for cell in reversed(path)]
-
 def render(obstacles, starts, goals, paths):
-	'''
-	Returns: (height, width, 3) uint8 numpy array of the shortest path embedding
-	'''
 	img = np.empty(obstacles.shape + (3,), dtype=np.uint8)
 	img[:] = FREE
 	img[obstacles] = OBSTACLE
@@ -118,12 +36,7 @@ def render(obstacles, starts, goals, paths):
 	return img
 
 def render_scenario(task):
-	'''
-	Writes the image of each instance of one scenario file. The instances of a scenario file
-	are its first n agents for several n, so each agent's path is computed once.
-
-	Returns: Number of images written
-	'''
+	'''Renders one scenario file's instances, sharing paths between them. Returns the number written.'''
 	map_file, output_dir, instances = task
 	obstacles = load_map(map_file)
 	paths = {}
@@ -142,23 +55,24 @@ def render_scenario(task):
 		written += 1
 	return written
 
+def keep_solvers(record, solvers):
+	'''`record` with only `solvers`, SOLVER the fastest of them; None if none solved it.'''
+	times = {s: record[s] for s in solvers}
+	solved = {s: t for s, t in times.items() if t != -1}
+	return {'SOLVER': min(solved, key=solved.get), **times} if solved else None
+
 def convert(yaml_details, agent_details, map_details, solvers=None, solved_by=None):
 	'''
-	Converts the benchmark's records to MAPFAST's conventions, keeping only `solvers` (default: all)
-	and the instances that one of them solved, and relabelling SOLVER as the fastest of them.
-	With `solved_by`, only the instances that one of those solvers solved are kept, e.g. the solvers of
-	another portfolio, so that two datasets built from the same benchmark hold the same instances.
-
-	Returns: Tuple of the converted yaml_details, agent_details and map_details
+	Keeps `solvers` and the instances one of them (or of `solved_by`, to match another portfolio) solved,
+	in [row, column]. Returns (yaml_details, agent_details, map_details).
 	'''
 	solvers = solvers or [s for s in next(iter(yaml_details.values())) if s != 'SOLVER']
 	yd, ad, md = {}, {}, {}
 	for instance, record in yaml_details.items():
-		times = {s: record[s] for s in solvers}
-		solved = {s: t for s, t in times.items() if t != -1}
-		if not solved or (solved_by and all(record[s] == -1 for s in solved_by)):
+		kept = keep_solvers(record, solvers)
+		if not kept or (solved_by and all(record[s] == -1 for s in solved_by)):
 			continue
-		yd[instance] = {'SOLVER': min(solved, key=solved.get), **times}
+		yd[instance] = kept
 		ad[instance] = {
 			'starts': [[y, x] for x, y in agent_details[instance]['starts']],
 			'goals': [[y, x] for x, y in agent_details[instance]['goals']],
@@ -168,22 +82,18 @@ def convert(yaml_details, agent_details, map_details, solvers=None, solved_by=No
 	return yd, ad, md
 
 def make_config(name, mapping, timeout, augmentation=1):
-	'''
-	Returns: Json object of the config of this dataset (for main.py and plots.py), with paths relative to its folder
-	'''
-	# file names inside the folder, from its path below datasets/ (e.g. movingai_10-200-agents_60s/four-solvers)
 	tag = name.replace('/', '_')
 	return {
-		**{d: d + '.json' for d in DETAILS}, 'test_details': '', 'input_location': 'images/', 'model_loc': 'model_weights/',
+		**{d: d + '.json' for d in DETAILS}, 'input_location': 'images/', 'model_loc': 'model_weights/',
 		'prediction_output': 'y_pred_true_{}.json'.format(tag), 'model_name': tag, 'mapping': mapping, 'timeout': timeout,
-		'augmentation': augmentation, 'batch_size': 16, 'epochs': 10, 'loss': 'ce', 'output_units': {'cl': 1, 'fin': 0, 'pair': 0},
+		'augmentation': augmentation, 'batch_size': 16, 'epochs': 10, 'output_units': {'cl': 1, 'fin': 0, 'pair': 0},
 	}
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Build a MAPFAST dataset from the MAPFAST files of MAPF Benchmarking')
-	parser.add_argument('prefix', help='Experiment folder of MAPF Benchmarking, e.g. ~/MAPF-Benchmarking/experiments/movingai_10-500-agents_300s (or the prefix of <prefix>_{yaml,agent,map}_details.json files)')
+	parser.add_argument('experiment', help='Experiment folder of MAPF Benchmarking, e.g. ~/MAPF-Benchmarking/experiments/movingai_10-500-agents_300s')
 	parser.add_argument('--benchmarks', required=True, help='MAPF Benchmarking benchmarks/ directory, with <map>/<map>.map for every map')
-	parser.add_argument('--name', default=None, help='Path of the dataset below datasets/, <benchmark>/<portfolio>, e.g. movingai_10-500-agents_300s/four-solvers (default: the base name of prefix)')
+	parser.add_argument('--name', default=None, help='Path of the dataset below datasets/, <benchmark>/<portfolio>, e.g. movingai_10-500-agents_300s/four-solvers (default: the experiment\'s name)')
 	parser.add_argument('--solvers', nargs='+', default=None, help='Solver portfolio (default: every solver in the files)')
 	parser.add_argument('--solved-by', nargs='+', default=None,
 						help='Keep only the instances that one of these solvers solved, e.g. the --solvers of another dataset built from the same benchmark, so that both hold the same instances')
@@ -193,11 +103,11 @@ if __name__ == '__main__':
 	parser.add_argument('--jobs', type=int, default=os.cpu_count(), help='Scenario files to render in parallel (default: all CPUs)')
 	args = parser.parse_args()
 
-	prefix = os.path.expanduser(args.prefix)
-	name = args.name or os.path.basename(os.path.normpath(prefix))
+	experiment = os.path.expanduser(args.experiment)
+	name = args.name or os.path.basename(os.path.normpath(experiment))
 	details = []
 	for d in DETAILS:
-		with open(os.path.join(prefix, d + '.json') if os.path.isdir(prefix) else '{}_{}.json'.format(prefix, d)) as f:
+		with open(os.path.join(experiment, d + '.json')) as f:
 			details.append(json.load(f))
 	yaml_details, agent_details, map_details = convert(*details, args.solvers, args.solved_by)
 	solvers = [s for s in next(iter(yaml_details.values())) if s != 'SOLVER']

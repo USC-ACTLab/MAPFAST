@@ -1,32 +1,15 @@
 #!/bin/bash
-# Hyperparameter sweep of MAPFAST-GNN (models/gnn.py, models/train_gnn.py) on one dataset: build its graphs from the
-# MovingAI files (tools/build_graphs.py) unless they exist, train every configuration of models/train_gnn.py's GRID (one
-# GPU task of a Slurm job array each), then rank them by validation speedup and keep the best one's test predictions in
-# the dataset's variant <dataset>/$VARIANT/, which compare.sh can plot next to the other models (NAME=@<dataset>/$VARIANT).
-# usage, from the repository folder: ./scripts/sweep_gnn.sh DATASET
-#   e.g. ./scripts/sweep_gnn.sh datasets/movingai_10-500-agents_300s/eight-solvers
-#   OUT        folder for the trained configurations and summary.md (default experiments/gnn_sweep/<dataset
-#              path below datasets/>)
-#   LOGS       folder for the jobs' .out and .err files (default OUT)
-#   BENCH      MAPF Benchmarking folder, for its benchmarks/ (default ~/MAPF-Benchmarking)
-#   EPOCHS     epochs per configuration (default 40)
-#   FOLDS      k-fold cross-validation with FOLDS folds (default 1: main.py's validation set); a configuration takes
-#              FOLDS times as long, so raise TRAIN_TIME, or resubmit: a configuration skips its finished folds
-#   VARIANT    dataset variant for the best predictions (default gnn)
-#   TRAIN_TIME time limit of each configuration (default 12:00:00)
-#   PARALLEL   most configurations training at once (default 8)
-#
-# This script only submits jobs. Train a model with scripts/train.sh first, so that the virtual environment exists.
+# MAPFAST-GNN sweep: graphs (unless built) -> one GPU job per GRID config -> select the best into <dataset>/$VARIANT.
+# usage: ./scripts/sweep_gnn.sh DATASET   (env: OUT, LOGS, BENCH, EPOCHS, FOLDS, VARIANT, TRAIN_TIME, PARALLEL)
 
 set -e
 
-# Exits unless the dataset and the virtual environment exist
 check_setup() {
 	[ -f "$DATASET/config.json" ] || { echo "no config.json in $DATASET" >&2; exit 1; }
 	[ -f pytorch.venvsource/bin/activate ] || { echo "no pytorch.venvsource/: run scripts/train.sh once first" >&2; exit 1; }
 }
 
-# Submits the job that builds the dataset's graphs, unless they exist; prints its id (nothing if they exist)
+# prints the job id, or nothing if the graphs exist
 submit_graphs() {
 	[ -f "$GRAPHS" ] && { echo "graphs: $GRAPHS exists" >&2; return; }
 	local id
@@ -37,7 +20,6 @@ submit_graphs() {
 	echo "$id"
 }
 
-# Submits one array task per hyperparameter configuration, after the graph job if there is one; prints the array's id
 submit_sweep() {
 	local after=() configs id
 	[ -z "$1" ] || after=(--dependency="afterok:$1")
@@ -50,8 +32,7 @@ submit_sweep() {
 	echo "$id"
 }
 
-# Submits the job that ranks the configurations once the array has ended (whether or not every task succeeded) and
-# writes the best one's predictions to <dataset>/$VARIANT/
+# afterany: rank whatever configurations finished
 submit_select() {
 	local id
 	id=$(sbatch --parsable -J "select_gnn_$NAME" --dependency="afterany:$1" -o "$LOGS/%x_%j.out" -e "$LOGS/%x_%j.err" \
@@ -64,11 +45,9 @@ python -u models/train_gnn.py select $OUT --dataset-out $DATASET/$VARIANT")
 	echo "Then compare: ./scripts/compare.sh ... MAPFAST-GNN=@$DATASET/$VARIANT" >&2
 }
 
-# run from the repository folder, whose paths (datasets/, models/, tools/, ...) every job uses
 cd "$(dirname "$0")/.."
 DATASET="${1:?usage: ./scripts/sweep_gnn.sh DATASET}"
 DATASET="${DATASET%/}"
-# its path below datasets/, and that path as one word for the job names
 REL="${DATASET#datasets/}"
 NAME="${REL//\//_}"
 OUT="${OUT:-experiments/gnn_sweep/$REL}"

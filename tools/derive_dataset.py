@@ -1,37 +1,23 @@
 '''
-Make a dataset folder from another one, with fewer solvers or only a new config, without copying or
-re-rendering its images: datasets/<name>/ gets (name a variant of a dataset as a folder in it, e.g.
-movingai_10-500-agents_300s/eight-solvers/score)
+Variant of a dataset without copying its images: fewer solvers (--drop) or a new config (--epochs, --aux).
 
-	yaml_details.json		the source's, without the dropped solvers and with SOLVER relabelled as the fastest of the others
-	config.json			a fresh config (see make_config in benchmark_dataset.py), whose other files are the source's
-
-	python tools/derive_dataset.py datasets/movingai_10-500-agents_300s/nine-solvers --name movingai_10-500-agents_300s/eight-solvers --drop mapf_prioritized_sipp
-	python tools/derive_dataset.py datasets/movingai_10-500-agents_300s/four-solvers --name movingai_10-500-agents_300s/four-solvers/aux --aux
-
-The instances that only dropped solvers solved are left out. The training, validation and test split depends only on
-the instances, so a dataset that keeps them all is split exactly as its source.
+	python tools/derive_dataset.py datasets/<benchmark>/nine-solvers --name <benchmark>/eight-solvers --drop mapf_prioritized_sipp
 '''
 import argparse
 import json
 import os
 import sys
 
-from benchmark_dataset import make_config
+from benchmark_dataset import keep_solvers, make_config
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models'))
-from utils import read_config
-
-def read_json(path):
-	with open(path) as f:
-		return json.load(f)
+from utils import read_config, read_json
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Make a dataset folder from another one, with fewer solvers or only a new config')
 	parser.add_argument('source', help='Dataset folder to derive from, e.g. datasets/movingai_10-500-agents_300s/nine-solvers')
 	parser.add_argument('--name', required=True, help='Path of the new dataset below datasets/, e.g. movingai_10-500-agents_300s/eight-solvers')
 	parser.add_argument('--drop', nargs='+', default=[], help='Solvers to leave out of the portfolio')
-	parser.add_argument('--loss', choices=['ce', 'score', 'custom'], default='ce', help='Loss of main.py: cross-entropy (default), the relative speed score (score) or analysis.py\'s custom score (custom); see MAPFAST.train_model')
 	parser.add_argument('--epochs', type=int, default=None, help='Training epochs of main.py (default: the source\'s)')
 	parser.add_argument('--aux', action='store_true', help='Also train MAPFAST\'s auxiliary outputs (finish prediction and pairwise comparison neurons)')
 	args = parser.parse_args()
@@ -44,13 +30,12 @@ if __name__ == '__main__':
 		raise SystemExit('not solvers of {}: {}'.format(source, ', '.join(unknown)))
 	solvers = sorted((s for s in mapping if s not in args.drop), key=mapping.get)
 
-	yaml_details = {}
 	source_yaml = read_json(config['yaml_details'])
+	yaml_details = {}
 	for instance, record in source_yaml.items():
-		times = {s: record[s] for s in solvers}
-		solved = {s: t for s, t in times.items() if t != -1}
-		if solved:
-			yaml_details[instance] = {'SOLVER': min(solved, key=solved.get), **times}
+		kept = keep_solvers(record, solvers)
+		if kept:
+			yaml_details[instance] = kept
 
 	dataset_dir = os.path.join('datasets', args.name)
 	os.makedirs(dataset_dir, exist_ok=True)
@@ -58,11 +43,9 @@ if __name__ == '__main__':
 		json.dump(yaml_details, f)
 
 	new_config = make_config(args.name, {s: i for i, s in enumerate(solvers)}, config['timeout'], config['augmentation'])
-	new_config['loss'] = args.loss
 	new_config['epochs'] = args.epochs or config['epochs']
 	if args.aux:
 		new_config['output_units'] = {'cl': 1, 'fin': 1, 'pair': 1}
-	# the source's agent and map details and images, relative to the new folder like every path of a config
 	for key in ('agent_details', 'map_details', 'input_location'):
 		new_config[key] = os.path.relpath(config[key], dataset_dir) + ('/' if key == 'input_location' else '')
 	with open(os.path.join(dataset_dir, 'config.json'), 'w') as f:

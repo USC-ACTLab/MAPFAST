@@ -125,4 +125,19 @@ Changes from round 4 (same instances and test set):
 - **MAPFAST-GNN with 5-fold cross-validation** over the training and validation instances: the epoch and threshold are chosen on all out-of-fold predictions (about 15,200 instances instead of 1,646), and the test picks average the five networks. Only GraphSAGE, depth 4 (`ends`/`paths`, runtime or cross-entropy loss: 4 configurations).
 - **CNN baselines:** MAPFASTv2 and MAPFASTv2_aux (15 epochs) retrained on ten solvers; MAPFAST and MAPFAST_aux are round 3's (their four-solver dataset is unchanged); round 4's `paths` model as the GNN reference. No Jev.
 
-Results: _to fill in_.
+Results (same 1,647 test instances):
+
+| | Total runtime (min) | Test speedup over always-bcp2 | Non-bcp2 picks (fastest) |
+| --- | --- | --- | --- |
+| Oracle (ten / eight / four solvers) | 287.1 / 324.9 / 339.3 | 1.215 / 1.073 / 1.028 | |
+| MAPFAST-GNN `paths` (runtime loss, threshold 0) | 319.7 | 1.091 | 228 (66), lazycbs 75 (41) |
+| MAPFAST-GNN `ends` (runtime loss, threshold 0.25) | 322.2 | 1.082 | 67 (37), lazycbs 54 (35) |
+| Always bcp2 | 348.7 | 1 | |
+| MAPFAST-GNN round 4 (`paths`, eight solvers) | 351.5 | 0.992 | 22 (7) |
+| MAPFASTv2, MAPFASTv2_aux | 368.5, 435.2 | 0.946, 0.801 | 269 (96), 237 (76) |
+| MAPFAST, MAPFAST_aux (round 3) | 479.3, 431.5 | 0.728, 0.808 | 176 (80), 160 (64) |
+
+- **MAPFAST-GNN beats always-bcp2 for the first time**, by 8–9%, taking 43–47% of the oracle's savings; all four configurations do (test 1.071–1.091).
+- **The gain is mostly lazycbs.** It adds the headroom (ten-solver oracle 37.8 min below the eight-solver one) and its wins are predictable: open maps (empty-16/32/48, random-32/64-10) at 100–200 agents. Four fifths of `ends`'s non-bcp2 picks are lazycbs; the two GNNs agree on 51 of their 54/75 lazycbs picks. bcp1 is fastest on 48 test instances but no model exploits it.
+- **Cross-validated selection transfers:** pooled out-of-fold speedups (1.072–1.095) match test (1.071–1.091) and every fold of every configuration beats bcp2 (1.041–1.156), unlike round 4's single validation set. This is confounded with the larger headroom (validation oracle 1.285×, round 4 1.116×).
+- **MAPFASTv2 improves (423.1 → 368.5)** by also picking lazycbs (52, 38 fastest) but still loses on its 215 cbsh2_rtc_ch/chbp picks (57 fastest).

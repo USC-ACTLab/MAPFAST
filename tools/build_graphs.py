@@ -1,83 +1,29 @@
 '''
-Turn every instance of a dataset into a graph for the GNN selector (models/gnn.py), reading the MovingAI map and
-scenario files of MAPF Benchmarking directly: an instance <map>-<type>-<i>_agents<n>.yaml is the first n agents of
-benchmarks/<map>/<map>.map.
+MAPFAST-GNN graphs (models/gnn.py) of a dataset's instances, from the MovingAI files, into <dataset>/graphs.pkl:
+maps (cell edges), scenarios (each agent's start, goal and shortest path) and instances (agent count, global features).
+Node features are computed in gnn.collate; none depends on position, so predictions are flip/rotation invariant.
 
-The graph has a node per free cell of the map, with an edge between 4-connected cells, and a node per agent, with an
-edge to its start cell and one to its goal cell, so that which start goes with which goal is kept (and optionally to
-every cell of its path, see models/gnn.py). Each agent's
-shortest path (4-connected A*, as in benchmark_dataset.py) is traced on the grid. models/gnn.py's collate computes the
-node features from these paths, for the instance's first n agents:
-
-	cell		starts		agents starting in the cell
-				goals		agents ending in the cell
-				paths		log(1 + agents whose path passes the cell)
-	agent		length		log(1 + its path length)
-				detour		path length / Manhattan distance from start to goal
-				overlap		log(1 + visits of other agents' paths to its path's cells)
-
-(a first feature tells agents (1) from cells (0)), and this file keeps the graph's global features
-
-	log agents, log free cells, agents per free cell, mean and longest path length / (height + width),
-	fraction of path visits that overlap, log cells of the map
-
-No feature depends on where a cell is, so the GNN's prediction does not change when the map is flipped or rotated.
-
-	python tools/build_graphs.py datasets/movingai_10-500-agents_300s/eight-solvers --benchmarks ~/MAPF-Benchmarking/benchmarks --jobs 16
-
-writes datasets/movingai_10-500-agents_300s/eight-solvers/graphs.pkl:
-	maps		map -> {'edges': int32 (2, edges) cell edges in both directions, 'cells': number of free cells}
-	scenarios	scenario file -> {'map', 'start', 'goal': int32 cell of each agent, 'offsets': int64 (agents + 1),
-				'paths': int32 cells of every agent's path, agent a's being paths[offsets[a]:offsets[a + 1]],
-				'detour': float32 per agent}
-	instances	instance -> {'scenario', 'agents': n, 'glob': float32 global features}
-The graphs only depend on the instances, so datasets derived from the same one (tools/derive_dataset.py) can share it.
+	python tools/build_graphs.py datasets/<benchmark>/<portfolio> --benchmarks ~/MAPF-Benchmarking/benchmarks
 '''
 import argparse
-import json
 import math
 import os
 import pickle
-import re
 import sys
 from multiprocessing import Pool
 
 import numpy as np
 
-from benchmark_dataset import load_map, map_name, scen_name, shortest_path
+from movingai import agent_count, load_map, load_scenario, map_name, scen_name, shortest_path
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models'))
-from utils import read_config
+from utils import read_config, read_json
 
 NODE_FEATURES = ('agent', 'starts', 'goals', 'paths', 'length', 'detour', 'overlap')
 GLOBAL_FEATURES = ('log_agents', 'log_free', 'agents_per_free', 'mean_path', 'max_path', 'overlap_fraction', 'log_cells')
 
-def agent_count(instance):
-	'''
-	Returns: Number of agents of an instance, e.g. 10 for Berlin_1_256-random-1_agents10.yaml
-	'''
-	return int(re.search(r'_agents(\d+)\.yaml$', instance).group(1))
-
-def load_scenario(scen_file):
-	'''
-	Returns: List of the ([row, column] start, [row, column] goal) of every agent of a MovingAI scenario file, in file order
-	'''
-	agents = []
-	with open(scen_file) as f:
-		if 'version 1' not in f.readline():
-			raise ValueError(scen_file + ' is not a version 1 scenario file')
-		for line in f:
-			fields = line.rstrip('\r\n').split('\t')
-			if len(fields) >= 8:
-				sx, sy, gx, gy = (int(v) for v in fields[4:8])
-				agents.append(([sy, sx], [gy, gx]))
-	return agents
-
 def cell_graph(obstacles):
-	'''
-	Returns: Tuple of the (height, width) array of each free cell's node (-1 for obstacles) and the int32 (2, edges)
-	array of the edges between 4-connected free cells, in both directions
-	'''
+	'''Returns (node index per cell, -1 for obstacles; 4-connected edges in both directions).'''
 	free = ~obstacles
 	node = np.full(obstacles.shape, -1, dtype=np.int64)
 	node[free] = np.arange(free.sum())
@@ -87,11 +33,7 @@ def cell_graph(obstacles):
 	return node, np.stack([np.concatenate([sources, targets]), np.concatenate([targets, sources])]).astype(np.int32)
 
 def build_scenario(task):
-	'''
-	Traces the paths of the agents of one scenario file that its instances use (their first n agents for several n).
-
-	Returns: Tuple of the map name, its graph, the scenario's paths and the dictionary instance -> {'agents', 'glob'}
-	'''
+	'''Returns (map graph, scenario paths, {instance: {'scenario', 'agents', 'glob'}}) of one scenario file.'''
 	map_file, scen_file, instances = task
 	obstacles = load_map(map_file)
 	height, width = obstacles.shape
@@ -131,10 +73,6 @@ def build_scenario(task):
 			math.log(height * width),
 		], dtype=np.float32)}
 	return {'edges': edges, 'cells': cells}, scenario, graphs
-
-def read_json(path):
-	with open(path) as f:
-		return json.load(f)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Build the GNN graphs of every instance of a dataset from the MovingAI files')

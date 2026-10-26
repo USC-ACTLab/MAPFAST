@@ -1,14 +1,6 @@
 '''
-Graph neural network selector: picks the fastest solver of a portfolio from the graph of an instance built by
-tools/build_graphs.py: a node per free cell of its MovingAI map, joined to its 4-connected neighbours, and a node per
-agent, joined to its start and goal cells and, with paths=True, to every cell of its shortest path, so that agents
-whose paths meet are 2 hops apart however far apart they are on the map. Each edge has a relation (RELATIONS), with its
-own weights. Plain PyTorch, no graph library: a batch is the union of its graphs, with `batch` giving each node's graph
-and `kind` whether it is a cell (0) or an agent (1).
-
-	net = SolverGNN(node_dim, global_dim, solvers, kind='sage', hidden=128, layers=4)
-	x, edge_index, edge_type, batch, kind, glob = collate(names, graphs, device, paths=True)
-	outputs = net(x, edge_index, edge_type, batch, kind, glob, len(names))
+MAPFAST-GNN: cell nodes (4-connected) plus agent nodes linked to their start, goal and (paths=True) path cells,
+with per-relation weights. Plain PyTorch; a batch is the disjoint union of its graphs.
 '''
 import numpy as np
 import torch
@@ -16,21 +8,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 KINDS = ('sage', 'gin')
-# the relation of each edge type, from its source to its target
 RELATIONS = ('cell-cell', 'start-agent', 'agent-start', 'goal-agent', 'agent-goal', 'path-agent', 'agent-path')
 
 class GraphLayer(nn.Module):
 	'''
-	One message-passing layer, with a weight matrix W_r per relation r (Schlichtkrull et al., 2018):
-		sage -> W . h_i + sum over r of W_r . mean over j in N_r(i) of h_j        (Hamilton et al., 2017)
-		gin -> MLP((1 + eps) h_i + sum over r of W_r . sum over j in N_r(i) of h_j)   (Xu et al., 2019)
+	Relational (Schlichtkrull et al., 2018) GraphSAGE (Hamilton et al., 2017) or GIN (Xu et al., 2019) layer:
+	sage: W h_i + sum_r W_r mean_{N_r(i)} h_j;  gin: MLP((1 + eps) h_i + sum_r W_r sum_{N_r(i)} h_j)
 	'''
 	def __init__(self, kind, dim):
 		super().__init__()
 		if kind not in KINDS:
 			raise ValueError('unknown layer {} (one of {})'.format(kind, ', '.join(KINDS)))
 		self.kind = kind
-		# the W_r side by side, applied to the relations' aggregates side by side
+		# all W_r as one matrix over the concatenated per-relation aggregates
 		self.neighbour_linear = nn.Linear(len(RELATIONS) * dim, dim, bias=False)
 		if kind == 'sage':
 			self.self_linear = nn.Linear(dim, dim)
@@ -39,9 +29,7 @@ class GraphLayer(nn.Module):
 			self.mlp = nn.Sequential(nn.Linear(dim, dim), nn.ReLU(), nn.Linear(dim, dim))
 
 	def forward(self, h, edge_index, slot, degree):
-		'''
-		`slot` is each edge's target * len(RELATIONS) + relation, `degree` the number of edges of each slot
-		'''
+		'''slot: target * len(RELATIONS) + relation per edge; degree: edges per slot.'''
 		neighbours = torch.zeros(len(h) * len(RELATIONS), h.shape[1], device=h.device).index_add_(0, slot, h[edge_index[0]])
 		if self.kind == 'sage':
 			neighbours = neighbours / degree.clamp(min=1).unsqueeze(1)
@@ -51,18 +39,7 @@ class GraphLayer(nn.Module):
 		return self.mlp((1 + self.eps) * h + neighbours)
 
 class SolverGNN(nn.Module):
-	'''
-	Node features -> `layers` residual message-passing layers -> mean and max over each graph's cells and over its
-	agents, joined with the graph's global features -> MLP -> one output per solver.
-
-	The arguments are:
-		1. node_dim, global_dim -> Number of node and global features
-		2. solvers -> Number of solvers to pick from
-		3. kind -> Message-passing layer: sage or gin (see GraphLayer)
-		4. hidden -> Width of the node embeddings and of the MLP
-		5. layers -> Number of message-passing layers
-		6. dropout -> Dropout after each layer and in the MLP
-	'''
+	'''Residual message passing -> mean/max pool of cells and of agents + global features -> MLP, one output per solver.'''
 	def __init__(self, node_dim, global_dim, solvers, kind='sage', hidden=128, layers=4, dropout=0.1):
 		super().__init__()
 		self.encode = nn.Linear(node_dim, hidden)
@@ -73,16 +50,13 @@ class SolverGNN(nn.Module):
 			nn.Linear(4 * hidden + global_dim, hidden), nn.ReLU(), nn.Dropout(dropout), nn.Linear(hidden, solvers))
 
 	def forward(self, x, edge_index, edge_type, batch, kind, glob, graphs):
-		'''
-		Returns: Tensor (graphs, solvers) of the outputs of each graph
-		'''
 		slot = edge_index[1] * len(RELATIONS) + edge_type
 		degree = torch.zeros(len(x) * len(RELATIONS), device=x.device).index_add_(0, slot, torch.ones(len(slot), device=x.device))
 		h = F.relu(self.encode(x))
 		for layer, norm in zip(self.layers, self.norms):
 			h = h + self.dropout(F.relu(norm(layer(h, edge_index, slot, degree))))
 
-		# pool cells and agents apart: group 2g holds graph g's cells, 2g + 1 its agents
+		# group 2g: graph g's cells, 2g + 1: its agents
 		group = 2 * batch + kind
 		counts = torch.zeros(2 * graphs, device=x.device).index_add_(0, group, torch.ones(len(group), device=x.device))
 		mean = torch.zeros(2 * graphs, h.shape[1], device=x.device).index_add_(0, group, h) / counts.clamp(min=1).unsqueeze(1)
@@ -92,25 +66,13 @@ class SolverGNN(nn.Module):
 		return self.head(torch.cat([mean.view(graphs, -1), maximum.view(graphs, -1), glob], dim=1))
 
 def graph_size(name, graphs):
-	'''
-	Returns: Number of nodes of an instance's graph
-	'''
 	g = graphs['instances'][name]
 	return graphs['maps'][graphs['scenarios'][g['scenario']]['map']]['cells'] + g['agents']
 
 def collate(names, graphs, device, global_stats=None, paths=False):
 	'''
-	Joins the graphs of instances into one batch, computing their node features (see tools/build_graphs.py).
-
-	The arguments are:
-		1. names -> List of instances
-		2. graphs -> Graph file of tools/build_graphs.py: {'maps', 'scenarios', 'instances'}
-		3. device -> Device to put the batch on
-		4. global_stats -> Optional (mean, std) numpy arrays to standardise the global features with
-		5. paths -> Whether to join each agent to every cell of its path, besides its start and goal
-
-	Returns: Tuple of the node features, edges, each edge's relation (index of RELATIONS), each node's graph, each
-	node's kind (0 cell, 1 agent) and the global features, as tensors
+	Batches instances of a build_graphs.py file, computing node features. global_stats: (mean, std) of the global
+	features. Returns tensors (x, edge_index, edge_type, batch, kind (0 cell, 1 agent), glob).
 	'''
 	xs, edges, types, batch, kind = [], [], [], [], []
 	base = 0
@@ -121,7 +83,7 @@ def collate(names, graphs, device, global_stats=None, paths=False):
 		n, cells = g['agents'], m['cells']
 		path_cells = s['paths'][:s['offsets'][n]]
 		visits = np.bincount(path_cells, minlength=cells)
-		# visits of each agent's path cells, less its own one per cell
+		# other agents' visits to each agent's path
 		on_path = np.concatenate([[0], np.cumsum(visits[path_cells])])
 		cells_on_path = np.diff(s['offsets'][:n + 1])
 		overlap = on_path[s['offsets'][1:n + 1]] - on_path[s['offsets'][:n]] - cells_on_path
