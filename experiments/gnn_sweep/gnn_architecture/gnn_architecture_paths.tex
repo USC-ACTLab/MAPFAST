@@ -1,0 +1,97 @@
+\documentclass[border=4pt]{standalone}
+\usepackage{tikz,amsmath,amssymb}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds}
+\definecolor{c0}{HTML}{2a78d6}\definecolor{c1}{HTML}{eb6834}\definecolor{c2}{HTML}{1baf7a}\definecolor{pathc}{HTML}{e34948}
+\definecolor{lin}{HTML}{bcd7f5}\definecolor{gl}{HTML}{f7ef7a}\definecolor{nrm}{HTML}{f7c6cf}\definecolor{act}{HTML}{f4f1e4}
+\definecolor{pool}{HTML}{f9d3a8}\definecolor{glob}{HTML}{c8ebd9}\definecolor{out}{HTML}{f08c8c}\definecolor{drop}{HTML}{e3e3e3}
+\tikzset{
+  b/.style={draw, rounded corners=3pt, minimum width=.72cm, minimum height=2.5cm, inner sep=1pt, font=\small},
+  s/.style={draw, rounded corners=3pt, minimum height=.55cm, inner sep=3pt, font=\small},
+  a/.style={-{Stealth[length=5pt]}, thick},
+  dim/.style={font=\footnotesize, yshift=-1.5cm}}
+\newcommand{\B}[4][]{\node[b, fill=#3, #1] (#2) {\rotatebox{90}{#4}};}
+\begin{document}
+\begin{tikzpicture}[node distance=.32cm]
+% ---------------- input ----------------
+\begin{scope}[scale=.25, shift={(0,-6)}]
+  \draw[thin, gray!40, step=1] (0,0) grid (12,12); \input{map.tex} \draw (0,0) rectangle (12,12);
+\end{scope}
+\node[font=\small, align=center] at (1.5,-1.95) {map $H{\times}W$, agents'\\starts, goals, A* paths};
+\draw[a] (3.15,0) -- (4.0,0);
+\begin{scope}[scale=.25, shift={(16.4,-6)}]
+  \input{graph.tex}
+\end{scope}
+\node[font=\small, align=center] at (6.2,-2.05) {a node per free cell and per agent,\\$(N{+}n){\times}7$ features};
+\node[font=\footnotesize, align=left, anchor=north west] at (4.1,-2.55)
+  {agent edges: start (solid), goal (dashed),\\every path cell (thin: \texttt{paths} only)};
+% ---------------- encoder + message passing ----------------
+\B[at={(9.9,0)}]{enc}{lin}{Linear}
+\B[right=of enc]{r0}{act}{ReLU}
+\B[right=.75cm of r0]{mp}{gl}{Graph layer}
+\B[right=of mp]{ln}{nrm}{LayerNorm}
+\B[right=of ln]{r1}{act}{ReLU}
+\B[right=of r1]{d1}{drop}{Dropout}
+\node[draw, circle, inner sep=0pt, minimum size=.42cm, right=.42cm of d1, font=\small] (add) {$+$};
+\draw[a] (8.75,0) -- (enc); \draw[a] (enc) -- (r0); \draw[a] (r0) -- coordinate[pos=.35](split) (mp);
+\foreach \u/\v in {mp/ln, ln/r1, r1/d1, d1/add} \draw[a] (\u) -- (\v);
+\draw[a] (split) -- ++(0,-1.6) -| (add);
+\node[font=\footnotesize, fill=white, inner sep=1pt] at ($(split)!.5!(add) + (0,-1.6)$) {residual};
+\begin{scope}[on background layer]
+  \coordinate (f1) at ($(split)+(0.12,-1.85)$); \coordinate (f2) at ($(mp.north)+(0,.15)$);
+  \node[draw, dashed, rounded corners=6pt, fit=(mp)(add)(f1)(f2), inner sep=4pt] (rep) {};
+\end{scope}
+\node[font=\small, anchor=south east] at (rep.north east) {$\times L$};
+\node[dim] at ($(enc.east)!.5!(r0.west)$) {$(N{+}n){\times}d$};
+% ---------------- graph layer inset ----------------
+\begin{scope}[shift={($(mp)+(-2.6,4.4)$)}]
+  \node[s, fill=act] (hi) at (0,.6) {$h_i$};
+  \node[s, fill=act, align=center] (hj) at (0,-.7) {$h_j,\ j\in\mathcal N_r(i)$\\for each relation $r$};
+  \node[s, fill=pool, right=.45cm of hj] (mean) {mean};
+  \node[s, fill=act, right=.4cm of mean] (cat) {concat over $r$};
+  \node[s, fill=lin, right=.4cm of cat] (wr) {Linear $[W_1\cdots W_7]$};
+  \node[s, fill=lin] (w0) at (wr |- hi) {Linear $W$};
+  \node[draw, circle, inner sep=0pt, minimum size=.42cm, right=.5cm of wr, yshift=.65cm, font=\small] (sum) {$+$};
+  \node[s, fill=act, right=.45cm of sum] (ho) {$h_i'$};
+  \draw[a] (hi) -- (w0); \draw[a] (hj) -- (mean); \draw[a] (mean) -- (cat); \draw[a] (cat) -- (wr);
+  \draw[a] (w0) -| (sum); \draw[a] (wr) -| (sum); \draw[a] (sum) -- (ho);
+  \node[font=\footnotesize, anchor=north west, align=left] at ($(hj.south west)+(0,-.12)$)
+    {7 relations, each with its own $W_r$: cell--cell, start$\leftrightarrow$agent, goal$\leftrightarrow$agent, path$\leftrightarrow$agent\\
+     GraphSAGE: $h_i' = W h_i + \textstyle\sum_r W_r\, \mathrm{mean}_{j\in\mathcal N_r(i)}\, h_j$};
+\end{scope}
+\begin{scope}[on background layer]
+  \coordinate (f3) at ($(hj.south west)+(0,-1.0)$); \coordinate (f4) at ($(ho.east)+(.15,0)$);
+  \node[draw, dashed, rounded corners=8pt, fill=gl!35, fit=(hi)(hj)(w0)(ho)(f3)(f4), inner sep=6pt] (inset) {};
+\end{scope}
+\node[font=\bfseries\small, anchor=south] at (inset.north) {Graph layer (relational, on cells and agents)};
+\draw[dashed, gray] (inset.south west) -- (mp.north west); \draw[dashed, gray] (inset.south east) -- (mp.north east);
+% ---------------- readout + head ----------------
+\node[s, fill=pool, minimum width=2.6cm, right=1.0cm of add, yshift=1.35cm] (cmean) {Mean pool, cells};
+\node[s, fill=pool, minimum width=2.6cm, below=.2cm of cmean] (cmax) {Max pool, cells};
+\node[s, fill=pool, minimum width=2.6cm, below=.2cm of cmax] (amean) {Mean pool, agents};
+\node[s, fill=pool, minimum width=2.6cm, below=.2cm of amean] (amax) {Max pool, agents};
+\foreach \p in {cmean, cmax, amean, amax} \draw[a] (add) -- ++(.45,0) |- (\p);
+\node[s, fill=glob, align=center, below=.75cm of amax] (glob) {global features $1{\times}7$};
+\B[right=.75cm of cmax, yshift=-.38cm, minimum height=3.2cm]{cat}{act}{Concat}
+\foreach \p in {cmean, cmax, amean, amax} \draw[a] (\p) -- (\p -| cat.west);
+\node[font=\footnotesize, anchor=south] at ($(cmean.east)!.5!(cmean -| cat.west)$) {$1{\times}d$};
+\draw[a] (glob.east) -| (cat.south);
+\B[right=.75cm of cat]{fc1}{lin}{FC}
+\B[right=of fc1]{r2}{act}{ReLU}
+\B[right=of r2]{d2}{drop}{Dropout}
+\B[right=of d2]{fc2}{lin}{FC}
+\foreach \u/\v in {cat/fc1, fc1/r2, r2/d2, d2/fc2} \draw[a] (\u) -- (\v);
+\node[dim, yshift=-.45cm] at ($(cat.east)!.5!(fc1.west)$) {$1{\times}(4d{+}7)$};
+\node[dim] at ($(fc1.east)!.5!(r2.west)$) {$1{\times}d$};
+\node[s, fill=out, align=center, right=.75cm of fc2] (o) {$o \in \mathbb R^{S}$\\[-1pt]\footnotesize $o_s = -\log(1{+}\hat t_s)$};
+\draw[a] (fc2) -- (o);
+\node[s, fill=out!45, align=left, right=.5cm of o, yshift=.8cm] (lrt)
+  {$\mathcal L_{\text{runtime}} = \operatorname{mean}_s \big({-o_s} - \log(1{+}t_s)\big)^2$\\[-1pt]\footnotesize timeout: only if $-o_s < \log(1{+}T)$};
+\node[s, fill=out!45, align=center, right=.5cm of o, yshift=-.8cm] (lce) {or $\mathcal L_{\text{CE}}$ (fastest solver)};
+\draw[a] (o.east) -- ++(.3,0) |- (lrt); \draw[a] (o.east) -- ++(.3,0) |- (lce);
+\node[s, fill=glob!60, align=left, below=1.1cm of lce.south west, anchor=north west, font=\footnotesize] (fb)
+  {inference: $o$ averaged over the $K{=}5$ fold networks;\\pick $\arg\max_s o_s$ if $\max_s o_s - o_{\text{bcp2}} \ge \tau$, else bcp2};
+\draw[a, dashed] (o.south) |- (fb.west);
+\node[font=\footnotesize, anchor=north east, text=black!65] at ($(fb.south east)+(0,-.15)$)
+  {selected (round 5): GraphSAGE, $d{=}128$, $L{=}4$, runtime loss, $\tau{=}0$};
+\end{tikzpicture}
+\end{document}

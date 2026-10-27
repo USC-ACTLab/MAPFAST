@@ -5,6 +5,7 @@ import re
 
 import numpy as np
 
+MAP_FAMILIES = ('empty', 'random', 'maze', 'room', 'warehouse', 'city', 'game')
 INSTANCE = re.compile(r'^((.+)-(random|even)-\d+)_agents(\d+)\.yaml$')
 
 def map_name(instance):
@@ -18,6 +19,12 @@ def scen_type(instance):
 
 def agent_count(instance):
 	return int(INSTANCE.match(instance).group(4))
+
+def map_family(instance):
+	'''empty, random, maze, room, warehouse, city (Berlin_1_256, ...) or game (den520d, ...).'''
+	m = map_name(instance)
+	prefix = m.split('-')[0]
+	return prefix if prefix in MAP_FAMILIES[:5] else 'city' if m.endswith('_256') else 'game'
 
 @functools.lru_cache(maxsize=4)
 def load_map(map_file):

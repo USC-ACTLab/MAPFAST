@@ -83,7 +83,7 @@ def score(picks, names, data):
 			'accuracy': float((picks == data['labels'](names)).mean())}
 
 def best_threshold(outputs, names, data):
-	scored = [(t, score(apply_threshold(outputs, data['default'], t), names, data)) for t in THRESHOLDS]
+	scored = [(t, score(apply_threshold(outputs, data['default'], t), names, data)) for t in data['thresholds']]
 	return min(scored, key=lambda s: (s[1]['runtime'], -s[1]['accuracy']))
 
 def folds(train_names, valid_names, k):
@@ -177,6 +177,7 @@ def train(args):
 	valid_names = [n for _, valid in parts for n in valid]
 	# default: the single solver with the lowest training runtime
 	data['default'] = int(data['times']([n for train, _ in parts for n in train]).sum(0).argmin())
+	data['thresholds'] = (0.,) if args.no_fallback else THRESHOLDS
 	baseline = {'solver': solvers[data['default']], **score(np.full(len(valid_names), data['default']), valid_names, data)}
 	oracle = score(data['labels'](valid_names), valid_names, data)
 
@@ -272,6 +273,7 @@ if __name__ == '__main__':
 	p.add_argument('--dropout', type=float, default=0.1)
 	p.add_argument('--weight-decay', type=float, default=1e-4)
 	p.add_argument('--limit', type=int, default=None, help='Only train on the first n training instances (a test)')
+	p.add_argument('--no-fallback', action='store_true', help='Always pick the top output (threshold 0)')
 	p.add_argument('--folds', type=int, default=1, help='Folds of k-fold cross-validation (default 1: main.py\'s '
 				   'validation set)')
 	p = commands.add_parser('select', help='Rank the trained configurations and keep the best')

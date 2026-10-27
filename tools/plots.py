@@ -16,6 +16,8 @@ import matplotlib.patches
 import matplotlib.pyplot as plt
 import numpy as np
 
+from movingai import MAP_FAMILIES, agent_count, map_family
+
 # dataviz palette
 SERIES_1 = '#2a78d6'
 SERIES_2 = '#eb6834'
@@ -202,7 +204,7 @@ def apply_time_limit(run, limit):
 			'result': scores(yaml_details, keys, picks, limit), 'dropped': len(run['keys']) - len(keys)}
 
 def plot_comparison(runs, output, limit=None):
-	'''compare_loss.png, compare_total_runtime.png and confusion_<name>.png for `runs`: (name, color, run or None, log or None).'''
+	'''compare_loss.png, compare_total_runtime.png, compare_solved.png and confusion_<name>.png for `runs`: (name, color, run or None, log or None).'''
 	logged = [(name, color, log) for name, color, _, log in runs if log and log['epochs']]
 	if logged:
 		fig, ax = plt.subplots(figsize=(8, 4.5))
@@ -222,6 +224,7 @@ def plot_comparison(runs, output, limit=None):
 	tested = [(name, color, run) for name, color, run, _ in runs if run]
 	if tested:
 		plot_total_runtime(tested, limit, os.path.join(output, 'compare_total_runtime.png'))
+		plot_solved(tested, limit, os.path.join(output, 'compare_solved.png'))
 	for name, _, run in tested:
 		plot_confusion(run['keys'], run['picks'], run['mapping'], os.path.join(output, 'confusion_{}.png'.format(name)),
 					   name + ': predicted against actual fastest solver')
@@ -248,6 +251,48 @@ def plot_total_runtime(tested, limit, out):
 		bars.setdefault(s, minutes)
 
 	plot_bars(bars, emphasis, limit, 'Total runtime: models against single solvers and the oracles', out)
+
+def plot_solved(tested, limit, out, bins=7):
+	'''Share of the test instances each model, bcp2 and lazycbs solves against agent count (in bins of equal size), by map family.'''
+	lines = [(name, color, '-', run, run['picks']['Model']) for name, color, run in tested]
+	for s, color in (('bcp2', TEXT), ('lazycbs', NEUTRAL)):
+		run = next((run for _, _, run in tested if s in run['mapping']), None)
+		if run:
+			lines.append((s, color, '--', run, run['picks'][s]))
+	agents = np.array([agent_count(k) for k in tested[0][2]['keys']])
+	counts, sizes = np.unique(agents, return_counts=True)
+	group = (sizes.cumsum() - sizes) * bins // sizes.sum()
+	ranges = [(counts[group == g].min(), counts[group == g].max()) for g in np.unique(group)]
+	families = ['all maps'] + [f for f in MAP_FAMILIES if f in {map_family(k) for k in tested[0][2]['keys']}]
+
+	columns = min(4, len(families))
+	rows = -(-len(families) // columns)
+	fig, axes = plt.subplots(rows, columns, figsize=(3.6 * columns, 3.2 * rows), sharey=True, squeeze=False)
+	for name, color, style, run, picks in lines:
+		family = np.array([map_family(k) for k in run['keys']])
+		bin_of = np.searchsorted([hi for _, hi in ranges], [agent_count(k) for k in run['keys']])
+		solved = np.array([run['yaml_details'][k][s] != -1 for k, s in zip(run['keys'], picks)])
+		for ax, f in zip(axes.flat, families):
+			mask = (family == f) | (f == 'all maps')
+			share = [solved[mask & (bin_of == b)].mean() * 100 if (mask & (bin_of == b)).any() else np.nan
+					 for b in range(len(ranges))]
+			ax.plot(share, style, marker='o', markersize=4, color=color, linewidth=2 if style == '-' else 1.5, label=name)
+	family = np.array([map_family(k) for k in tested[0][2]['keys']])
+	for ax, f in zip(axes.flat, families):
+		ax.set_title('{} ({} instances)'.format(f, len(family) if f == 'all maps' else (family == f).sum()), fontsize=11)
+		ax.set_xticks(range(len(ranges)))
+		ax.set_xticklabels(['{}–{}'.format(lo, hi) if lo < hi else str(lo) for lo, hi in ranges], rotation=45)
+		ax.set_xlabel('Agents')
+		ax.set_ylim(top=100.5)
+		ax.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(decimals=0))
+	for ax in axes[:, 0]:
+		ax.set_ylabel('Test instances solved within {:g} s'.format(limit))
+	for ax in axes.flat[len(families):]:
+		ax.set_visible(False)
+	fig.tight_layout()
+	fig.legend(*axes.flat[0].get_legend_handles_labels(), loc='upper center', ncol=min(len(lines), 5),
+			   bbox_to_anchor=(0.5, 0))
+	save(fig, out)
 
 def save(fig, out):
 	fig.tight_layout()

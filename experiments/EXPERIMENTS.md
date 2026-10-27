@@ -13,7 +13,7 @@ What changed between rounds (datasets, models, losses) and the results. Logs and
 | [round_5/](round_5/) | Ten solvers (bcp1, lazycbs), MAPFASTv2 retrained, MAPFAST-GNN with 5-fold cross-validation |
 | [headroom/](headroom/) | Where the oracle saves time over always-bcp2 (`tools/headroom.py`) |
 | [gnn_sweep/](gnn_sweep/) | MAPFAST-GNN hyperparameter sweeps, one folder per dataset |
-| [gnn_architecture/](gnn_architecture/) | MAPFAST-GNN architecture figure (TikZ source) |
+| [gnn_sweep/gnn_architecture/](gnn_sweep/gnn_architecture/) | MAPFAST-GNN architecture figures: round 3's (image only) and the `paths` model's (TikZ source, `gen.py`) |
 
 Datasets are `datasets/<benchmark>/<portfolio>/[<variant>/]`.
 
@@ -68,7 +68,7 @@ Changes:
 - **MAPFAST, MAPFASTv2** unchanged (cross-entropy); **MAPFAST_aux, MAPFASTv2_aux** trained for 15 epochs.
 - **MAPFAST-GNN** (`models/gnn.py`), eight solvers, MAPFASTv2's split:
 
-  ![MAPFAST-GNN architecture](gnn_architecture/gnn_architecture.png)
+  ![MAPFAST-GNN architecture](gnn_sweep/gnn_architecture/gnn_architecture.png)
 
   - Input: the map as a grid graph (at most 64 × 64 blocks) with per-block features (free space, starts, goals, shortest-path cells, path overlap) and global ones (agents, density, path lengths).
   - **Regret loss:** expected seconds lost to the fastest solver; a timeout costs 300 s.
@@ -99,6 +99,9 @@ Changes from round 3's MAPFAST-GNN (same dataset `movingai_10-500-agents_300s/ei
 - **No coarsening:** a node per free cell (k = 1; up to 96,603 cells on orz900d).
 - **Agent nodes:** one per agent, with edges to its start and goal cells, so that which start goes with which goal is kept; features: path length, detour (path / Manhattan distance) and how often other agents' paths visit its path. Cells: starts, goals, paths through them. Cells and agents are pooled separately; each kind of edge has its own weights.
 - **Path edges (ablation):** `ends` joins agents to their start and goal only; `paths` also to every cell of their path, so agents whose paths meet are 2 hops apart (with `ends`, information travels one cell per layer).
+
+  ![MAPFAST-GNN, paths](gnn_sweep/gnn_architecture/gnn_architecture_paths.png)
+
 - **Runtime loss:** predicts each solver's log(1 + seconds) (a timeout only as a lower bound) and picks the fastest; the fallback rule leaves bcp2 only for a predicted speedup above a threshold tuned on validation. Cross-entropy is kept for comparison; the regret loss is dropped.
 - **Sweep:** GraphSAGE/GIN, width 128, depth 4/8, `ends`/`paths`, runtime or cross-entropy loss (16 configurations); the best of each edge set is compared with always-bcp2, the oracles and round 3's models; no Jev.
 
@@ -141,3 +144,9 @@ Results (same 1,647 test instances):
 - **The gain is mostly lazycbs.** It adds the headroom (ten-solver oracle 37.8 min below the eight-solver one) and its wins are predictable: open maps (empty-16/32/48, random-32/64-10) at 100–200 agents. Four fifths of `ends`'s non-bcp2 picks are lazycbs; the two GNNs agree on 51 of their 54/75 lazycbs picks. bcp1 is fastest on 48 test instances but no model exploits it.
 - **Cross-validated selection transfers:** pooled out-of-fold speedups (1.072–1.095) match test (1.071–1.091) and every fold of every configuration beats bcp2 (1.041–1.156), unlike round 4's single validation set. This is confounded with the larger headroom (validation oracle 1.285×, round 4 1.116×).
 - **MAPFASTv2 improves (423.1 → 368.5)** by also picking lazycbs (52, 38 fastest) but still loses on its 215 cbsh2_rtc_ch/chbp picks (57 fastest).
+
+## Round 6: MAPFAST-GNN without the fallback rule
+
+Change from round 5: always pick the top output (threshold 0) instead of keeping bcp2 unless the top pick wins by a validated margin. The fallback only affects selection and test picks, so round 5's networks are reused (`train_gnn.py --no-fallback` on their per-fold outputs) and only the epoch is reselected. Round 5's `paths` model already chose threshold 0, so only `ends` (0.25) and the cross-entropy configurations can change.
+
+Results: _to fill in_.
