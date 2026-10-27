@@ -33,6 +33,10 @@ TEXT = '#0b0b0b'
 TEXT_2 = '#52514e'
 GRID = '#e6e5e1'
 SEQUENTIAL = ['#fcfcfb', '#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b']
+# dashed in compare_solved.png, so they stay apart from the models' solid lines of the same hue
+SOLVER_COLORS = {'bcp2': TEXT, 'bcp1': SERIES_8, 'lazycbs': SERIES_1, 'cbs': SERIES_3, 'ecbs': SERIES_4, 'reloc': SERIES_5,
+				 'mapf_prioritized_sipp': SERIES_6, 'cbsh2_rtc': SERIES_2, 'cbsh2_rtc_ch': SERIES_7,
+				 'cbsh2_rtc_bp': NEUTRAL, 'cbsh2_rtc_chbp': TEXT_2}
 
 plt.rcParams.update({
 	'figure.facecolor': SURFACE, 'axes.facecolor': SURFACE, 'savefig.facecolor': SURFACE,
@@ -253,9 +257,9 @@ def plot_total_runtime(tested, limit, out):
 	plot_bars(bars, emphasis, limit, 'Total runtime: models against single solvers and the oracles', out)
 
 def plot_solved(tested, limit, out, bins=7):
-	'''Share of the test instances each model, bcp2 and lazycbs solves against agent count (in bins of equal size), by map family.'''
+	'''Share of the test instances each model (solid) and solver (dashed) solves against agent count (in bins of equal size), by map family.'''
 	lines = [(name, color, '-', run, run['picks']['Model']) for name, color, run in tested]
-	for s, color in (('bcp2', TEXT), ('lazycbs', NEUTRAL)):
+	for s, color in SOLVER_COLORS.items():
 		run = next((run for _, _, run in tested if s in run['mapping']), None)
 		if run:
 			lines.append((s, color, '--', run, run['picks'][s]))
@@ -276,7 +280,8 @@ def plot_solved(tested, limit, out, bins=7):
 			mask = (family == f) | (f == 'all maps')
 			share = [solved[mask & (bin_of == b)].mean() * 100 if (mask & (bin_of == b)).any() else np.nan
 					 for b in range(len(ranges))]
-			ax.plot(share, style, marker='o', markersize=4, color=color, linewidth=2 if style == '-' else 1.5, label=name)
+			ax.plot(share, style, marker='o' if style == '-' else None, markersize=4, color=color,
+					linewidth=2 if style == '-' else 1.8 if name == 'bcp2' else 1.2, label=name)
 	family = np.array([map_family(k) for k in tested[0][2]['keys']])
 	for ax, f in zip(axes.flat, families):
 		ax.set_title('{} ({} instances)'.format(f, len(family) if f == 'all maps' else (family == f).sum()), fontsize=11)
@@ -290,7 +295,7 @@ def plot_solved(tested, limit, out, bins=7):
 	for ax in axes.flat[len(families):]:
 		ax.set_visible(False)
 	fig.tight_layout()
-	fig.legend(*axes.flat[0].get_legend_handles_labels(), loc='upper center', ncol=min(len(lines), 5),
+	fig.legend(*axes.flat[0].get_legend_handles_labels(), loc='upper center', ncol=min(len(lines), 6),
 			   bbox_to_anchor=(0.5, 0))
 	save(fig, out)
 
